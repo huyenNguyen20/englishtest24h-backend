@@ -1,0 +1,10 @@
+
+db:
+  type: 'mysql'
+  port: '3306'
+  database: 'englishtest24'
+
+jwt:
+  expiresIn:  86400
+
+  

@@ -1,0 +1,295 @@
+import { Exam, Subjects } from './entities/exam.entity';
+import { EntityRepository, getConnection, Repository } from 'typeorm';
+import { CreateExamDto, FilterExamDto, UpdateExamDto } from './dto';
+import { User } from 'src/auth/entities/user.entity';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Question } from './entities/question.entity';
+import { TestEnrollment } from './entities/test-enrollment.entity';
+import { Post, Comment } from 'src/post/entities/post.entity';
+import { Section } from './entities/section.entity';
+import { QuestionGroup } from './entities/questionGroup.entity';
+import { Answer } from './entities/answer.entity';
+
+@EntityRepository(Exam)
+export class ExamRepository extends Repository<Exam> {
+  /****Exams Methods for Public Users*** */
+  async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {
+    try {
+      const { search, subject, limit, offset } = filterExamDto;
+      const query = this.createQueryBuilder('exam')
+        .select('exam.id')
+        .addSelect('exam.isPublished')
+        .addSelect('exam.imageUrl')
+        .addSelect('exam.title')
+        .addSelect('exam.totalRating')
+        .addSelect('exam.ratingPeople')
+        .addSelect('exam.testTakers')
+        .addSelect('exam.description')
+        .addSelect('exam.updatedBy')
+        .addSelect('exam.timeAllowed')
+        .addSelect('exam.subject')
+        .where('exam.isPublished = :value', { value: true });
+      if (search)
+        query.andWhere(
+          'LOWER(exam.title) LIKE :search OR LOWER(exam.description) LIKE :search',
+          { search: `%${search.toLowerCase()}%` },
+        );
+      if (subject === 0 || subject) {
+        query.andWhere('exam.subject = :subjectId', { subjectId: subject });
+      }
+      query.orderBy('exam.updatedBy', 'DESC');
+      if (offset) query.offset(offset);
+      if (limit) query.limit(limit);
+      const exams = await query.getMany();
+      return exams;
+    } catch (e) {
+      console.log('error --- ', e);
+      throw new BadRequestException('Something went wrong.');
+    }
+  }
+
+  async getPublishedExam(examId: number): Promise<Exam> {
+    try {
+      const exam = await this.findOne({
+        where: { id: examId, isPublished: true },
+      });
+      delete exam.sections;
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      return exam;
+    } catch (e) {
+      throw new BadRequestException('Something went wrong.');
+    }
+  }
+
+  async getLatestExams(): Promise<Exam[]> {
+    try {
+      return await this.createQueryBuilder('exam')
+        .select('exam.id')
+        .addSelect('exam.isPublished')
+        .addSelect('exam.imageUrl')
+        .addSelect('exam.title')
+        .addSelect('exam.totalRating')
+        .addSelect('exam.ratingPeople')
+        .addSelect('exam.testTakers')
+        .addSelect('exam.description')
+        .addSelect('exam.updatedBy')
+        .addSelect('exam.timeAllowed')
+        .addSelect('exam.subject')
+        .where('exam.isPublished = :value', { value: true })
+        .orderBy('exam.updatedBy', 'DESC')
+        .limit(5)
+        .getMany();
+    } catch (e) {
+      throw new BadRequestException('Something went wrong.');
+    }
+  }
+
+  async getRelatedExams(examId: number): Promise<Exam[]> {
+    try {
+      const exam = await this.findOne(examId);
+      if (!exam) throw new NotFoundException();
+      else {
+        return await this.createQueryBuilder('exam')
+          .select('exam.id')
+          .addSelect('exam.isPublished')
+          .addSelect('exam.imageUrl')
+          .addSelect('exam.title')
+          .addSelect('exam.totalRating')
+          .addSelect('exam.ratingPeople')
+          .addSelect('exam.testTakers')
+          .addSelect('exam.description')
+          .addSelect('exam.updatedBy')
+          .addSelect('exam.timeAllowed')
+          .addSelect('exam.subject')
+          .where('exam.subject = :subject', { subject: exam.subject })
+          .andWhere('exam.isPublished = :value', { value: true })
+          .orderBy('exam.updatedBy', 'DESC')
+          .limit(5)
+          .getMany();
+      }
+    } catch (e) {
+      throw new BadRequestException('Something went wrong.');
+    }
+  }
+
+  async getSubjects(): Promise<any> {
+    return Subjects;
+  }
+  /****Exams Methods for Owner*** */
+  async getExams(user: User): Promise<Exam[]> {
+    const exams = await this.createQueryBuilder('exam')
+      .select('exam.id')
+      .addSelect('exam.isPublished')
+      .addSelect('exam.title')
+      .addSelect('exam.imageUrl')
+      .addSelect('exam.totalRating')
+      .addSelect('exam.ratingPeople')
+      .addSelect('exam.testTakers')
+      .addSelect('exam.description')
+      .addSelect('exam.updatedBy')
+      .addSelect('exam.timeAllowed')
+      .addSelect('exam.subject')
+      .where('exam.ownerId = :userId', { userId: user.id })
+      .orderBy('exam.updatedBy', 'DESC')
+      .getMany();
+    return exams;
+  }
+
+  async createExam(createExamDto: CreateExamDto, user: User): Promise<Exam[]> {
+    const { title, description, timeAllowed, subject, imageUrl } =
+      createExamDto;
+    const exam = new Exam();
+    if (imageUrl) exam.imageUrl = imageUrl;
+    exam.title = title;
+    exam.description = description;
+    exam.owner = user;
+    exam.timeAllowed = timeAllowed;
+    exam.subject = subject;
+    await exam.save();
+    return await this.getExams(user);
+  }
+
+  async getExam(examId: number, user: User): Promise<Exam> {
+    const exam = await this.createQueryBuilder('exam')
+      .leftJoinAndSelect('exam.sections', 'section')
+      .where('exam.id = :examId', { examId })
+      .andWhere('exam.ownerId = :ownerId', { ownerId: user.id })
+      .getOne();
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    if (exam.ownerId !== user.id)
+      throw new NotFoundException('You are not permitted');
+    return exam;
+  }
+
+  async updateExam(
+    updatedExamDto: UpdateExamDto,
+    examId: number,
+    user: User,
+  ): Promise<Exam[]> {
+    const { title, description, imageUrl } = updatedExamDto;
+    const exam = await this.getExam(examId, user);
+    if (title) exam.title = title;
+    if (description) exam.description = description;
+    if (imageUrl) exam.imageUrl = imageUrl;
+    await exam.save();
+    return await this.getExams(user);
+  }
+
+  async togglePublishExam(examId: number, user: User): Promise<Exam[]> {
+    try {
+      const exam = await this.findOne({
+        where: { id: examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      else {
+        exam.isPublished = !exam.isPublished;
+        await exam.save();
+        return await this.getExams(user);
+      }
+    } catch (e) {
+      throw new NotFoundException('Exam Not Found');
+    }
+  }
+
+  async removeExam(examId: number, user: User): Promise<Exam[]> {
+    const exam = await this.getExam(examId, user);
+    const sections = await getConnection()
+      .createQueryBuilder()
+      .select('section.id')
+      .from(Section, 'section')
+      .where('section.examId =:examId', { examId })
+      .getMany();
+    if (sections.length > 0) {
+      const sectionIds = sections.map((section) => section.id);
+      const questionGroups = await getConnection()
+        .createQueryBuilder()
+        .select('id')
+        .from(QuestionGroup, 'questionGroup')
+        .where('questionGroup.sectionId IN (:...sectionIds)', {
+          sectionIds: [...sectionIds],
+        })
+        .execute();
+      if (questionGroups.length > 0) {
+        const questionGroupIds = questionGroups.map(
+          (questionGroup) => questionGroup.id,
+        );
+        const questions = await getConnection()
+          .createQueryBuilder()
+          .select('id')
+          .from(Question, 'question')
+          .where('question.questionGroupId IN (:...questionGroupIds)', {
+            questionGroupIds: [...questionGroupIds],
+          })
+          .execute();
+        if (questions.length > 0) {
+          const questionIds = questions.map((question) => question.id);
+
+          await getConnection()
+            .createQueryBuilder()
+            .delete()
+            .from(Answer)
+            .where('questionId IN (:...questionIds)', {
+              questionIds: [...questionIds],
+            })
+            .execute();
+
+          await getConnection()
+            .createQueryBuilder()
+            .delete()
+            .from(Question)
+            .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
+            .execute();
+        }
+        await getConnection()
+          .createQueryBuilder()
+          .delete()
+          .from(QuestionGroup)
+          .where('id IN (:...questionGroupIds)', {
+            questionGroupIds: [...questionGroupIds],
+          })
+          .execute();
+      }
+
+      await getConnection()
+        .createQueryBuilder()
+        .delete()
+        .from(Section)
+        .where('id IN (:...sectionIds)', { sectionIds: [...sectionIds] })
+        .execute();
+    }
+
+    await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(TestEnrollment)
+      .where('examId =:examId', { examId })
+      .execute();
+
+    const posts = await getConnection()
+      .createQueryBuilder()
+      .select('id')
+      .from(Post, 'post')
+      .where('post.examId =:examId', { examId })
+      .getMany();
+
+    if (posts.length > 0) {
+      const postIds = posts.map((post) => post.id);
+      await getConnection()
+        .createQueryBuilder()
+        .delete()
+        .from(Comment)
+        .where('postId IN (:...postIds)', { postIds: [...postIds] })
+        .execute();
+
+      await getConnection()
+        .createQueryBuilder()
+        .delete()
+        .from(Post)
+        .where('examId =:examId', { examId })
+        .execute();
+    }
+
+    await this.delete(examId);
+    return await this.getExams(user);
+  }
+}

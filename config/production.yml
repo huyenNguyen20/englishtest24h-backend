@@ -1,0 +1,7 @@
+client:
+  url: 'http://englishtest24.s3-website-ap-southeast-1.amazonaws.com'
+server:
+  url: 'http://englishtest24-env.eba-ypg6y9pg.ap-southeast-1.elasticbeanstalk.com'
+
+db:
+  synchronize: false

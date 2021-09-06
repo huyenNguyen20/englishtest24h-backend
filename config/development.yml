@@ -1,0 +1,13 @@
+server:
+  port: 3000
+  url: 'http://localhost:3000'
+
+client:
+  port: 3001
+  url: 'http://localhost:3001'
+  
+db:
+  host: 'localhost'
+  username: 'root'
+  password: 'blueOcean@2809'
+  synchronize: true
