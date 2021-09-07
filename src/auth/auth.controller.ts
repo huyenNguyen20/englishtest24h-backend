@@ -72,7 +72,7 @@ export class AuthController {
     });
     return res
       .status(HttpStatus.OK)
-      .redirect(`${config.get('client.url')}/oAuthRedirect`);
+      .redirect(`${config.get('client.url')}`);
   }
 
   @ApiOperation({ summary: 'Send Email for Resetting Password' })
