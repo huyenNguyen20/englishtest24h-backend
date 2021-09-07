@@ -358,7 +358,6 @@ export class ExamController {
     @Param('sectionId', ParseIntPipe) sectionId: number,
     @getUser() user: User,
   ): Promise<QuestionGroup[]> {
-    console.log("CreateQuestionGroupDto", createQuestionGroupDto);
     return await this.examService.createQuestionGroup(
       createQuestionGroupDto,
       examId,
