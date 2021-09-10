@@ -27,7 +27,6 @@ import { User } from 'src/auth/entities/user.entity';
 import { ExamValidationPipe } from './pipes/exam.pipe';
 import {
   FileFieldsInterceptor,
-  FileInterceptor,
 } from '@nestjs/platform-express';
 import { Exam } from './entities/exam.entity';
 import { ExamFilterValidationPipe } from './pipes/exam-filter.pipe';
