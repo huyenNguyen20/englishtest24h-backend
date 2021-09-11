@@ -5,7 +5,6 @@ import {
   Column,
   ManyToOne,
   OneToMany,
-  JoinTable,
 } from 'typeorm';
 import { Section } from './section.entity';
 import { Question } from './question.entity';

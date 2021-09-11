@@ -27,6 +27,7 @@ import { JwtPayload } from './jwtPayload.interface';
 import { Express } from 'express';
 import { ContactUsFormDto } from './dto/contactUsForm.dto';
 import * as config from 'config';
+import axios from 'axios';
 
 @ApiTags('Authentication and User Endpoints')
 @Controller('auth')
@@ -70,9 +71,7 @@ export class AuthController {
     res.cookie('nest-cookie', token, {
       expires: new Date(Date.now() + 60 * 60 * 1000),
     });
-    return res
-      .status(HttpStatus.OK)
-      .redirect(`${config.get('client.url')}`);
+    return res.status(HttpStatus.OK).redirect(`${config.get('client.url')}`);
   }
 
   @ApiOperation({ summary: 'Send Email for Resetting Password' })
@@ -92,19 +91,12 @@ export class AuthController {
         message: "Account associated to the email doesn't exist.",
       });
     }
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD,
-      },
-    });
-    const mailOptionToUsers = {
-      from: 'My Todo',
-      to: email,
-      subject: 'Reset Password for My Todo Account',
-      html: `
+
+    const body = {
+      senderEmail: 'englishtest24@gmail.com',
+      recipientEmail: email,
+      subject: 'Reset Password for englishtest24 Account',
+      htmlMessage: `
             <p style="font-size: 16px">Thank you for sending the message! </p>
             <p style="font-size: 16px">Please click the following link for password reset: </p>
             <p style="font-size: 16px">${config.get(
@@ -114,14 +106,18 @@ export class AuthController {
             <p style="font-size: 16px">englishtest24 </p>
             `,
     };
-    transporter.sendMail(mailOptionToUsers, (err) => {
-      if (err) return res.send({ message: err.toString() });
-      else
+
+    try {
+      const resp = await axios.post(config.get('sendEmail').url, body);
+      if (resp.status === 200)
         return res.send({
           message:
             'Reset password link was sent to your email. Please check your email!',
         });
-    });
+      else throw new Error('Something went wrong. Please try again!');
+    } catch (err) {
+      return res.send({ message: err.message || err.toString() });
+    }
   }
 
   @ApiOperation({ summary: 'Reset Password' })
@@ -194,19 +190,11 @@ export class AuthController {
     @Response() res,
   ) {
     const { email, name, message } = contactUsForm;
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD,
-      },
-    });
-    const mailOptionToUsers = {
-      from: 'My Todo',
-      to: 'nguyendieuhuyen2809@gmail.com',
+    const body = {
+      senderEmail: 'englishtest24@gmail.com',
+      recipientEmail: 'nguyendieuhuyen2809@gmail.com',
       subject: 'Message From User',
-      html: `
+      htmlMessage: `
             <p style="font-size: 16px">User Message </p>
             <p style="font-size: 16px">User Name: ${name} </p>
             <p style="font-size: 16px">User Email: ${email} </p>
@@ -215,12 +203,15 @@ export class AuthController {
             <p style="font-size: 16px">englishtest24 </p>
             `,
     };
-    transporter.sendMail(mailOptionToUsers, (err) => {
-      if (err) return res.send({ message: err.toString() });
-      else
+    try {
+      const resp = await axios.post(config.get('sendEmail').url, body);
+      if (resp.status === 200)
         return res.send({
           message: 'Your message has been sent successfully!',
         });
-    });
+      else throw new Error('Something went wrong. Please try again!');
+    } catch (err) {
+      return res.send({ message: err.message || err.toString() });
+    }
   }
 }

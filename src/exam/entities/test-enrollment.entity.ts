@@ -33,10 +33,10 @@ export class TestEnrollment extends BaseEntity {
   @Column({ default: 0 })
   timeTaken: number;
 
-  @Column("longtext")
+  @Column('longtext')
   answerObj: string;
 
-  @Column("longtext")
+  @Column('longtext')
   sectionsObj: string;
 
   @UpdateDateColumn()

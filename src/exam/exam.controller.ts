@@ -15,19 +15,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { ExamService } from './exam.service';
-import {
-  CreateExamDto,
-  UpdateExamDto,
-  FilterExamDto,
-} from './dto';
+import { CreateExamDto, UpdateExamDto, FilterExamDto } from './dto';
 // import { examtatusValidationPipe } from './pipes/task-status-validation.pipe';
 import { AuthGuard } from '@nestjs/passport';
 import { getUser } from 'src/auth/decorator/getUser.decorator';
 import { User } from 'src/auth/entities/user.entity';
 import { ExamValidationPipe } from './pipes/exam.pipe';
-import {
-  FileFieldsInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Exam } from './entities/exam.entity';
 import { ExamFilterValidationPipe } from './pipes/exam-filter.pipe';
 import { Section } from './entities/section.entity';
@@ -115,27 +109,12 @@ export class ExamController {
 
   @Post()
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
+  @UseInterceptors(FileFieldsInterceptor([]))
   async createExam(
-    @UploadedFiles() files,
     @Body(new ExamValidationPipe()) createExamDto: CreateExamDto,
     @getUser() user: User,
   ): Promise<Exam[]> {
-    if (
-      files &&
-      files.image &&
-      !files.image[0].originalname.toLowerCase().match(/\.(jpg|jpeg|gif|png)/)
-    )
-      throw new BadRequestException('Must be An Image File');
-    let createExam = {};
-    let imageUrl;
-    if (files && files.image) {
-      imageUrl = `${config.get('server.url')}/examsFiles/${
-        files.image[0].filename
-      }`;
-      createExam = { ...createExamDto, imageUrl };
-    } else createExam = { ...createExamDto };
-    return await this.examService.createExam(createExam, user);
+    return await this.examService.createExam(createExamDto, user);
   }
 
   @Get('/:examId')
@@ -149,28 +128,13 @@ export class ExamController {
 
   @Put('/:examId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
+  @UseInterceptors(FileFieldsInterceptor([]))
   async updateExam(
-    @UploadedFiles() files,
     @Body(new ExamValidationPipe()) updateExamDto: UpdateExamDto,
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
   ): Promise<Exam[]> {
-    if (
-      files &&
-      files.image &&
-      !files.image[0].originalname.toLowerCase().match(/\.(jpg|jpeg|gif|png)/)
-    )
-      throw new BadRequestException('Must be An Image File');
-    let updateExam = {};
-    let imageUrl;
-    if (files && files.image) {
-      imageUrl = `${config.get('server.url')}/examsFiles/${
-        files.image[0].filename
-      }`;
-      updateExam = { ...updateExamDto, imageUrl };
-    } else updateExam = { ...updateExamDto };
-    return await this.examService.updateExam(updateExam, examId, user);
+    return await this.examService.updateExam(updateExamDto, examId, user);
   }
 
   @Put('/:examId/published')
@@ -206,54 +170,13 @@ export class ExamController {
 
   @Post('/:examId/sections')
   @UseGuards(AuthGuard())
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'image', maxCount: 1 },
-      { name: 'audio', maxCount: 1 },
-    ]),
-  )
+  @UseInterceptors(FileFieldsInterceptor([]))
   async createSection(
-    @UploadedFiles() files,
     @Body(new ValidationPipe()) createSectionDto: CreateSectionDto,
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
   ) {
-    if (
-      files &&
-      files.image &&
-      !files.image[0].originalname.toLowerCase().match(/\.(jpg|jpeg|gif|png)/)
-    )
-      throw new BadRequestException('Must be An Image File');
-    if (
-      files &&
-      files.audio &&
-      !files.audio[0].originalname.toLowerCase().match(/\.(wav|mp3)/)
-    )
-      throw new BadRequestException('Must be An Audio File');
-    let createSection = {};
-    let imageUrl, audioUrl;
-    if (files && files.image && files.audio) {
-      imageUrl = `${config.get('server.url')}/examsFiles/${
-        files.image[0].filename
-      }`;
-      audioUrl = `${config.get('server.url')}/examsFiles/${
-        files.audio[0].filename
-      }`;
-      createSection = { ...createSectionDto, imageUrl, audioUrl };
-    } else if (files && files.image && !files.audio) {
-      imageUrl = `${config.get('server.url')}/examsFiles/${
-        files.image[0].filename
-      }`;
-      createSection = { ...createSectionDto, imageUrl };
-    } else if (files && !files.image && files.audio) {
-      audioUrl = `${config.get('server.url')}/examsFiles/${
-        files.audio[0].filename
-      }`;
-      createSection = { ...createSectionDto, audioUrl };
-    } else {
-      createSection = { ...createSectionDto };
-    }
-    return await this.examService.createSection(createSection, examId, user);
+    return await this.examService.createSection(createSectionDto, examId, user);
   }
 
   @Get('/:examId/sections/:sectionId')
@@ -268,56 +191,15 @@ export class ExamController {
 
   @Put('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'image', maxCount: 1 },
-      { name: 'audio', maxCount: 1 },
-    ]),
-  )
+  @UseInterceptors(FileFieldsInterceptor([]))
   async updateSection(
-    @UploadedFiles() files,
     @Body(new ValidationPipe()) updateSectionDto: UpdateSectionDto,
     @Param('examId', ParseIntPipe) examId: number,
     @Param('sectionId', ParseIntPipe) sectionId: number,
     @getUser() user: User,
   ): Promise<Section> {
-    if (
-      files &&
-      files.image &&
-      !files.image[0].originalname.toLowerCase().match(/\.(jpg|jpeg|gif|png)/)
-    )
-      throw new BadRequestException('Must be An Image File');
-    if (
-      files &&
-      files.audio &&
-      !files.audio[0].originalname.toLowerCase().match(/\.(wav|mp3)/)
-    )
-      throw new BadRequestException('Must be An Audio File');
-    let updateSection = {};
-    let imageUrl, audioUrl;
-    if (files && files.image && files.audio) {
-      imageUrl = `${config.get('server.url')}/examsFiles/${
-        files.image[0].filename
-      }`;
-      audioUrl = `${config.get('server.url')}/examsFiles/${
-        files.audio[0].filename
-      }`;
-      updateSection = { ...updateSectionDto, imageUrl, audioUrl };
-    } else if (files && files.image && !files.audio) {
-      imageUrl = `${config.get('server.url')}/examsFiles/${
-        files.image[0].filename
-      }`;
-      updateSection = { ...updateSectionDto, imageUrl };
-    } else if (files && !files.image && files.audio) {
-      audioUrl = `${config.get('server.url')}/examsFiles/${
-        files.audio[0].filename
-      }`;
-      updateSection = { ...updateSectionDto, audioUrl };
-    } else {
-      updateSection = { ...updateSectionDto };
-    }
     return await this.examService.updateSection(
-      updateSection,
+      updateSectionDto,
       examId,
       sectionId,
       user,

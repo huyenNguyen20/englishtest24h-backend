@@ -21,6 +21,8 @@ import { UpdateQuestionGroupDto } from './dto/update-questionGroup.dto';
 import { Answer } from './entities/answer.entity';
 import { UpdateAnswerDto } from './dto/update-answer.dto';
 import { getConnection } from 'typeorm';
+import axios from 'axios';
+import * as config from 'config';
 
 @Injectable()
 export class ExamService {
@@ -118,7 +120,11 @@ export class ExamService {
     const exam = await this.getExam(examId, user);
     //1. Remove corresponding images
     if (exam && imageUrl && Boolean(exam.imageUrl)) {
-      this.deleteFile(exam.imageUrl);
+      const filename = exam.imageUrl.substring(
+        exam.imageUrl.lastIndexOf('/') + 1,
+      );
+      const url = `${config.get('deleteImage').url}/${filename}`;
+      await axios.delete(url);
     }
     //2. Update Exam
     return await this.examRepository.updateExam(updatedExamDto, examId, user);
@@ -133,7 +139,11 @@ export class ExamService {
       const exam = await this.getExam(examId, user);
       //1. Remove corresponding images
       if (exam && Boolean(exam.imageUrl)) {
-        this.deleteFile(exam.imageUrl);
+        const filename = exam.imageUrl.substring(
+          exam.imageUrl.lastIndexOf('/') + 1,
+        );
+        const url = `${config.get('deleteImage').url}/${filename}`;
+        await axios.delete(url);
       }
       //2. Remove  all corresponding image and audio files in sections
       const sections = await this.getSections(examId, user);
@@ -193,10 +203,18 @@ export class ExamService {
       user,
     );
     if (section && imageUrl && Boolean(section.imageUrl)) {
-      this.deleteFile(section.imageUrl);
+      const filename = section.imageUrl.substring(
+        section.imageUrl.lastIndexOf('/') + 1,
+      );
+      const url = `${config.get('deleteImage').url}/${filename}`;
+      await axios.delete(url);
     }
     if (section && audioUrl && Boolean(section.audioUrl)) {
-      this.deleteFile(section.audioUrl);
+      const filename = section.audioUrl.substring(
+        section.audioUrl.lastIndexOf('/') + 1,
+      );
+      const url = `${config.get('deleteAudio').url}/${filename}`;
+      await axios.delete(url);
     }
     //2. Update the section
     return await this.sectionRepository.updateSection(
@@ -219,10 +237,18 @@ export class ExamService {
       user,
     );
     if (section && Boolean(section.imageUrl)) {
-      this.deleteFile(section.imageUrl);
+      const filename = section.imageUrl.substring(
+        section.imageUrl.lastIndexOf('/') + 1,
+      );
+      const url = `${config.get('deleteImage').url}/${filename}`;
+      await axios.delete(url);
     }
     if (section && Boolean(section.audioUrl)) {
-      this.deleteFile(section.audioUrl);
+      const filename = section.audioUrl.substring(
+        section.audioUrl.lastIndexOf('/') + 1,
+      );
+      const url = `${config.get('deleteAudio').url}/${filename}`;
+      await axios.delete(url);
     }
     //2. Remove the section
     await this.sectionRepository.removeSection(examId, sectionId, user);
@@ -261,7 +287,7 @@ export class ExamService {
     //Create questions and answers
     const newQuestions = [];
     for (const q of questions) {
-      let question = await this.createQuestion(q, questionGroup.id, user);
+      const question = await this.createQuestion(q, questionGroup.id, user);
       newQuestions.push(question);
     }
 
@@ -444,22 +470,5 @@ export class ExamService {
   ): Promise<Answer[]> {
     await this.answerRepository.removeAnswer(answerId, user);
     return await this.getAnswers(questionId, user);
-  }
-
-  /****************Helper Methods******************* */
-  deleteFile(url: string) {
-    const fs = require('fs');
-    const fileName = url.split('/');
-    try {
-      fs.unlinkSync(
-        join(
-          process.cwd(),
-          `public/examsFiles/${fileName[fileName.length - 1]}`,
-        ),
-      );
-      console.log('File was deleted');
-    } catch (e) {
-      console.log('File Deletion Error: Something went wrong');
-    }
   }
 }

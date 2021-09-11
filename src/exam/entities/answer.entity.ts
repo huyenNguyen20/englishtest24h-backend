@@ -1,10 +1,8 @@
 import {
   BaseEntity,
   Entity,
-  PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  OneToMany,
   PrimaryColumn,
 } from 'typeorm';
 import { Question } from './question.entity';

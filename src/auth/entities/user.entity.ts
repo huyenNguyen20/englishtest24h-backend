@@ -14,7 +14,7 @@ import { TestEnrollment } from 'src/exam/entities/test-enrollment.entity';
 @Unique(['email'])
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
-  id: number; 
+  id: number;
 
   @Column()
   OAuthId: string;

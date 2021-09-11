@@ -5,6 +5,8 @@ import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
 import { Exam } from './entities/exam.entity';
 import { TestEnrollment } from './entities/test-enrollment.entity';
 import { join } from 'path';
+import * as config from 'config';
+import axios from 'axios';
 
 @EntityRepository(TestEnrollment)
 export class TestEnrollmentRepository extends Repository<TestEnrollment> {
@@ -74,12 +76,15 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       if (subject === 3) {
         const urlArr = [];
         const answers = JSON.parse(enrollment.answerObj);
-        if(Array.isArray(answers) ){
-          answers.forEach((a) => {
-            if (a.userAnswer[0]) urlArr.push(a.userAnswer[0]);
-          });
+        for (const a in answers) {
+          if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
+            urlArr.push(answers[a].userAnswer[0]);
         }
-        urlArr.forEach((url) => this.deleteFile(url));
+        for (const url of urlArr) {
+          const filename = url.substring(url.lastIndexOf('/') + 1);
+          const audioPath = `${config.get('deleteAudio').url}/${filename}`;
+          await axios.delete(audioPath);
+        }
       }
       enrollment.timeTaken++;
       enrollment.score = score;
@@ -122,23 +127,6 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       return enrollment;
     } catch (e) {
       throw new NotFoundException("You haven't enrolled in the exam");
-    }
-  }
-
-  /****************Helper Methods******************* */
-  deleteFile(url: string) {
-    const fs = require('fs');
-    const fileName = url.split('/');
-    try {
-      fs.unlinkSync(
-        join(
-          process.cwd(),
-          `public/examsFiles/${fileName[fileName.length - 1]}`,
-        ),
-      );
-      console.log('File was deleted');
-    } catch (e) {
-      console.log('File Deletion Error: Something went wrong');
     }
   }
 }

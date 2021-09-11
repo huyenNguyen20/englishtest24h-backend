@@ -75,21 +75,4 @@ export class TestEnrollmentController {
   ): Promise<TestEnrollment> {
     return await this.testEnrollmentService.getExamResult(enrollmentId);
   }
-
-  @Post('/:examId/audio')
-  @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([{ name: 'audio', maxCount: 1 }]))
-  async uploadSpeakingAudio(@UploadedFiles() files) {
-    if (
-      files &&
-      files.audio &&
-      !files.audio[0].originalname.toLowerCase().match(/\.(wav|mp3)/)
-    )
-      throw new BadRequestException('Must be An Audio File');
-    if (files && files.audio)
-      return `${config.get('server.url')}/examsFiles/${
-        files.audio[0].filename
-      }`;
-    else return null;
-  }
 }
