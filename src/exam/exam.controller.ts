@@ -9,9 +9,6 @@ import {
   ParseIntPipe,
   UseGuards,
   ValidationPipe,
-  UseInterceptors,
-  UploadedFiles,
-  BadRequestException,
   Query,
 } from '@nestjs/common';
 import { ExamService } from './exam.service';
@@ -21,7 +18,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { getUser } from 'src/auth/decorator/getUser.decorator';
 import { User } from 'src/auth/entities/user.entity';
 import { ExamValidationPipe } from './pipes/exam.pipe';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Exam } from './entities/exam.entity';
 import { ExamFilterValidationPipe } from './pipes/exam-filter.pipe';
 import { Section } from './entities/section.entity';
@@ -109,7 +105,6 @@ export class ExamController {
 
   @Post()
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
   async createExam(
     @Body(new ExamValidationPipe()) createExamDto: CreateExamDto,
     @getUser() user: User,
@@ -128,7 +123,6 @@ export class ExamController {
 
   @Put('/:examId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
   async updateExam(
     @Body(new ExamValidationPipe()) updateExamDto: UpdateExamDto,
     @Param('examId', ParseIntPipe) examId: number,
@@ -170,7 +164,6 @@ export class ExamController {
 
   @Post('/:examId/sections')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
   async createSection(
     @Body(new ValidationPipe()) createSectionDto: CreateSectionDto,
     @Param('examId', ParseIntPipe) examId: number,
@@ -191,7 +184,6 @@ export class ExamController {
 
   @Put('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
   async updateSection(
     @Body(new ValidationPipe()) updateSectionDto: UpdateSectionDto,
     @Param('examId', ParseIntPipe) examId: number,

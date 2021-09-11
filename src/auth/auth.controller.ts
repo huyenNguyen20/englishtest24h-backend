@@ -154,28 +154,12 @@ export class AuthController {
   })
   @Post('/profile')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileInterceptor('userAvatar'))
   async editProfile(
     @getUser() user: User,
-    @UploadedFile() file: Express.Multer.File,
     @Body(new ValidationPipe()) updateProfile: ProfileDto,
     @Response() res,
   ) {
-    const updates = {
-      avatarUrl: '',
-      firstName: undefined,
-      lastName: undefined,
-      email: undefined,
-    };
-    if (file)
-      updates.avatarUrl = `${config.get('server.url')}/usersFile/images/${
-        file.filename
-      }`;
-    const { firstName, lastName, email } = updateProfile;
-    updates.firstName = firstName;
-    updates.lastName = lastName;
-    updates.email = email;
-    const updatedUser = await this.authService.updateProfile(user, updates);
+    const updatedUser = await this.authService.updateProfile(user, updateProfile);
     return res.status(200).json(updatedUser);
   }
 
