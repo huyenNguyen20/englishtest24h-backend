@@ -10,6 +10,7 @@ import {
   UseGuards,
   ValidationPipe,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ExamService } from './exam.service';
 import { CreateExamDto, UpdateExamDto, FilterExamDto } from './dto';
@@ -29,6 +30,7 @@ import { QuestionGroupValidationPipe } from './pipes/questionGroup.pipe';
 import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 import * as config from 'config';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @Controller('exams')
 export class ExamController {
@@ -105,6 +107,7 @@ export class ExamController {
 
   @Post()
   @UseGuards(AuthGuard())
+  @UseInterceptors(FileFieldsInterceptor([]))
   async createExam(
     @Body(new ExamValidationPipe()) createExamDto: CreateExamDto,
     @getUser() user: User,
@@ -123,6 +126,7 @@ export class ExamController {
 
   @Put('/:examId')
   @UseGuards(AuthGuard())
+  @UseInterceptors(FileFieldsInterceptor([]))
   async updateExam(
     @Body(new ExamValidationPipe()) updateExamDto: UpdateExamDto,
     @Param('examId', ParseIntPipe) examId: number,
@@ -164,6 +168,7 @@ export class ExamController {
 
   @Post('/:examId/sections')
   @UseGuards(AuthGuard())
+  @UseInterceptors(FileFieldsInterceptor([]))
   async createSection(
     @Body(new ValidationPipe()) createSectionDto: CreateSectionDto,
     @Param('examId', ParseIntPipe) examId: number,
@@ -184,6 +189,7 @@ export class ExamController {
 
   @Put('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
+  @UseInterceptors(FileFieldsInterceptor([]))
   async updateSection(
     @Body(new ValidationPipe()) updateSectionDto: UpdateSectionDto,
     @Param('examId', ParseIntPipe) examId: number,

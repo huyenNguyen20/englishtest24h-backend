@@ -13,7 +13,7 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
 import { getUser } from './decorator/getUser.decorator';
 import { CreateUserDto } from './dto/createUser.dto';
@@ -152,6 +152,7 @@ export class AuthController {
     status: 200,
     description: '{avatarUrl,email,firstName,lastName}',
   })
+  @UseInterceptors(FileFieldsInterceptor([]))
   @Post('/profile')
   @UseGuards(AuthGuard())
   async editProfile(
