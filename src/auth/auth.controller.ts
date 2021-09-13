@@ -71,7 +71,7 @@ export class AuthController {
     res.cookie('nest-cookie', token, {
       expires: new Date(Date.now() + 60 * 60 * 1000),
     });
-    return res.status(HttpStatus.OK).redirect(`${config.get('client.url')}`);
+    return res.status(HttpStatus.OK).redirect(`${config.get('client.url')}/oAuthRedirect`);
   }
 
   @ApiOperation({ summary: 'Send Email for Resetting Password' })
