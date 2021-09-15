@@ -139,6 +139,7 @@ export class AuthController {
   @Get('/profile')
   @UseGuards(AuthGuard())
   async getProfile(@getUser() user: User, @Response() res) {
+
     return res.status(HttpStatus.OK).json({
       avatarUrl: user.avatarUrl,
       email: user.email,
@@ -152,9 +153,10 @@ export class AuthController {
     status: 200,
     description: '{avatarUrl,email,firstName,lastName}',
   })
-  @UseInterceptors(FileFieldsInterceptor([]))
+  
   @Post('/profile')
   @UseGuards(AuthGuard())
+  @UseInterceptors(FileFieldsInterceptor([]))
   async editProfile(
     @getUser() user: User,
     @Body(new ValidationPipe()) updateProfile: ProfileDto,
