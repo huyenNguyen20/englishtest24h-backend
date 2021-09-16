@@ -13,14 +13,25 @@ import { Answer } from './entities/answer.entity';
 @EntityRepository(Exam)
 export class ExamRepository extends Repository<Exam> {
   /****Exams Methods for Public Users*** */
+  async getPublishedExamIndexes () : Promise<Partial<Exam>[]> {
+    return await this.createQueryBuilder('exam')
+                  .select("exam.id")
+                  .addSelect("exam.title")
+                  .addSelect("exam.subject")
+                  .where('exam.isPublished = :value', { value: true })
+                  .getMany();
+  }
+
   async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {
     try {
-      const { search, subject, limit, offset } = filterExamDto;
+      const { search, subject, authorId, limit, offset } = filterExamDto;
       const query = this.createQueryBuilder('exam')
         .select('exam.id')
         .addSelect('exam.isPublished')
         .addSelect('exam.imageUrl')
         .addSelect('exam.title')
+        .addSelect('exam.ownerId')
+        .addSelect('exam.authorName')
         .addSelect('exam.totalRating')
         .addSelect('exam.ratingPeople')
         .addSelect('exam.testTakers')
@@ -36,6 +47,9 @@ export class ExamRepository extends Repository<Exam> {
         );
       if (subject === 0 || subject) {
         query.andWhere('exam.subject = :subjectId', { subjectId: subject });
+      }
+      if (authorId === 0 || authorId) {
+        query.andWhere('exam.ownerId = :ownerId', { ownerId: authorId });
       }
       query.orderBy('exam.updatedBy', 'DESC');
       if (offset) query.offset(offset);
@@ -68,6 +82,8 @@ export class ExamRepository extends Repository<Exam> {
         .addSelect('exam.isPublished')
         .addSelect('exam.imageUrl')
         .addSelect('exam.title')
+        .addSelect('exam.authorName')
+        .addSelect('exam.ownerId')
         .addSelect('exam.totalRating')
         .addSelect('exam.ratingPeople')
         .addSelect('exam.testTakers')
@@ -100,7 +116,9 @@ export class ExamRepository extends Repository<Exam> {
           .addSelect('exam.description')
           .addSelect('exam.updatedBy')
           .addSelect('exam.timeAllowed')
+          .addSelect('exam.ownerId')
           .addSelect('exam.subject')
+          .addSelect('exam.authorName')
           .where('exam.subject = :subject', { subject: exam.subject })
           .andWhere('exam.isPublished = :value', { value: true })
           .orderBy('exam.updatedBy', 'DESC')
@@ -143,6 +161,7 @@ export class ExamRepository extends Repository<Exam> {
     exam.title = title;
     exam.description = description;
     exam.owner = user;
+    exam.authorName = `${user.firstName} ${user.lastName}`;
     exam.timeAllowed = timeAllowed;
     exam.subject = subject;
     await exam.save();

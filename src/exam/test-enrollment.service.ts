@@ -13,6 +13,9 @@ export class TestEnrollmentService {
     private testEnrollmentRepository: TestEnrollmentRepository,
     private examService: ExamService,
   ) {}
+  async getAllEnrollmentIndexes(): Promise<Partial<TestEnrollment>[]> {
+    return await this.testEnrollmentRepository.getAllEnrollmentIndexes();
+  }
   async getTestTakersScores(examId: number) {
     return await this.testEnrollmentRepository.getTestTakersScores(examId);
   }

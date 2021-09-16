@@ -11,6 +11,10 @@ export class FilterExamDto {
 
   @IsOptional()
   @IsNumber()
+  authorId: number;
+
+  @IsOptional()
+  @IsNumber()
   @IsPositive()
   limit: number;
 

@@ -64,6 +64,9 @@ export class Exam extends BaseEntity {
   @Column()
   ownerId: number;
 
+  @Column()
+  authorName: string;
+
   @OneToMany(
     (type) => TestEnrollment,
     (testEnrollment) => testEnrollment.exam,

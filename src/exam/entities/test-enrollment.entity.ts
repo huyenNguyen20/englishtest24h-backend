@@ -7,7 +7,6 @@ import {
   Column,
   ManyToOne,
   UpdateDateColumn,
-  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -20,6 +19,9 @@ export class TestEnrollment extends BaseEntity {
 
   @Column()
   examId: number;
+
+  @Column()
+  subjectId: number;
 
   @ManyToOne((type) => User, (user) => user.testErollments, { eager: false })
   student: User;

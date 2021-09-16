@@ -46,7 +46,9 @@ export class ExamService {
   /************************************* */
   /****Exam Services For Public Users*****/
   /************************************* */
-
+  async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
+    return await this.examRepository.getPublishedExamIndexes();
+  }
   async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {
     return await this.examRepository.getPublishedExams(filterExamDto);
   }

@@ -19,11 +19,15 @@ import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
 import { TestEnrollment } from './entities/test-enrollment.entity';
 import { TestEnrollmentValidationPipe } from './pipes/test-enrollment.pipe';
 import { TestEnrollmentService } from './test-enrollment.service';
-import * as config from 'config';
 
 @Controller('testEnrollment')
 export class TestEnrollmentController {
   constructor(private readonly testEnrollmentService: TestEnrollmentService) {}
+  @Get('/')
+  async getAllEnrollmentIndexes():Promise<Partial<TestEnrollment>[]>{
+    return await this.testEnrollmentService.getAllEnrollmentIndexes();
+  }
+
   @Get('/myTests')
   @UseGuards(AuthGuard())
   async getMyTests(@getUser() user: User): Promise<any> {

@@ -39,12 +39,15 @@ export class ExamController {
   /********************* */
   /***Exam Routes for Public Users***/
   /********************* */
-
   @Get('/published')
   async getPublishedExams(
     @Query(new ExamFilterValidationPipe()) filterExamDto: FilterExamDto,
   ): Promise<Exam[]> {
     return await this.examService.getPublishedExams(filterExamDto);
+  }
+  @Get('/published/indexes')
+  async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
+    return await this.examService.getPublishedExamIndexes();
   }
 
   @Get('/published/latest')
