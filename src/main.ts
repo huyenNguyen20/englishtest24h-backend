@@ -12,10 +12,10 @@ async function bootstrap() {
 
   //Bootstrap Swagger API
   const config = new DocumentBuilder()
-    .setTitle('Test Application')
-    .setDescription('Test Application description')
+    .setTitle('englishtest24')
+    .setDescription('englishtest24 description')
     .setVersion('1.0')
-    .addTag('Test Application')
+    .addTag('englishtest24 Application')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
@@ -31,10 +31,10 @@ async function bootstrap() {
     app.enableCors();
   } else {
     app.enableCors({
-      origin: process.env.CLIENT_URL,
+      origin: clientConfig.url,
     });
   }
 
-  await app.listen(serverConfig.port || process.env.PORT);
+  await app.listen(serverConfig.port);
 }
 bootstrap();

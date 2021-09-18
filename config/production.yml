@@ -3,11 +3,11 @@ server:
   url: 'http://localhost:3000'
 
 client:
-  port: 80
-  url: 'http://localhost:80'
+  port: 8080
+  url: 'http://localhost:8080'
 
 db:
-  host: 'englishtest24-db.cp9armlyndkz.ap-southeast-1.rds.amazonaws.com'
+  host: 'englishtest24db.cp9armlyndkz.ap-southeast-1.rds.amazonaws.com'
   username: 'root'
   password: 'blueOcean2809'
   synchronize: false
