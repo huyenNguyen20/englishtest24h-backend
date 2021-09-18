@@ -1,4 +1,3 @@
-import { Exam } from 'src/exam/entities/exam.entity';
 import {
   BaseEntity,
   Entity,

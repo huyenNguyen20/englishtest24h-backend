@@ -1,7 +1,13 @@
-client:
-  url: 'http://englishtest24.s3-website-ap-southeast-1.amazonaws.com'
 server:
-  url: 'http://englishtest24-env.eba-ypg6y9pg.ap-southeast-1.elasticbeanstalk.com'
+  port: 3000
+  url: 'http://localhost:3000'
+
+client:
+  port: 80
+  url: 'http://localhost:80'
 
 db:
+  host: 'englishtest24-db.cp9armlyndkz.ap-southeast-1.rds.amazonaws.com'
+  username: 'root'
+  password: 'blueOcean2809'
   synchronize: false

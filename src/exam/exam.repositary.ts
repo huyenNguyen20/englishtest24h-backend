@@ -13,13 +13,13 @@ import { Answer } from './entities/answer.entity';
 @EntityRepository(Exam)
 export class ExamRepository extends Repository<Exam> {
   /****Exams Methods for Public Users*** */
-  async getPublishedExamIndexes () : Promise<Partial<Exam>[]> {
+  async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.createQueryBuilder('exam')
-                  .select("exam.id")
-                  .addSelect("exam.title")
-                  .addSelect("exam.subject")
-                  .where('exam.isPublished = :value', { value: true })
-                  .getMany();
+      .select('exam.id')
+      .addSelect('exam.title')
+      .addSelect('exam.subject')
+      .where('exam.isPublished = :value', { value: true })
+      .getMany();
   }
 
   async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {

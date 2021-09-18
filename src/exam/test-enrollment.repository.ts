@@ -10,12 +10,12 @@ import axios from 'axios';
 
 @EntityRepository(TestEnrollment)
 export class TestEnrollmentRepository extends Repository<TestEnrollment> {
-  async getAllEnrollmentIndexes() : Promise<Partial<TestEnrollment>[]> {
+  async getAllEnrollmentIndexes(): Promise<Partial<TestEnrollment>[]> {
     return await this.createQueryBuilder('e')
-          .select("e.id")
-          .addSelect("e.examId")
-          .addSelect("e.subjectId")
-          .getMany();
+      .select('e.id')
+      .addSelect('e.examId')
+      .addSelect('e.subjectId')
+      .getMany();
   }
   async getTestTakersScores(examId: number) {
     try {

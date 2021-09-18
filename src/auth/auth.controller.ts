@@ -13,7 +13,10 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
-import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
 import { getUser } from './decorator/getUser.decorator';
 import { CreateUserDto } from './dto/createUser.dto';
@@ -71,7 +74,9 @@ export class AuthController {
     res.cookie('nest-cookie', token, {
       expires: new Date(Date.now() + 60 * 60 * 1000),
     });
-    return res.status(HttpStatus.OK).redirect(`${config.get('client.url')}/oAuthRedirect`);
+    return res
+      .status(HttpStatus.OK)
+      .redirect(`${config.get('client.url')}/oAuthRedirect`);
   }
 
   @ApiOperation({ summary: 'Send Email for Resetting Password' })
@@ -139,7 +144,6 @@ export class AuthController {
   @Get('/profile')
   @UseGuards(AuthGuard())
   async getProfile(@getUser() user: User, @Response() res) {
-
     return res.status(HttpStatus.OK).json({
       avatarUrl: user.avatarUrl,
       email: user.email,
@@ -153,7 +157,6 @@ export class AuthController {
     status: 200,
     description: '{avatarUrl,email,firstName,lastName}',
   })
-  
   @Post('/profile')
   @UseGuards(AuthGuard())
   @UseInterceptors(FileFieldsInterceptor([]))
@@ -162,7 +165,10 @@ export class AuthController {
     @Body(new ValidationPipe()) updateProfile: ProfileDto,
     @Response() res,
   ) {
-    const updatedUser = await this.authService.updateProfile(user, updateProfile);
+    const updatedUser = await this.authService.updateProfile(
+      user,
+      updateProfile,
+    );
     return res.status(200).json(updatedUser);
   }
 

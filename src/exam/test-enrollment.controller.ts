@@ -24,7 +24,7 @@ import { TestEnrollmentService } from './test-enrollment.service';
 export class TestEnrollmentController {
   constructor(private readonly testEnrollmentService: TestEnrollmentService) {}
   @Get('/')
-  async getAllEnrollmentIndexes():Promise<Partial<TestEnrollment>[]>{
+  async getAllEnrollmentIndexes(): Promise<Partial<TestEnrollment>[]> {
     return await this.testEnrollmentService.getAllEnrollmentIndexes();
   }
 

@@ -1,10 +1,4 @@
-import {
-  BaseEntity,
-  Entity,
-  Column,
-  ManyToOne,
-  PrimaryColumn,
-} from 'typeorm';
+import { BaseEntity, Entity, Column, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Question } from './question.entity';
 
 @Entity()

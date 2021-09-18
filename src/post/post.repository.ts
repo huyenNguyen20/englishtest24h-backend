@@ -4,7 +4,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
-import { Exam } from 'src/exam/entities/exam.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
