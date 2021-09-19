@@ -1,10 +1,10 @@
 server:
   port: 3000
-  url: 'http://localhost:3000'
+  url: 'https://ns1.englishtest24.tk'
 
 client:
-  port: 8080
-  url: 'http://localhost:8080'
+  port: 80
+  url: 'https://www.englishtest24.tk'
 
 db:
   host: 'englishtest24db.cp9armlyndkz.ap-southeast-1.rds.amazonaws.com'

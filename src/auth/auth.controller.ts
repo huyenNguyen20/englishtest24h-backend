@@ -71,12 +71,13 @@ export class AuthController {
     const { email } = user;
     const payload: JwtPayload = { email };
     const token = await this.jwtService.sign(payload);
-    res.cookie('nest-cookie', token, {
-      expires: new Date(Date.now() + 60 * 60 * 1000),
-    });
     return res
       .status(HttpStatus.OK)
-      .redirect(`${config.get('client.url')}/oAuthRedirect`);
+      .redirect(
+        `${config.get('client.url')}/oAuthRedirect?token=${encodeURIComponent(
+          token,
+        )}`,
+      );
   }
 
   @ApiOperation({ summary: 'Send Email for Resetting Password' })
