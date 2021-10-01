@@ -30,15 +30,8 @@ async function bootstrap() {
   if (process.env.NODE_ENV === 'development') {
     app.enableCors();
   } else {
-    var whitelist = ['https://www.englishtest24.tk', 'https://englishtest24.tk'];
     app.enableCors({
-      origin: (origin : string, callback : Function) => {
-        if(whitelist.includes(origin)){
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"));
-        }  
-      }
+      origin: clientConfig.url
     });
   }
 

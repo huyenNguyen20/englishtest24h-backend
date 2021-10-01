@@ -2,10 +2,6 @@
 db:
   type: 'mysql'
   port: '3306'
-  database: 'englishtest24'
-  host: 'englishtest24db.cp9armlyndkz.ap-southeast-1.rds.amazonaws.com'
-  username: 'root'
-  password: 'blueOcean2809'
   synchronize: false
   
 jwt:

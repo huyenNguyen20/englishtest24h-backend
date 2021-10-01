@@ -1,14 +1,15 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as config from 'config';
-
 const dbconfig = config.get('db');
+
+require('dotenv').config();
 export const TypeORMConfig: TypeOrmModuleOptions = {
   type: dbconfig.get('type'),
-  host: dbconfig.get('host'),
+  host: process.env.DATABASE_HOST,
   port: dbconfig.get('port'),
-  username: dbconfig.get('username'),
-  password: dbconfig.get('password'),
-  database: dbconfig.get('database'),
+  username: process.env.DATABASE_USERNAME,
+  password: process.env.DATABASE_PASSWORD,
+  database: process.env.DATABASE_DATABASE,
   autoLoadEntities: true,
-  synchronize: process.env.SYNCHRONIZE || dbconfig.get('synchronize'),
+  synchronize: dbconfig.get('synchronize'),
 };
