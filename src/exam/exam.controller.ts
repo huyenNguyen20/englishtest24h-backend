@@ -31,7 +31,9 @@ import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 import * as config from 'config';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Exams Endpoints')
 @Controller('exams')
 export class ExamController {
   constructor(private readonly examService: ExamService) {}
@@ -39,6 +41,8 @@ export class ExamController {
   /********************* */
   /***Exam Routes for Public Users***/
   /********************* */
+  @ApiOperation({ summary: 'Get Published Exams with / without filers' })
+  @ApiResponse({ status: 200, description: 'Exam Object Array' })
   @Get('/published')
   async getPublishedExams(
     @Query(new ExamFilterValidationPipe()) filterExamDto: FilterExamDto,
