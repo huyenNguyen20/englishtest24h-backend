@@ -4,7 +4,6 @@ import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
 import { Exam } from './entities/exam.entity';
 import { TestEnrollment } from './entities/test-enrollment.entity';
-import { join } from 'path';
 import * as config from 'config';
 import axios from 'axios';
 

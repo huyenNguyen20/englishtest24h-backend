@@ -31,7 +31,7 @@ async function bootstrap() {
     app.enableCors();
   } else {
     app.enableCors({
-      origin: clientConfig.url
+      origin: clientConfig.url,
     });
   }
 
