@@ -121,7 +121,7 @@ export class ExamService {
     const { imageUrl } = updatedExamDto;
     const exam = await this.getExam(examId, user);
     //1. Remove corresponding images
-    if (exam && imageUrl && Boolean(exam.imageUrl)) {
+    if (exam && Boolean(exam.imageUrl) && exam.imageUrl !== imageUrl) {
       const filename = exam.imageUrl.substring(
         exam.imageUrl.lastIndexOf('/') + 1,
       );
@@ -204,14 +204,14 @@ export class ExamService {
       sectionId,
       user,
     );
-    if (section && imageUrl && Boolean(section.imageUrl)) {
+    if (section && Boolean(section.imageUrl) && section.imageUrl !== imageUrl) {
       const filename = section.imageUrl.substring(
         section.imageUrl.lastIndexOf('/') + 1,
       );
       const url = `${config.get('deleteImage').url}/${filename}`;
       await axios.delete(url);
     }
-    if (section && audioUrl && Boolean(section.audioUrl)) {
+    if (section  && Boolean(section.audioUrl)  && section.audioUrl !== audioUrl) {
       const filename = section.audioUrl.substring(
         section.audioUrl.lastIndexOf('/') + 1,
       );
@@ -318,7 +318,18 @@ export class ExamService {
     user: User,
   ): Promise<QuestionGroup[]> {
     //Update questionGroup
-    const { questions } = updateQuestionGroupDto;
+    const { questions, imageUrl } = updateQuestionGroupDto;
+    const oldQuestionGroup = await this.getQuestionGroup(questionGroupId, user);
+    // Delete image of the question group
+    if (Boolean(oldQuestionGroup.imageUrl) && oldQuestionGroup.imageUrl !== imageUrl) {
+      const filename = oldQuestionGroup.imageUrl.substring(
+        oldQuestionGroup.imageUrl.lastIndexOf('/') + 1,
+      );
+      const url = `${config.get('deleteImage').url}/${filename}`;
+      await axios.delete(url);
+    }
+
+    // Update and get updated question group
     const questionGroup =
       await this.questionGroupRepository.updateQuestionGroup(
         updateQuestionGroupDto,
@@ -327,6 +338,18 @@ export class ExamService {
       );
 
     const questionIds = questionGroup.questions.map((question) => question.id);
+
+    //Delete image file of corresponding questions
+    for (let question of questionGroup.questions) {
+      if (Boolean(question.imageUrl)) {
+        const filename = question.imageUrl.substring(
+          question.imageUrl.lastIndexOf('/') + 1,
+        );
+        const url = `${config.get('deleteImage').url}/${filename}`;
+        await axios.delete(url);
+      }
+    }
+    
     if (questionIds.length > 0) {
       //console.log(questionIds);
       //Delete corresponding questions and answers
@@ -366,6 +389,31 @@ export class ExamService {
     questionGroupId: number,
     user: User,
   ): Promise<QuestionGroup[]> {
+    const questionGroup =
+    await this.questionGroupRepository.getQuestionGroup(
+      questionGroupId,
+      user,
+    );
+    // Delete image of the question group
+    if (Boolean(questionGroup.imageUrl)) {
+      const filename = questionGroup.imageUrl.substring(
+        questionGroup.imageUrl.lastIndexOf('/') + 1,
+      );
+      const url = `${config.get('deleteImage').url}/${filename}`;
+      await axios.delete(url);
+    }
+
+    //Delete image file of corresponding questions 
+      for (let question of questionGroup.questions) {
+        if (Boolean(question.imageUrl)) {
+          const filename = question.imageUrl.substring(
+            question.imageUrl.lastIndexOf('/') + 1,
+          );
+          const url = `${config.get('deleteImage').url}/${filename}`;
+          await axios.delete(url);
+        }
+      }
+
     await this.questionGroupRepository.removeQuestionGroup(
       questionGroupId,
       user,

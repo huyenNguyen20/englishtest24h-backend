@@ -20,13 +20,17 @@ export class SectionRepository extends Repository<Section> {
     exam: Exam,
     user: User,
   ): Promise<Section> {
-    const { title, audioUrl, imageUrl, htmlContent, transcript } =
+    const { title, audioUrl, imageUrl, htmlContent, directions, transcript } =
       createSectionDto;
     const s = new Section();
     s.title = title;
     if (audioUrl) s.audioUrl = audioUrl;
+    
     if (imageUrl) s.imageUrl = imageUrl;
+    else s.imageUrl = null;
+
     if (htmlContent) s.htmlContent = htmlContent;
+    if (directions) s.directions = directions;
     if (transcript) s.transcript = transcript;
     s.ownerId = user.id;
     s.exam = exam;
@@ -53,12 +57,17 @@ export class SectionRepository extends Repository<Section> {
     sectionId: number,
     user: User,
   ): Promise<Section> {
-    const { title, imageUrl, audioUrl, htmlContent, transcription } =
+    const { title, imageUrl, audioUrl, htmlContent, directions, transcription } =
       updateQuestionDto;
     const s = await this.getSection(examId, sectionId, user);
     if (title) s.title = title;
     if (audioUrl) s.audioUrl = audioUrl;
+    else s.audioUrl = null;
+
     if (imageUrl) s.imageUrl = imageUrl;
+    else s.imageUrl = null;
+
+    if (directions) s.directions = directions;
     if (htmlContent) s.htmlContent = htmlContent;
     if (transcription) s.transcript = transcription;
     await s.save();

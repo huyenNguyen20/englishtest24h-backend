@@ -29,7 +29,6 @@ import { UpdateQuestionGroupDto } from './dto/update-questionGroup.dto';
 import { QuestionGroupValidationPipe } from './pipes/questionGroup.pipe';
 import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
-import * as config from 'config';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 

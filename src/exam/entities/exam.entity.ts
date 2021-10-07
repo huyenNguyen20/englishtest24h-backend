@@ -32,6 +32,9 @@ export class Exam extends BaseEntity {
   @Column({ default: false })
   isPublished: boolean;
 
+  @Column('longtext', {default: null})
+  restrictedAccessList: string;
+
   @Column('longtext')
   description: string;
 

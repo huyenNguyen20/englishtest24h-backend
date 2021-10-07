@@ -17,18 +17,21 @@ export class QuestionRepository extends Repository<Question> {
     questionGroup: QuestionGroup,
     user: User,
   ): Promise<Question> {
-    const { score, question, order, minWords, positionId, htmlExplaination } =
+    const { score, question, order, minWords, imageUrl, htmlExplaination } =
       createQuestionDto;
     const q = new Question();
     q.score = score;
     if (question) q.question = question;
     if (htmlExplaination) q.htmlExplaination = htmlExplaination;
-    if (positionId) q.positionId = positionId;
+
+    if (imageUrl) q.imageUrl = imageUrl;
+    else q.imageUrl = null;
+
     if (minWords) q.minWords = minWords;
     q.questionGroup = questionGroup;
     q.questionGroupId = questionGroup.id;
     q.ownerId = user.id;
-    q.order = order;
+    if(order) q.order = order;
     await q.save();
     return q;
   }
@@ -47,14 +50,17 @@ export class QuestionRepository extends Repository<Question> {
     questionId: number,
     user: User,
   ): Promise<void> {
-    const { order, question, score, minWords, htmlExplaination, positionId } =
+    const { order, question, score, minWords, imageUrl, htmlExplaination} =
       updateQuestionDto;
     const q = await this.getQuestion(questionId, user);
 
     if (score) q.score = score;
     if (question) q.question = question;
     if (htmlExplaination) q.htmlExplaination = htmlExplaination;
-    if (positionId) q.positionId = positionId;
+
+    if (imageUrl) q.imageUrl = imageUrl;
+    else q.imageUrl = null;
+
     if (minWords) q.minWords = minWords;
     if (order) q.order = order;
     await q.save();

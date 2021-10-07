@@ -29,7 +29,7 @@ export class TestEnrollment extends BaseEntity {
   @Column()
   studentId: number;
 
-  @Column()
+  @Column({default: null})
   score: number;
 
   @Column({ default: 0 })

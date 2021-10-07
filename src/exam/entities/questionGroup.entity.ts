@@ -29,6 +29,9 @@ export class QuestionGroup extends BaseEntity {
   @Column()
   type: number;
 
+  @Column({ default: null })
+  imageUrl: string;
+
   @Column('longtext')
   title: string;
 

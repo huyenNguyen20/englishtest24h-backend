@@ -189,7 +189,10 @@ export class ExamRepository extends Repository<Exam> {
     const exam = await this.getExam(examId, user);
     if (title) exam.title = title;
     if (description) exam.description = description;
+    
     if (imageUrl) exam.imageUrl = imageUrl;
+    else exam.imageUrl = null;
+
     await exam.save();
     return await this.getExams(user);
   }

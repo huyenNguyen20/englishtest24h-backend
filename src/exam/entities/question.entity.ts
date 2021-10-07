@@ -14,8 +14,11 @@ export class Question extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ default: null })
   order: number;
+
+  @Column({ default: null})
+  imageUrl: string;
 
   @ManyToOne(
     (type) => QuestionGroup,
@@ -38,9 +41,6 @@ export class Question extends BaseEntity {
 
   @Column({ default: null })
   minWords: number;
-
-  @Column({ default: null })
-  positionId: string;
 
   @Column({ default: null, type: 'longtext' })
   htmlExplaination: string;

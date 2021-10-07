@@ -23,6 +23,9 @@ export class Section extends BaseEntity {
   @Column({ default: null, type: 'longtext' })
   htmlContent: string;
 
+  @Column({ default: null, type: 'longtext' })
+  directions: string;
+
   @Column({ default: null })
   audioUrl: string;
 

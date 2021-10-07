@@ -26,7 +26,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       enrollments.forEach((e) => {
         const temp = {
           name: `${e.student.firstName} ${e.student.lastName}`,
-          score: e.score,
+          score: e.score || null,
         };
         results.push(temp);
       });
@@ -62,7 +62,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       newEnrollment.exam = exam;
       newEnrollment.subjectId = exam.subject;
       newEnrollment.student = user;
-      newEnrollment.score = score;
+      if(score) newEnrollment.score = score;
       newEnrollment.answerObj = answerObj;
       newEnrollment.sectionsObj = sectionsObj;
       newEnrollment.timeTaken = 1;
@@ -94,7 +94,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
         }
       }
       enrollment.timeTaken++;
-      enrollment.score = score;
+      if(score) enrollment.score = score;
       enrollment.answerObj = answerObj;
       enrollment.sectionsObj = sectionsObj;
       await enrollment.save();

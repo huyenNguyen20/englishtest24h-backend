@@ -25,10 +25,14 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
     section: Section,
     user: User,
   ): Promise<QuestionGroup> {
-    const { type, title, htmlContent } = createQuestionGroupDto;
+    const { type, title, htmlContent, imageUrl } = createQuestionGroupDto;
     const q = new QuestionGroup();
     q.title = title;
     if (htmlContent) q.htmlContent = htmlContent;
+    
+    if (imageUrl) q.imageUrl = imageUrl;
+    else q.imageUrl = null;
+
     q.type = type;
     q.ownerId = user.id;
     q.section = section;
@@ -56,10 +60,14 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
     questionGroupId: number,
     user: User,
   ): Promise<QuestionGroup> {
-    const { title, htmlContent } = updateQuestionGroupDto;
+    const { title, htmlContent, imageUrl } = updateQuestionGroupDto;
     const q = await this.findOne(questionGroupId);
     if (title) q.title = title;
     if (htmlContent) q.htmlContent = htmlContent;
+
+    if (imageUrl) q.imageUrl = imageUrl;
+    else q.imageUrl = null;
+
     await q.save();
     return q;
   }

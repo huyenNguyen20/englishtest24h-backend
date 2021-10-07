@@ -34,6 +34,12 @@ export class User extends BaseEntity {
   @Column()
   avatarUrl: string;
 
+  @Column({ default: true})
+  isEducator: boolean;
+
+  @Column({ default: false})
+  isAdmin: boolean;
+
   @Column()
   salt: string;
 
