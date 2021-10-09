@@ -8,14 +8,12 @@ import {
   UseGuards,
   HttpStatus,
   UseInterceptors,
-  UploadedFile,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
 import {
   FileFieldsInterceptor,
-  FileInterceptor,
 } from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
 import { getUser } from './decorator/getUser.decorator';
@@ -68,8 +66,8 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async authWithGoogleCallBack(@getUser() user: User, @Response() res) {
-    const { email } = user;
-    const payload: JwtPayload = { email };
+    const { email, isEducator, isAdmin} = user;
+    const payload: JwtPayload = { email, isEducator, isAdmin };
     const token = await this.jwtService.sign(payload);
     return res
       .status(HttpStatus.OK)

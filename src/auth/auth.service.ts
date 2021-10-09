@@ -28,7 +28,8 @@ export class AuthService {
     const { email } = signInUserDto;
     const isSignedIn = await this.authRepository.signInUser(signInUserDto);
     if (!isSignedIn) throw new UnauthorizedException();
-    const payload: JwtPayload = { email };
+    const user = await this.getUser({email});
+    const payload: JwtPayload = { email, isEducator: user.isEducator, isAdmin: user.isAdmin };
     const token = await this.jwtService.sign(payload);
     return { token };
   }

@@ -31,6 +31,9 @@ import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CreateWritingSectionDto } from './dto/create-writing-section.dto';
+import { UpdateWritingSectionDto } from './dto/update-writing-section.dto';
+import { CreateWritingSectionValidationPipe } from './pipes/create-writing-section.pipe';
 
 @ApiTags('Exams Endpoints')
 @Controller('exams')
@@ -162,7 +165,7 @@ export class ExamController {
   /********************* */
   /***Sections***/
   /********************* */
-
+  @ApiOperation({ summary: 'Get all sections of an exam' })
   @Get('/:examId/sections')
   @UseGuards(AuthGuard())
   async getSections(
@@ -172,6 +175,7 @@ export class ExamController {
     return await this.examService.getSections(examId, user);
   }
 
+  @ApiOperation({ summary: 'Create a section of an reading/listening/speaking exam' })
   @Post('/:examId/sections')
   @UseGuards(AuthGuard())
   @UseInterceptors(FileFieldsInterceptor([]))
@@ -183,6 +187,19 @@ export class ExamController {
     return await this.examService.createSection(createSectionDto, examId, user);
   }
 
+  @ApiOperation({ summary: 'Create a section of an writing exam' })
+  @Post('/:examId/writingSections')
+  @UseGuards(AuthGuard())
+  @UseInterceptors(FileFieldsInterceptor([]))
+  async createWritingSection(
+    @Body(new CreateWritingSectionValidationPipe()) createWritingSectionDto: CreateWritingSectionDto,
+    @Param('examId', ParseIntPipe) examId: number,
+    @getUser() user: User,
+  ): Promise<Section> {
+    return await this.examService.createWritingSection(createWritingSectionDto, examId, user);
+  }
+
+  @ApiOperation({ summary: 'Get an section with a specific id' })
   @Get('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
   async getSection(
@@ -193,6 +210,7 @@ export class ExamController {
     return await this.examService.getSection(examId, sectionId, user);
   }
 
+  @ApiOperation({ summary: 'Update a section of an reading/listening/speaking exam' })
   @Put('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
   @UseInterceptors(FileFieldsInterceptor([]))
@@ -210,6 +228,25 @@ export class ExamController {
     );
   }
 
+  @ApiOperation({ summary: 'Update a section of an writing exam' })
+  @Put('/:examId/writingSections/:sectionId')
+  @UseGuards(AuthGuard())
+  @UseInterceptors(FileFieldsInterceptor([]))
+  async updateWritingSection(
+    @Body(new CreateWritingSectionValidationPipe()) updateWritingSectionDto: UpdateWritingSectionDto,
+    @Param('examId', ParseIntPipe) examId: number,
+    @Param('sectionId', ParseIntPipe) sectionId: number,
+    @getUser() user: User,
+  ): Promise<Section> {
+    return await this.examService.updateWritingSection(
+      updateWritingSectionDto,
+      examId,
+      sectionId,
+      user,
+    );
+  }
+
+  @ApiOperation({ summary: 'Delete a section of an exam' })
   @Delete('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
   async removeSection(

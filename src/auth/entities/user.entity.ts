@@ -34,7 +34,7 @@ export class User extends BaseEntity {
   @Column()
   avatarUrl: string;
 
-  @Column({ default: true})
+  @Column({ default: false})
   isEducator: boolean;
 
   @Column({ default: false})

@@ -3,14 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { FilterExamDto, UpdateExamDto, UpdateQuestionDto } from './dto';
+import { CreateQuestionDto, FilterExamDto, UpdateExamDto, UpdateQuestionDto } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExamRepository } from './exam.repositary';
 import { User } from 'src/auth/entities/user.entity';
 import { QuestionRepository } from './question.repository';
 import { AnswerRepository } from './answer.repository';
 import { Exam } from './entities/exam.entity';
-import { join } from 'path';
 import { Question } from './entities/question.entity';
 import { Section } from './entities/section.entity';
 import { SectionRepository } from './section.respository';
@@ -23,6 +22,9 @@ import { UpdateAnswerDto } from './dto/update-answer.dto';
 import { getConnection } from 'typeorm';
 import axios from 'axios';
 import * as config from 'config';
+import { CreateSectionDto } from './dto/create-section.dto';
+import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
+import { UpdateWritingSectionDto } from './dto/update-writing-section.dto';
 
 @Injectable()
 export class ExamService {
@@ -183,6 +185,50 @@ export class ExamService {
     );
   }
 
+  async createWritingSection(
+    createWritingSectionDto: any,
+    examId: number,
+    user: User): Promise<Section>{
+    const exam = await this.getExam(examId, user); 
+    const sectionDto : CreateSectionDto = {
+      title: createWritingSectionDto.title,
+      directions: createWritingSectionDto.directions,
+      imageUrl: createWritingSectionDto.imageUrl || null,
+      audioUrl: null,
+      htmlContent: null,
+      transcription: null,
+    }
+    const section = await this.sectionRepository.createSection(
+      sectionDto,
+      exam,
+      user,
+    );
+    const questionDto : CreateQuestionDto = {
+      imageUrl: null,
+      score: createWritingSectionDto.score,
+      order: null,
+      minWords: createWritingSectionDto.minWords,
+      question: createWritingSectionDto.question,
+      htmlExplaination: createWritingSectionDto.htmlExplaination,
+      answers: null
+    }
+    const questionGroupDto : CreateQuestionGroupDto = {
+      type: 7,
+      title: "",
+      imageUrl: null,
+      htmlContent: null,
+      questions: [questionDto]
+    }
+    const questionGroups = await this.createQuestionGroup(
+      questionGroupDto,
+      exam.id,
+      section.id,
+      user,
+    )
+    section.questionGroups = questionGroups;
+    return section;
+  }
+
   async getSection(
     examId: number,
     sectionId: number,
@@ -226,6 +272,63 @@ export class ExamService {
       user,
     );
   }
+
+  async updateWritingSection(
+    updateWritingSectionDto: UpdateWritingSectionDto,
+    examId: number,
+    sectionId: number,
+    user: User,
+  ): Promise<Section> {
+    //1. Remove Existing Audio and Image Files from File System
+    const { imageUrl } = updateWritingSectionDto;
+    const section = await this.sectionRepository.getSection(
+      examId,
+      sectionId,
+      user,
+    );
+    if (section && Boolean(section.imageUrl) && section.imageUrl !== imageUrl) {
+      const filename = section.imageUrl.substring(
+        section.imageUrl.lastIndexOf('/') + 1,
+      );
+      const url = `${config.get('deleteImage').url}/${filename}`;
+      await axios.delete(url);
+    }
+    //2. Update the section
+    const sectionDto : UpdateSectionDto = {
+      title: updateWritingSectionDto.title,
+      directions: updateWritingSectionDto.directions,
+      imageUrl: updateWritingSectionDto.imageUrl || null,
+    }
+    const questionDto : CreateQuestionDto = {
+      imageUrl: null,
+      score: updateWritingSectionDto.score,
+      order: null,
+      minWords: updateWritingSectionDto.minWords,
+      question: updateWritingSectionDto.question,
+      htmlExplaination: updateWritingSectionDto.htmlExplaination,
+      answers: null
+    }
+    const questionGroupDto : UpdateQuestionGroupDto = {
+      title: "",
+      imageUrl: null,
+      htmlContent: null,
+      questions: [questionDto]
+    }
+    const updatedSection = await this.sectionRepository.updateSection(
+      sectionDto,
+      examId,
+      sectionId,
+      user,
+    );
+    const updatedQuestionGroup = await this.updateQuestionGroup(
+      questionGroupDto, 
+      section.id, 
+      section.questionGroups[0].id, 
+      user)
+    updatedSection.questionGroups = updatedQuestionGroup;
+    return updatedSection;
+  }
+
 
   async removeSection(
     examId: number,
@@ -320,6 +423,7 @@ export class ExamService {
     //Update questionGroup
     const { questions, imageUrl } = updateQuestionGroupDto;
     const oldQuestionGroup = await this.getQuestionGroup(questionGroupId, user);
+    
     // Delete image of the question group
     if (Boolean(oldQuestionGroup.imageUrl) && oldQuestionGroup.imageUrl !== imageUrl) {
       const filename = oldQuestionGroup.imageUrl.substring(

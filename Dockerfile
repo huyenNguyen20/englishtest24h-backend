@@ -1,13 +1,28 @@
-FROM node:16-alpine3.11
+FROM node:12.13-alpine As development
 
-WORKDIR /backend
+WORKDIR /usr/src/app
 
-ADD package*.json ./
+COPY package*.json ./
 
-RUN npm install
+RUN npm install --only=development
 
 COPY . .
 
-EXPOSE 3000
+RUN npm run build
 
-CMD npm run start:dev
+FROM node:12.13-alpine as production
+
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install --only=production
+
+COPY . .
+
+COPY --from=development /usr/src/app/dist ./dist
+
+CMD ["node", "dist/main"]
