@@ -6,7 +6,7 @@ export class CreateWritingSectionValidationPipe implements PipeTransform {
       return {
         ...value,
         score: parseInt(score, 10),
-        mninWords: parseInt(minWords, 10),
+        minWords: parseInt(minWords, 10),
       };
   }
 }

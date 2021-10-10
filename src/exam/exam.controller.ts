@@ -26,7 +26,6 @@ import { CreateSectionDto } from './dto/create-section.dto';
 import { UpdateSectionDto } from './dto/update-section.dto';
 import { QuestionGroup } from './entities/questionGroup.entity';
 import { UpdateQuestionGroupDto } from './dto/update-questionGroup.dto';
-import { QuestionGroupValidationPipe } from './pipes/questionGroup.pipe';
 import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
@@ -34,6 +33,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateWritingSectionDto } from './dto/create-writing-section.dto';
 import { UpdateWritingSectionDto } from './dto/update-writing-section.dto';
 import { CreateWritingSectionValidationPipe } from './pipes/create-writing-section.pipe';
+import { CreateQuestionGroupValidationPipe } from './pipes/create-question-group.pipe';
 
 @ApiTags('Exams Endpoints')
 @Controller('exams')
@@ -273,8 +273,9 @@ export class ExamController {
 
   @Post('/:examId/sections/:sectionId/questionGroups')
   @UseGuards(AuthGuard())
+  @UseInterceptors(FileFieldsInterceptor([]))
   async createQuestionGroups(
-    @Body(new QuestionGroupValidationPipe())
+    @Body(new CreateQuestionGroupValidationPipe())
     createQuestionGroupDto: CreateQuestionGroupDto,
     @Param('examId', ParseIntPipe) examId: number,
     @Param('sectionId', ParseIntPipe) sectionId: number,
@@ -290,8 +291,9 @@ export class ExamController {
 
   @Put('/:examId/sections/:sectionId/questionGroups/:questionGroupId')
   @UseGuards(AuthGuard())
+  @UseInterceptors(FileFieldsInterceptor([]))
   async updateQuestionGroup(
-    @Body(new QuestionGroupValidationPipe())
+    @Body(new CreateQuestionGroupValidationPipe())
     updateQuestionGroupDto: UpdateQuestionGroupDto,
     @Param('examId', ParseIntPipe) examId: number,
     @Param('sectionId', ParseIntPipe) sectionId: number,
