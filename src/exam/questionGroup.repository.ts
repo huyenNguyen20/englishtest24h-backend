@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
+import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
 import { UpdateQuestionGroupDto } from './dto/update-questionGroup.dto';
 import { Answer } from './entities/answer.entity';
 import { Question } from './entities/question.entity';
@@ -21,15 +22,15 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
   }
 
   async createQuestionGroup(
-    createQuestionGroupDto: any,
+    createQuestionGroupDto: CreateQuestionGroupDto,
     section: Section,
     user: User,
   ): Promise<QuestionGroup> {
-    const { type, title, htmlContent, imageUrl } = createQuestionGroupDto;
+    const { type, title, htmlContent, imageUrl, matchingOptions } = createQuestionGroupDto;
     const q = new QuestionGroup();
     q.title = title;
     if (htmlContent) q.htmlContent = htmlContent;
-    
+    if (matchingOptions) q.matchingOptions = matchingOptions;
     if (imageUrl) q.imageUrl = imageUrl;
     else q.imageUrl = null;
 
@@ -60,11 +61,11 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
     questionGroupId: number,
     user: User,
   ): Promise<QuestionGroup> {
-    const { title, htmlContent, imageUrl } = updateQuestionGroupDto;
+    const { title, htmlContent, imageUrl, matchingOptions} = updateQuestionGroupDto;
     const q = await this.findOne(questionGroupId);
     if (title) q.title = title;
     if (htmlContent) q.htmlContent = htmlContent;
-
+    if (Boolean(matchingOptions)) q.matchingOptions = matchingOptions;
     if (imageUrl) q.imageUrl = imageUrl;
     else q.imageUrl = null;
 

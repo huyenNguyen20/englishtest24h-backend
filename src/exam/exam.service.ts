@@ -25,6 +25,7 @@ import * as config from 'config';
 import { CreateSectionDto } from './dto/create-section.dto';
 import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
 import { UpdateWritingSectionDto } from './dto/update-writing-section.dto';
+import { create } from 'ts-node';
 
 @Injectable()
 export class ExamService {
@@ -217,6 +218,7 @@ export class ExamService {
       title: "",
       imageUrl: null,
       htmlContent: null,
+      matchingOptions: null,
       questions: [questionDto]
     }
     const questionGroups = await this.createQuestionGroup(
@@ -375,13 +377,12 @@ export class ExamService {
   }
 
   async createQuestionGroup(
-    createQuestionGroupDto: any,
+    createQuestionGroupDto: CreateQuestionGroupDto,
     examId: number,
     sectionId: number,
     user: User,
   ): Promise<QuestionGroup[]> {
     const section = await this.getSection(examId, sectionId, user);
-
     const questionGroup =
       await this.questionGroupRepository.createQuestionGroup(
         createQuestionGroupDto,
@@ -432,7 +433,6 @@ export class ExamService {
       const url = `${config.get('deleteImage').url}/${filename}`;
       await axios.delete(url);
     }
-
     // Update and get updated question group
     const questionGroup =
       await this.questionGroupRepository.updateQuestionGroup(

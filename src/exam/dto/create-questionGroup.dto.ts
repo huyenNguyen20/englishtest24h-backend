@@ -30,6 +30,11 @@ export class CreateQuestionGroupDto {
   @IsString()
   htmlContent: string;
 
+  @ApiProperty({ example: '[A, B, C, D]', description: 'Matching Options for Matching Questions' })
+  @IsOptional()
+  @IsString()
+  matchingOptions: string;
+
   @ApiProperty({ example: '[{id: 1, question: "example", answers: [], ...}]', description: 'List of questions for a question group' })
   @IsOptional()
   questions: CreateQuestionDto[];
