@@ -25,7 +25,6 @@ import * as config from 'config';
 import { CreateSectionDto } from './dto/create-section.dto';
 import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
 import { UpdateWritingSectionDto } from './dto/update-writing-section.dto';
-import { create } from 'ts-node';
 
 @Injectable()
 export class ExamService {
@@ -139,6 +138,10 @@ export class ExamService {
     return await this.examRepository.togglePublishExam(examId, user);
   }
 
+  async postRestrictedAccessList(restrictedList: string, examId: number, user: User): Promise<Exam[]>{
+    return await this.examRepository.postRestrictedAccessList(restrictedList, examId, user);
+  }
+
   async removeExam(examId: number, user: User): Promise<Exam[]> {
     try {
       const exam = await this.getExam(examId, user);
@@ -178,57 +181,77 @@ export class ExamService {
     examId: number,
     user: User,
   ): Promise<Section> {
-    const exam = await this.getExam(examId, user);
-    return await this.sectionRepository.createSection(
-      createSectionDto,
-      exam,
-      user,
-    );
+    try {
+      /***Check the User's Permission***/
+      const exam = await this.examRepository.findOne({
+        where: { id: examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      /***********************************/ 
+      else {
+        return await this.sectionRepository.createSection(
+          createSectionDto,
+          exam,
+          user,
+        );
+      }
+    } catch (e) {
+      throw new NotFoundException('Exam Not Found');
+    }
   }
 
   async createWritingSection(
     createWritingSectionDto: any,
     examId: number,
     user: User): Promise<Section>{
-    const exam = await this.getExam(examId, user); 
-    const sectionDto : CreateSectionDto = {
-      title: createWritingSectionDto.title,
-      directions: createWritingSectionDto.directions,
-      imageUrl: createWritingSectionDto.imageUrl || null,
-      audioUrl: null,
-      htmlContent: null,
-      transcription: null,
+    try{
+      /***Check the User's Permission***/
+      const exam = await this.examRepository.findOne({
+        where: { id: examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      /********************************/ 
+      const sectionDto : CreateSectionDto = {
+        title: createWritingSectionDto.title,
+        directions: createWritingSectionDto.directions,
+        imageUrl: createWritingSectionDto.imageUrl || null,
+        audioUrl: null,
+        htmlContent: null,
+        transcription: null,
+      }
+      const section = await this.sectionRepository.createSection(
+        sectionDto,
+        exam,
+        user,
+      );
+      const questionDto : CreateQuestionDto = {
+        imageUrl: null,
+        score: createWritingSectionDto.score,
+        order: null,
+        minWords: createWritingSectionDto.minWords,
+        question: createWritingSectionDto.question,
+        htmlExplaination: createWritingSectionDto.htmlExplaination,
+        answers: null
+      }
+      const questionGroupDto : CreateQuestionGroupDto = {
+        type: 7,
+        title: "",
+        imageUrl: null,
+        htmlContent: null,
+        matchingOptions: null,
+        questions: [questionDto]
+      }
+      const questionGroups = await this.createQuestionGroup(
+        questionGroupDto,
+        exam.id,
+        section.id,
+        user,
+      )
+      section.questionGroups = questionGroups;
+      return section;
+    } catch(e){
+      throw new NotFoundException('Exam Not Found');
     }
-    const section = await this.sectionRepository.createSection(
-      sectionDto,
-      exam,
-      user,
-    );
-    const questionDto : CreateQuestionDto = {
-      imageUrl: null,
-      score: createWritingSectionDto.score,
-      order: null,
-      minWords: createWritingSectionDto.minWords,
-      question: createWritingSectionDto.question,
-      htmlExplaination: createWritingSectionDto.htmlExplaination,
-      answers: null
-    }
-    const questionGroupDto : CreateQuestionGroupDto = {
-      type: 7,
-      title: "",
-      imageUrl: null,
-      htmlContent: null,
-      matchingOptions: null,
-      questions: [questionDto]
-    }
-    const questionGroups = await this.createQuestionGroup(
-      questionGroupDto,
-      exam.id,
-      section.id,
-      user,
-    )
-    section.questionGroups = questionGroups;
-    return section;
   }
 
   async getSection(
@@ -245,34 +268,44 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<Section> {
-    //1. Remove Existing Audio and Image Files from File System
-    const { audioUrl, imageUrl } = updateSectionDto;
-    const section = await this.sectionRepository.getSection(
-      examId,
-      sectionId,
-      user,
-    );
-    if (section && Boolean(section.imageUrl) && section.imageUrl !== imageUrl) {
-      const filename = section.imageUrl.substring(
-        section.imageUrl.lastIndexOf('/') + 1,
+    try{
+      /***Check the User's Permission***/
+      const exam = await this.examRepository.findOne({
+        where: { id: examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      /********************************/ 
+       //1. Remove Existing Audio and Image Files from File System
+      const { audioUrl, imageUrl } = updateSectionDto;
+      const section = await this.sectionRepository.getSection(
+        examId,
+        sectionId,
+        user,
       );
-      const url = `${config.get('deleteImage').url}/${filename}`;
-      await axios.delete(url);
-    }
-    if (section  && Boolean(section.audioUrl)  && section.audioUrl !== audioUrl) {
-      const filename = section.audioUrl.substring(
-        section.audioUrl.lastIndexOf('/') + 1,
+      if (section && Boolean(section.imageUrl) && section.imageUrl !== imageUrl) {
+        const filename = section.imageUrl.substring(
+          section.imageUrl.lastIndexOf('/') + 1,
+        );
+        const url = `${config.get('deleteImage').url}/${filename}`;
+        await axios.delete(url);
+      }
+      if (section  && Boolean(section.audioUrl)  && section.audioUrl !== audioUrl) {
+        const filename = section.audioUrl.substring(
+          section.audioUrl.lastIndexOf('/') + 1,
+        );
+        const url = `${config.get('deleteAudio').url}/${filename}`;
+        await axios.delete(url);
+      }
+      //2. Update the section
+      return await this.sectionRepository.updateSection(
+        updateSectionDto,
+        examId,
+        sectionId,
+        user,
       );
-      const url = `${config.get('deleteAudio').url}/${filename}`;
-      await axios.delete(url);
+    } catch (e){
+      throw new NotFoundException('Exam Not Found')
     }
-    //2. Update the section
-    return await this.sectionRepository.updateSection(
-      updateSectionDto,
-      examId,
-      sectionId,
-      user,
-    );
   }
 
   async updateWritingSection(
@@ -281,54 +314,64 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<Section> {
-    //1. Remove Existing Audio and Image Files from File System
-    const { imageUrl } = updateWritingSectionDto;
-    const section = await this.sectionRepository.getSection(
-      examId,
-      sectionId,
-      user,
-    );
-    if (section && Boolean(section.imageUrl) && section.imageUrl !== imageUrl) {
-      const filename = section.imageUrl.substring(
-        section.imageUrl.lastIndexOf('/') + 1,
+    try{
+      /***Check the User's Permission***/
+      const exam = await this.examRepository.findOne({
+        where: { id: examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      /**********************************/ 
+      //1. Remove Existing Audio and Image Files from File System
+      const { imageUrl } = updateWritingSectionDto;
+      const section = await this.sectionRepository.getSection(
+        examId,
+        sectionId,
+        user,
       );
-      const url = `${config.get('deleteImage').url}/${filename}`;
-      await axios.delete(url);
+      if (section && Boolean(section.imageUrl) && section.imageUrl !== imageUrl) {
+        const filename = section.imageUrl.substring(
+          section.imageUrl.lastIndexOf('/') + 1,
+        );
+        const url = `${config.get('deleteImage').url}/${filename}`;
+        await axios.delete(url);
+      }
+      //2. Update the section
+      const sectionDto : UpdateSectionDto = {
+        title: updateWritingSectionDto.title,
+        directions: updateWritingSectionDto.directions,
+        imageUrl: updateWritingSectionDto.imageUrl || null,
+      }
+      const questionDto : CreateQuestionDto = {
+        imageUrl: null,
+        score: updateWritingSectionDto.score,
+        order: null,
+        minWords: updateWritingSectionDto.minWords,
+        question: updateWritingSectionDto.question,
+        htmlExplaination: updateWritingSectionDto.htmlExplaination,
+        answers: null
+      }
+      const questionGroupDto : UpdateQuestionGroupDto = {
+        title: "",
+        imageUrl: null,
+        htmlContent: null,
+        questions: [questionDto]
+      }
+      const updatedSection = await this.sectionRepository.updateSection(
+        sectionDto,
+        examId,
+        sectionId,
+        user,
+      );
+      const updatedQuestionGroup = await this.updateQuestionGroup(
+        questionGroupDto, 
+        section.id, 
+        section.questionGroups[0].id, 
+        user)
+      updatedSection.questionGroups = updatedQuestionGroup;
+      return updatedSection;
+    } catch (e){
+      throw new NotFoundException('Exam Not Found')
     }
-    //2. Update the section
-    const sectionDto : UpdateSectionDto = {
-      title: updateWritingSectionDto.title,
-      directions: updateWritingSectionDto.directions,
-      imageUrl: updateWritingSectionDto.imageUrl || null,
-    }
-    const questionDto : CreateQuestionDto = {
-      imageUrl: null,
-      score: updateWritingSectionDto.score,
-      order: null,
-      minWords: updateWritingSectionDto.minWords,
-      question: updateWritingSectionDto.question,
-      htmlExplaination: updateWritingSectionDto.htmlExplaination,
-      answers: null
-    }
-    const questionGroupDto : UpdateQuestionGroupDto = {
-      title: "",
-      imageUrl: null,
-      htmlContent: null,
-      questions: [questionDto]
-    }
-    const updatedSection = await this.sectionRepository.updateSection(
-      sectionDto,
-      examId,
-      sectionId,
-      user,
-    );
-    const updatedQuestionGroup = await this.updateQuestionGroup(
-      questionGroupDto, 
-      section.id, 
-      section.questionGroups[0].id, 
-      user)
-    updatedSection.questionGroups = updatedQuestionGroup;
-    return updatedSection;
   }
 
 
@@ -337,29 +380,39 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<Section[]> {
-    //1. Remove Audio and Image Files from File System
-    const section = await this.sectionRepository.getSection(
-      examId,
-      sectionId,
-      user,
-    );
-    if (section && Boolean(section.imageUrl)) {
-      const filename = section.imageUrl.substring(
-        section.imageUrl.lastIndexOf('/') + 1,
+    try{
+      /***Check the User's Permission***/
+      const exam = await this.examRepository.findOne({
+        where: { id: examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      /***************************** */
+      //1. Remove Audio and Image Files from File System
+      const section = await this.sectionRepository.getSection(
+        examId,
+        sectionId,
+        user,
       );
-      const url = `${config.get('deleteImage').url}/${filename}`;
-      await axios.delete(url);
+      if (section && Boolean(section.imageUrl)) {
+        const filename = section.imageUrl.substring(
+          section.imageUrl.lastIndexOf('/') + 1,
+        );
+        const url = `${config.get('deleteImage').url}/${filename}`;
+        await axios.delete(url);
+      }
+      if (section && Boolean(section.audioUrl)) {
+        const filename = section.audioUrl.substring(
+          section.audioUrl.lastIndexOf('/') + 1,
+        );
+        const url = `${config.get('deleteAudio').url}/${filename}`;
+        await axios.delete(url);
+      }
+      //2. Remove the section
+      await this.sectionRepository.removeSection(examId, sectionId, user);
+      return await this.getSections(examId, user);
+    } catch (e){
+      throw new NotFoundException('Exam Not Found')
     }
-    if (section && Boolean(section.audioUrl)) {
-      const filename = section.audioUrl.substring(
-        section.audioUrl.lastIndexOf('/') + 1,
-      );
-      const url = `${config.get('deleteAudio').url}/${filename}`;
-      await axios.delete(url);
-    }
-    //2. Remove the section
-    await this.sectionRepository.removeSection(examId, sectionId, user);
-    return await this.getSections(examId, user);
   }
 
   /************************************* */
@@ -382,27 +435,37 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<QuestionGroup[]> {
-    const section = await this.getSection(examId, sectionId, user);
-    const questionGroup =
-      await this.questionGroupRepository.createQuestionGroup(
-        createQuestionGroupDto,
-        section,
-        user,
-      );
-    const { questions } = createQuestionGroupDto;
-    //Create questions and answers
-    const newQuestions = [];
-    for (const q of questions) {
-      const question = await this.createQuestion(q, questionGroup.id, user);
-      newQuestions.push(question);
-    }
+    try{
+      /***Check the User's Permission***/
+      const exam = await this.examRepository.findOne({
+        where: { id: examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      /***************************** */
+      const section = await this.getSection(examId, sectionId, user);
+      const questionGroup =
+        await this.questionGroupRepository.createQuestionGroup(
+          createQuestionGroupDto,
+          section,
+          user,
+        );
+      const { questions } = createQuestionGroupDto;
+      //Create questions and answers
+      const newQuestions = [];
+      for (const q of questions) {
+        const question = await this.createQuestion(q, questionGroup.id, user);
+        newQuestions.push(question);
+      }
 
-    let questionGroups = await this.getQuestionGroups(sectionId, user);
-    questionGroups = questionGroups.map((q) => {
-      if (q.id === questionGroup.id) q.questions = newQuestions;
-      return q;
-    });
-    return questionGroups;
+      let questionGroups = await this.getQuestionGroups(sectionId, user);
+      questionGroups = questionGroups.map((q) => {
+        if (q.id === questionGroup.id) q.questions = newQuestions;
+        return q;
+      });
+      return questionGroups;
+    } catch (e){
+      throw new NotFoundException('Exam Not Found')
+    }
   }
 
   async getQuestionGroup(
@@ -422,92 +485,38 @@ export class ExamService {
     user: User,
   ): Promise<QuestionGroup[]> {
     //Update questionGroup
-    const { questions, imageUrl } = updateQuestionGroupDto;
-    const oldQuestionGroup = await this.getQuestionGroup(questionGroupId, user);
-    
-    // Delete image of the question group
-    if (Boolean(oldQuestionGroup.imageUrl) && oldQuestionGroup.imageUrl !== imageUrl) {
-      const filename = oldQuestionGroup.imageUrl.substring(
-        oldQuestionGroup.imageUrl.lastIndexOf('/') + 1,
-      );
-      const url = `${config.get('deleteImage').url}/${filename}`;
-      await axios.delete(url);
-    }
-    // Update and get updated question group
-    const questionGroup =
-      await this.questionGroupRepository.updateQuestionGroup(
-        updateQuestionGroupDto,
-        questionGroupId,
-        user,
-      );
+    try{
+      /***Check the User's Permission***/
+      const section = await this.sectionRepository.findOne(sectionId)
+      if (!section) throw new NotFoundException('Exam Not Found');
+      const exam = await this.examRepository.findOne({
+        where: { id: section.examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      /************************************ */
 
-    const questionIds = questionGroup.questions.map((question) => question.id);
-
-    //Delete image file of corresponding questions
-    for (let question of questionGroup.questions) {
-      if (Boolean(question.imageUrl)) {
-        const filename = question.imageUrl.substring(
-          question.imageUrl.lastIndexOf('/') + 1,
+      const { questions, imageUrl } = updateQuestionGroupDto;
+      const oldQuestionGroup = await this.getQuestionGroup(questionGroupId, user);
+      
+      // Delete image of the question group
+      if (Boolean(oldQuestionGroup.imageUrl) && oldQuestionGroup.imageUrl !== imageUrl) {
+        const filename = oldQuestionGroup.imageUrl.substring(
+          oldQuestionGroup.imageUrl.lastIndexOf('/') + 1,
         );
         const url = `${config.get('deleteImage').url}/${filename}`;
         await axios.delete(url);
       }
-    }
-    
-    if (questionIds.length > 0) {
-      //console.log(questionIds);
-      //Delete corresponding questions and answers
-      await getConnection()
-        .createQueryBuilder()
-        .delete()
-        .from(Answer)
-        .where('questionId IN (:...questionIds)', {
-          questionIds: [...questionIds],
-        })
-        .execute();
+      // Update and get updated question group
+      const questionGroup =
+        await this.questionGroupRepository.updateQuestionGroup(
+          updateQuestionGroupDto,
+          questionGroupId,
+          user,
+        );
 
-      await getConnection()
-        .createQueryBuilder()
-        .delete()
-        .from(Question)
-        .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
-        .execute();
-    }
-    //Create questions and answers
-    const newQuestions = [];
-    for (const q of questions) {
-      const question = await this.createQuestion(q, questionGroup.id, user);
-      newQuestions.push(question);
-    }
+      const questionIds = questionGroup.questions.map((question) => question.id);
 
-    let questionGroups = await this.getQuestionGroups(sectionId, user);
-    questionGroups = questionGroups.map((q) => {
-      if (q.id === questionGroup.id) q.questions = newQuestions;
-      return q;
-    });
-    return questionGroups;
-  }
-
-  async removeQuestionGroup(
-    sectionId: number,
-    questionGroupId: number,
-    user: User,
-  ): Promise<QuestionGroup[]> {
-    const questionGroup =
-    await this.questionGroupRepository.getQuestionGroup(
-      questionGroupId,
-      user,
-    );
-    // Delete image of the question group
-    if (Boolean(questionGroup.imageUrl)) {
-      const filename = questionGroup.imageUrl.substring(
-        questionGroup.imageUrl.lastIndexOf('/') + 1,
-      );
-      const url = `${config.get('deleteImage').url}/${filename}`;
-      await axios.delete(url);
-    }
-
-    //Delete image file of corresponding questions 
+      //Delete image file of corresponding questions
       for (let question of questionGroup.questions) {
         if (Boolean(question.imageUrl)) {
           const filename = question.imageUrl.substring(
@@ -517,12 +526,91 @@ export class ExamService {
           await axios.delete(url);
         }
       }
+      
+      if (questionIds.length > 0) {
+        //console.log(questionIds);
+        //Delete corresponding questions and answers
+        await getConnection()
+          .createQueryBuilder()
+          .delete()
+          .from(Answer)
+          .where('questionId IN (:...questionIds)', {
+            questionIds: [...questionIds],
+          })
+          .execute();
 
-    await this.questionGroupRepository.removeQuestionGroup(
-      questionGroupId,
-      user,
-    );
-    return await this.getQuestionGroups(sectionId, user);
+        await getConnection()
+          .createQueryBuilder()
+          .delete()
+          .from(Question)
+          .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
+          .execute();
+      }
+      //Create questions and answers
+      const newQuestions = [];
+      for (const q of questions) {
+        const question = await this.createQuestion(q, questionGroup.id, user);
+        newQuestions.push(question);
+      }
+
+      let questionGroups = await this.getQuestionGroups(sectionId, user);
+      questionGroups = questionGroups.map((q) => {
+        if (q.id === questionGroup.id) q.questions = newQuestions;
+        return q;
+      });
+      return questionGroups;
+    } catch (e){
+      throw new NotFoundException('Exam Not Found')
+    }
+  }
+
+  async removeQuestionGroup(
+    sectionId: number,
+    questionGroupId: number,
+    user: User,
+  ): Promise<QuestionGroup[]> {
+    try{
+      /***Check the User's Permission***/
+      const section = await this.sectionRepository.findOne(sectionId)
+      if (!section) throw new NotFoundException('Exam Not Found');
+      const exam = await this.examRepository.findOne({
+        where: { id: section.examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      /**********************************/
+      const questionGroup =
+      await this.questionGroupRepository.getQuestionGroup(
+        questionGroupId,
+        user,
+      );
+      // Delete image of the question group
+      if (Boolean(questionGroup.imageUrl)) {
+        const filename = questionGroup.imageUrl.substring(
+          questionGroup.imageUrl.lastIndexOf('/') + 1,
+        );
+        const url = `${config.get('deleteImage').url}/${filename}`;
+        await axios.delete(url);
+      }
+
+      //Delete image file of corresponding questions 
+        for (let question of questionGroup.questions) {
+          if (Boolean(question.imageUrl)) {
+            const filename = question.imageUrl.substring(
+              question.imageUrl.lastIndexOf('/') + 1,
+            );
+            const url = `${config.get('deleteImage').url}/${filename}`;
+            await axios.delete(url);
+          }
+        }
+
+      await this.questionGroupRepository.removeQuestionGroup(
+        questionGroupId,
+        user,
+      );
+      return await this.getQuestionGroups(sectionId, user);
+    } catch (e){
+      throw new NotFoundException('Exam Not Found')
+    }
   }
 
   /************************************* */

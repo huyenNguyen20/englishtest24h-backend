@@ -1,3 +1,5 @@
+import axios from 'axios';
+import * as config from 'config';
 import { NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
@@ -86,6 +88,18 @@ export class SectionRepository extends Repository<Section> {
       const questionGroupIds = questionGroups.map(
         (questionGroup) => questionGroup.id,
       );
+
+      //Delete Images of Corresponding Question Groups
+      for (let questionGroup of questionGroups) {
+        if (Boolean(questionGroup.imageUrl)) {
+          const filename = questionGroup.imageUrl.substring(
+            questionGroup.imageUrl.lastIndexOf('/') + 1,
+          );
+          const url = `${config.get('deleteImage').url}/${filename}`;
+          await axios.delete(url);
+        }
+      }
+
       const questions = await getConnection()
         .createQueryBuilder()
         .select('id')
@@ -94,8 +108,21 @@ export class SectionRepository extends Repository<Section> {
           questionGroupIds: [...questionGroupIds],
         })
         .execute();
+
       if (questions.length > 0) {
+
         const questionIds = questions.map((question) => question.id);
+
+        //Delete Images of Corresponding Questions
+        for (let question of questions) {
+          if (Boolean(question.imageUrl)) {
+            const filename = question.imageUrl.substring(
+              question.imageUrl.lastIndexOf('/') + 1,
+            );
+            const url = `${config.get('deleteImage').url}/${filename}`;
+            await axios.delete(url);
+          }
+        }
 
         await getConnection()
           .createQueryBuilder()
@@ -113,6 +140,7 @@ export class SectionRepository extends Repository<Section> {
           .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
           .execute();
       }
+      
       await getConnection()
         .createQueryBuilder()
         .delete()

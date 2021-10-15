@@ -152,6 +152,16 @@ export class ExamController {
   ): Promise<Exam[]> {
     return await this.examService.togglePublishExam(examId, user);
   }
+   
+  @Put('/:examId/restrictedList')
+  @UseGuards(AuthGuard())
+  async postRestrictedAccessList(
+    @Body(new ValidationPipe()) body : {restrictedList: string},
+    @Param('examId', ParseIntPipe) examId: number,
+    @getUser() user: User,
+  ): Promise<Exam[]> {
+    return await this.examService.postRestrictedAccessList(body.restrictedList, examId, user);
+  }
 
   @Delete('/:examId')
   @UseGuards(AuthGuard())

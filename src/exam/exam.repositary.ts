@@ -1,3 +1,5 @@
+import axios from 'axios';
+import * as config from 'config';
 import { Exam, Subjects } from './entities/exam.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreateExamDto, FilterExamDto, UpdateExamDto } from './dto';
@@ -147,6 +149,7 @@ export class ExamRepository extends Repository<Exam> {
       .addSelect('exam.updatedBy')
       .addSelect('exam.timeAllowed')
       .addSelect('exam.subject')
+      .addSelect('exam.restrictedAccessList')
       .where('exam.ownerId = :userId', { userId: user.id })
       .orderBy('exam.updatedBy', 'DESC')
       .getMany();
@@ -185,16 +188,23 @@ export class ExamRepository extends Repository<Exam> {
     examId: number,
     user: User,
   ): Promise<Exam[]> {
-    const { title, description, imageUrl } = updatedExamDto;
-    const exam = await this.getExam(examId, user);
-    if (title) exam.title = title;
-    if (description) exam.description = description;
-    
-    if (imageUrl) exam.imageUrl = imageUrl;
-    else exam.imageUrl = null;
+    try {
+      const exam = await this.findOne({
+        where: { id: examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      const { title, description, imageUrl } = updatedExamDto;
+      if (title) exam.title = title;
+      if (description) exam.description = description;
+      
+      if (imageUrl) exam.imageUrl = imageUrl;
+      else exam.imageUrl = null;
 
-    await exam.save();
-    return await this.getExams(user);
+      await exam.save();
+      return await this.getExams(user);
+    } catch(e){
+      throw new NotFoundException('Exam Not Found');
+    }
   }
 
   async togglePublishExam(examId: number, user: User): Promise<Exam[]> {
@@ -213,105 +223,176 @@ export class ExamRepository extends Repository<Exam> {
     }
   }
 
-  async removeExam(examId: number, user: User): Promise<Exam[]> {
-    const exam = await this.getExam(examId, user);
-    const sections = await getConnection()
-      .createQueryBuilder()
-      .select('section.id')
-      .from(Section, 'section')
-      .where('section.examId =:examId', { examId })
-      .getMany();
-    if (sections.length > 0) {
-      const sectionIds = sections.map((section) => section.id);
-      const questionGroups = await getConnection()
-        .createQueryBuilder()
-        .select('id')
-        .from(QuestionGroup, 'questionGroup')
-        .where('questionGroup.sectionId IN (:...sectionIds)', {
-          sectionIds: [...sectionIds],
+  async postRestrictedAccessList(restrictedList: string, examId: number, user: User) : Promise<Exam[]>{
+    try {
+      const exam = await this.findOne({
+        where: { id: examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      else {
+        exam.restrictedAccessList = restrictedList;
+        await exam.save();
+        const exams = await this.getExams(user);
+        return exams.map((e) => {
+          if(e.id === exam.id 
+            &&  e.restrictedAccessList !== restrictedList){ 
+            e.restrictedAccessList = restrictedList;
+          }
+          return e;
         })
-        .execute();
-      if (questionGroups.length > 0) {
-        const questionGroupIds = questionGroups.map(
-          (questionGroup) => questionGroup.id,
-        );
-        const questions = await getConnection()
+      }
+    } catch (e) {
+      throw new NotFoundException('Exam Not Found');
+    }
+  }
+
+  async removeExam(examId: number, user: User): Promise<Exam[]> {
+    try {
+      const exam = await this.findOne({
+        where: { id: examId, ownerId: user.id },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      const sections = await getConnection()
+        .createQueryBuilder()
+        .select('section.id')
+        .from(Section, 'section')
+        .where('section.examId =:examId', { examId })
+        .getMany();
+      //TODO: Remove Images and Audios of Questions, QuestionGroup, and Sections
+      if (sections.length > 0) {
+        const sectionIds = sections.map((section) => section.id);
+        //Delete Images and Audios of Corresponding Sections
+        for (let section of sections) {
+          if (Boolean(section.imageUrl)) {
+            const filename = section.imageUrl.substring(
+              section.imageUrl.lastIndexOf('/') + 1,
+            );
+            const url = `${config.get('deleteImage').url}/${filename}`;
+            await axios.delete(url);
+          }
+          if (Boolean(section.audioUrl)) {
+            const filename = section.audioUrl.substring(
+              section.audioUrl.lastIndexOf('/') + 1,
+            );
+            const url = `${config.get('deleteAudio').url}/${filename}`;
+            await axios.delete(url);
+          }
+        }
+
+        const questionGroups = await getConnection()
           .createQueryBuilder()
           .select('id')
-          .from(Question, 'question')
-          .where('question.questionGroupId IN (:...questionGroupIds)', {
-            questionGroupIds: [...questionGroupIds],
+          .from(QuestionGroup, 'questionGroup')
+          .where('questionGroup.sectionId IN (:...sectionIds)', {
+            sectionIds: [...sectionIds],
           })
           .execute();
-        if (questions.length > 0) {
-          const questionIds = questions.map((question) => question.id);
+        if (questionGroups.length > 0) {
+          const questionGroupIds = questionGroups.map(
+            (questionGroup) => questionGroup.id,
+          );
+          //Delete Images of Corresponding Question Groups
+          for (let questionGroup of questionGroups) {
+            if (Boolean(questionGroup.imageUrl)) {
+              const filename = questionGroup.imageUrl.substring(
+                questionGroup.imageUrl.lastIndexOf('/') + 1,
+              );
+              const url = `${config.get('deleteImage').url}/${filename}`;
+              await axios.delete(url);
+            }
+          }
 
-          await getConnection()
+          const questions = await getConnection()
             .createQueryBuilder()
-            .delete()
-            .from(Answer)
-            .where('questionId IN (:...questionIds)', {
-              questionIds: [...questionIds],
+            .select('id')
+            .from(Question, 'question')
+            .where('question.questionGroupId IN (:...questionGroupIds)', {
+              questionGroupIds: [...questionGroupIds],
             })
             .execute();
-
+          if (questions.length > 0) {
+            const questionIds = questions.map((question) => question.id);
+            //Delete Images of Corresponding Questions
+            for (let question of questions) {
+              if (Boolean(question.imageUrl)) {
+                const filename = question.imageUrl.substring(
+                  question.imageUrl.lastIndexOf('/') + 1,
+                );
+                const url = `${config.get('deleteImage').url}/${filename}`;
+                await axios.delete(url);
+              }
+            }
+            //Delete Answers of Corresponding Questions
+            await getConnection()
+              .createQueryBuilder()
+              .delete()
+              .from(Answer)
+              .where('questionId IN (:...questionIds)', {
+                questionIds: [...questionIds],
+              })
+              .execute();
+            //Delete Questions
+            await getConnection()
+              .createQueryBuilder()
+              .delete()
+              .from(Question)
+              .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
+              .execute();
+          }
+          //Delete Question Group
           await getConnection()
             .createQueryBuilder()
             .delete()
-            .from(Question)
-            .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
+            .from(QuestionGroup)
+            .where('id IN (:...questionGroupIds)', {
+              questionGroupIds: [...questionGroupIds],
+            })
             .execute();
         }
+        //Delete Section
         await getConnection()
           .createQueryBuilder()
           .delete()
-          .from(QuestionGroup)
-          .where('id IN (:...questionGroupIds)', {
-            questionGroupIds: [...questionGroupIds],
-          })
+          .from(Section)
+          .where('id IN (:...sectionIds)', { sectionIds: [...sectionIds] })
+          .execute();
+      }
+      // Delete Exam
+      await getConnection()
+        .createQueryBuilder()
+        .delete()
+        .from(TestEnrollment)
+        .where('examId =:examId', { examId })
+        .execute();
+
+      const posts = await getConnection()
+        .createQueryBuilder()
+        .select('id')
+        .from(Post, 'post')
+        .where('post.examId =:examId', { examId })
+        .getMany();
+
+      if (posts.length > 0) {
+        const postIds = posts.map((post) => post.id);
+        await getConnection()
+          .createQueryBuilder()
+          .delete()
+          .from(Comment)
+          .where('postId IN (:...postIds)', { postIds: [...postIds] })
+          .execute();
+
+        await getConnection()
+          .createQueryBuilder()
+          .delete()
+          .from(Post)
+          .where('examId =:examId', { examId })
           .execute();
       }
 
-      await getConnection()
-        .createQueryBuilder()
-        .delete()
-        .from(Section)
-        .where('id IN (:...sectionIds)', { sectionIds: [...sectionIds] })
-        .execute();
+      await this.delete(examId);
+      return await this.getExams(user);
+    } catch (e){
+      throw new NotFoundException('Exam Not Found');
     }
-
-    await getConnection()
-      .createQueryBuilder()
-      .delete()
-      .from(TestEnrollment)
-      .where('examId =:examId', { examId })
-      .execute();
-
-    const posts = await getConnection()
-      .createQueryBuilder()
-      .select('id')
-      .from(Post, 'post')
-      .where('post.examId =:examId', { examId })
-      .getMany();
-
-    if (posts.length > 0) {
-      const postIds = posts.map((post) => post.id);
-      await getConnection()
-        .createQueryBuilder()
-        .delete()
-        .from(Comment)
-        .where('postId IN (:...postIds)', { postIds: [...postIds] })
-        .execute();
-
-      await getConnection()
-        .createQueryBuilder()
-        .delete()
-        .from(Post)
-        .where('examId =:examId', { examId })
-        .execute();
-    }
-
-    await this.delete(examId);
-    return await this.getExams(user);
   }
 }
