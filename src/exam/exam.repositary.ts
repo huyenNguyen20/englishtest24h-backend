@@ -135,6 +135,16 @@ export class ExamRepository extends Repository<Exam> {
   async getSubjects(): Promise<any> {
     return Subjects;
   }
+  /******Exams Methods for Restricted Users** */
+  async getRestrictedExamIndexes(): Promise<Partial<Exam>[]> {
+    return await this.createQueryBuilder('exam')
+      .select('exam.id')
+      .addSelect('exam.title')
+      .addSelect('exam.subject')
+      .where('exam.restrictedAccessList is NOT NULL')
+      .getMany();
+  }
+
   /****Exams Methods for Owner*** */
   async getExams(user: User): Promise<Exam[]> {
     const exams = await this.createQueryBuilder('exam')

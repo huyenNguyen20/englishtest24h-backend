@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateQuestionDto, FilterExamDto, UpdateExamDto, UpdateQuestionDto } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -51,12 +52,36 @@ export class ExamService {
   async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.examRepository.getPublishedExamIndexes();
   }
+  async getRestrictedExamIndexes(): Promise<Partial<Exam>[]> {
+    return await this.examRepository.getRestrictedExamIndexes();
+  }
   async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {
     return await this.examRepository.getPublishedExams(filterExamDto);
   }
   async getPublishedExam(examId: number): Promise<Exam> {
     return await this.examRepository.getPublishedExam(examId);
   }
+
+  async getRestrictedExam(email:string, examId: number): Promise<Exam> {
+    try {
+      const exam = await this.examRepository.findOne({
+        where: { id: examId },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      if(exam.restrictedAccessList){ 
+        const list = JSON.parse(exam.restrictedAccessList);
+        const isIncluded = list.filter(item => item.content === email);
+        if(isIncluded[0]) {
+          delete exam.sections;
+          return exam;
+        }
+      }
+      throw new UnauthorizedException("You are not permitted to take the test");
+    } catch (e) {
+      return e;
+    }
+  }
+
   async getLatestExams(): Promise<Exam[]> {
     return await this.examRepository.getLatestExams();
   }
@@ -81,6 +106,29 @@ export class ExamService {
       return { exam, sections };
     } catch (e) {
       throw new NotFoundException('Exam Not Found');
+    }
+  }
+
+  async getRestrictedExamForTestTaker (
+    email: string,
+    examId: number
+  ): Promise<{ exam: Exam; sections: Section[] }> {
+    try {
+      const exam = await this.examRepository.findOne({
+        where: { id: examId },
+      });
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      if(exam.restrictedAccessList){ 
+        const list = JSON.parse(exam.restrictedAccessList);
+        const isIncluded = list.filter(item => item.content === email);
+        if(isIncluded[0]) {
+          const sections = await this.sectionRepository.find({ where: { examId } });
+          return { exam, sections };
+        }
+      }
+      throw new UnauthorizedException("You are not permitted to take the test");
+    } catch (e) {
+      return e;
     }
   }
 

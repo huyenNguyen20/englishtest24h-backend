@@ -43,7 +43,7 @@ export class ExamController {
   /********************* */
   /***Exam Routes for Public Users***/
   /********************* */
-  @ApiOperation({ summary: 'Get Published Exams with / without filers' })
+  @ApiOperation({ summary: 'Get Published Exams with / without filters' })
   @ApiResponse({ status: 200, description: 'Exam Object Array' })
   @Get('/published')
   async getPublishedExams(
@@ -56,11 +56,13 @@ export class ExamController {
     return await this.examService.getPublishedExamIndexes();
   }
 
+  @ApiOperation({ summary: 'Get Latest Restricted Exams' })
   @Get('/published/latest')
   async getLatestExams(): Promise<Exam[]> {
     return await this.examService.getLatestExams();
   }
 
+  @ApiOperation({ summary: 'Get Related Published Exams' })
   @Get('/published/related/:examId')
   async getRelatedExams(
     @Param('examId', ParseIntPipe) examId: number,
@@ -68,16 +70,19 @@ export class ExamController {
     return await this.examService.getRelatedExams(examId);
   }
 
+  @ApiOperation({ summary: 'Get Subjects' })
   @Get('/subjects')
   async getSubject(): Promise<Exam[]> {
     return await this.examService.getSubjects();
   }
 
+  @ApiOperation({ summary: 'Get Question Types' })
   @Get('/questionTypes')
   async getQuestionTypes(): Promise<string[]> {
     return await this.examService.getQuestionTypes();
   }
 
+  @ApiOperation({ summary: 'Get Details of an Published Exam' })
   @Get('/published/:examId/examDetails')
   async getExamDetails(
     @Param('examId', ParseIntPipe) examId: number,
@@ -85,6 +90,7 @@ export class ExamController {
     return await this.examService.getPublishedExam(examId);
   }
 
+  @ApiOperation({ summary: 'Get an Published Exam for test taker' })
   @Get('/published/:examId')
   @UseGuards(AuthGuard())
   async getExamForTestTaker(
@@ -93,6 +99,7 @@ export class ExamController {
     return await this.examService.getExamForTestTaker(examId);
   }
 
+  @ApiOperation({ summary: 'Update Rating for a published exam' })
   @Post('/published/:examId/updateRating')
   @UseGuards(AuthGuard())
   async updateExamRating(
@@ -104,6 +111,46 @@ export class ExamController {
       examId,
     );
   }
+  /*****************Methods for Restricted Access*************** */
+  @Get('/restricted/indexes')
+  async getRestrictedExamIndexes(): Promise<Partial<Exam>[]> {
+    return await this.examService.getRestrictedExamIndexes();
+  }
+
+  @ApiOperation({ summary: 'Get Details of an Restricted Exam' })
+  @Get('/restricted/:examId/examDetails')
+  @UseGuards(AuthGuard())
+  async getRestrictedExamDetails(
+    @Param('examId', ParseIntPipe) examId: number,
+    @getUser() user: User,
+  ): Promise<Exam> {
+    return await this.examService.getRestrictedExam(user.email, examId);
+  }
+
+  @ApiOperation({ summary: 'Get an Published Exam for test takers' })
+  @Get('/restricted/:examId')
+  @UseGuards(AuthGuard())
+  async getRestrictedExamForTestTaker(
+    @Param('examId', ParseIntPipe) examId: number,
+    @getUser() user: User,
+  ): Promise<{ exam: Exam; sections: Section[] }> {
+    return await this.examService.getRestrictedExamForTestTaker(user.email, examId);
+  }
+
+  @ApiOperation({ summary: 'Update rating for an Published Exam' })
+  @Post('/restricted/:examId/updateRating')
+  @UseGuards(AuthGuard())
+  async updateRestrictedExamRating(
+    @Param('examId', ParseIntPipe) examId: number,
+    @getUser() user: User,
+    @Body(new ValidationPipe()) updateRatingDto: UpdateRatingDto,
+  ): Promise<void> {
+    return await this.examService.updateExamRating(
+      updateRatingDto.rating,
+      examId,
+    );
+  }
+
   /********************* */
   /***Exam Routes for Owner***/
   /********************* */
