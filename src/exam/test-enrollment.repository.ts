@@ -53,15 +53,17 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
     exam: Exam,
     user: User,
   ): Promise<TestEnrollment> {
-    const { score, answerObj, sectionsObj } = createTestEnrollmentDto;
+    const { score, totalScore, answerObj, sectionsObj } = createTestEnrollmentDto;
     const enrollment = await this.findOne({
       where: { examId: exam.id, studentId: user.id },
     });
+    console.log(score);
     if (!enrollment) {
       const newEnrollment = new TestEnrollment();
       newEnrollment.exam = exam;
       newEnrollment.subjectId = exam.subject;
       newEnrollment.student = user;
+      newEnrollment.totalScore = totalScore;
       if(score) newEnrollment.score = score;
       newEnrollment.answerObj = answerObj;
       newEnrollment.sectionsObj = sectionsObj;
@@ -95,6 +97,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       }
       enrollment.timeTaken++;
       if(score) enrollment.score = score;
+      enrollment.totalScore = totalScore;
       enrollment.answerObj = answerObj;
       enrollment.sectionsObj = sectionsObj;
       await enrollment.save();

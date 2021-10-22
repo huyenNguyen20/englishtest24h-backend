@@ -32,6 +32,9 @@ export class TestEnrollment extends BaseEntity {
   @Column({default: null})
   score: number;
 
+  @Column()
+  totalScore: number;
+
   @Column({type: 'longtext', default: null})
   teacherGrading: string;
 

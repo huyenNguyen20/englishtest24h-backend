@@ -6,6 +6,10 @@ export class CreateTestEnrollmentDto {
   @IsPositive()
   score: number;
 
+  @IsNumber()
+  @IsPositive()
+  totalScore: number;
+
   @IsNotEmpty()
   @IsString()
   answerObj: string;

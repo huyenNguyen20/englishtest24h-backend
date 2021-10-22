@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/entities/user.entity';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
 import { TestEnrollment } from './entities/test-enrollment.entity';
-import { ExamService } from './exam.service';
+import { ExamRepository } from './exam.repositary';
 import { TestEnrollmentRepository } from './test-enrollment.repository';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class TestEnrollmentService {
   constructor(
     @InjectRepository(TestEnrollmentRepository)
     private testEnrollmentRepository: TestEnrollmentRepository,
-    private examService: ExamService,
+    private examRepository: ExamRepository,
   ) {}
   async getAllEnrollmentIndexes(): Promise<Partial<TestEnrollment>[]> {
     return await this.testEnrollmentRepository.getAllEnrollmentIndexes();
@@ -27,9 +27,7 @@ export class TestEnrollmentService {
     examId: number,
     user: User,
   ): Promise<TestEnrollment> {
-    const { exam, sections } = await this.examService.getExamForTestTaker(
-      examId,
-    );
+    const exam= await this.examRepository.findOne(examId);
     if (!exam) throw new NotFoundException('Exam Not Found');
     return await this.testEnrollmentRepository.postTestScore(
       createTestEnrollmentDto,
