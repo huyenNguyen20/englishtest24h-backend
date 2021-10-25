@@ -29,7 +29,7 @@ export class AuthService {
     const isSignedIn = await this.authRepository.signInUser(signInUserDto);
     if (!isSignedIn) throw new UnauthorizedException();
     const user = await this.getUser({email});
-    const payload: JwtPayload = { email, isEducator: user.isEducator, isAdmin: user.isAdmin };
+    const payload: JwtPayload = { id: user.id, email, isEducator: user.isEducator, isAdmin: user.isAdmin };
     const token = await this.jwtService.sign(payload);
     return { token };
   }

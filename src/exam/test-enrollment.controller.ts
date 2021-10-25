@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -76,7 +77,43 @@ export class TestEnrollmentController {
   async getExamResult(
     @Param('examId', ParseIntPipe) examId: number,
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
+  ): Promise<{enrollment: TestEnrollment, teacherId: number, isPublished: boolean}> {
+    return await this.testEnrollmentService.getExamResult(examId, enrollmentId);
+  }
+
+  // Teacher update student's test score
+  @Put('/:examId/enrollments/:enrollmentId/updateScore')
+  @UseGuards(AuthGuard())
+  async updateScore(
+    @Body(new ValidationPipe()) body: {score : string},
+    @Param('examId', ParseIntPipe) examId: number,
+    @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
+    @getUser() user: User,
   ): Promise<TestEnrollment> {
-    return await this.testEnrollmentService.getExamResult(enrollmentId);
+    const score = parseInt(body.score, 10);
+    if(isNaN(score)) throw new BadRequestException("score must be a number");
+    else return await this.testEnrollmentService.updateScore(
+        parseInt(body.score),
+        examId,
+        enrollmentId,
+        user,
+      );
+  }
+
+  // Teacher update teacher grading
+  @Put('/:examId/enrollments/:enrollmentId/teacherGrading')
+  @UseGuards(AuthGuard())
+  async updateTeacherGrading(
+    @Body(new ValidationPipe()) body: {teacherGrading : string},
+    @Param('examId', ParseIntPipe) examId: number,
+    @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
+    @getUser() user: User,
+  ): Promise<TestEnrollment> {
+    return await this.testEnrollmentService.updateTeacherGrading(
+      body.teacherGrading,
+      examId,
+      enrollmentId,
+      user,
+    );
   }
 }

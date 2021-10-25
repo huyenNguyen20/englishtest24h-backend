@@ -57,14 +57,13 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
     const enrollment = await this.findOne({
       where: { examId: exam.id, studentId: user.id },
     });
-    console.log(score);
     if (!enrollment) {
       const newEnrollment = new TestEnrollment();
       newEnrollment.exam = exam;
       newEnrollment.subjectId = exam.subject;
       newEnrollment.student = user;
       newEnrollment.totalScore = totalScore;
-      if(score) newEnrollment.score = score;
+      if(score || score === 0) newEnrollment.score = score;
       newEnrollment.answerObj = answerObj;
       newEnrollment.sectionsObj = sectionsObj;
       newEnrollment.timeTaken = 1;
@@ -96,7 +95,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
         }
       }
       enrollment.timeTaken++;
-      if(score) enrollment.score = score;
+      if(score || score === 0) enrollment.score = score;
       enrollment.totalScore = totalScore;
       enrollment.answerObj = answerObj;
       enrollment.sectionsObj = sectionsObj;
@@ -105,6 +104,18 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
     return await this.getScore(exam.id, user);
   }
 
+  async updateEnrollment(payload: {score?:number, teacherGrading?: string}, enrollmentId: number): Promise<TestEnrollment>{
+    try {
+      const testEnrollment = await this.findOne(enrollmentId);
+      if(!testEnrollment) throw new Error("The student hasn't taken the test. The enrollment is not found.");
+      if(payload.score || payload.score === 0) testEnrollment.score = payload.score;
+      if(payload.teacherGrading) testEnrollment.teacherGrading = payload.teacherGrading;
+      await testEnrollment.save();
+      return testEnrollment;
+    } catch (e){
+      throw e;
+    }
+  }
   async getScore(examId: number, user: User): Promise<TestEnrollment> {
     try {
       const enrollment = await this.findOne({
