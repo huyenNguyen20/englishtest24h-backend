@@ -4,6 +4,7 @@ import { User } from 'src/auth/entities/user.entity';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
 import { TestEnrollment } from './entities/test-enrollment.entity';
 import { ExamRepository } from './exam.repositary';
+import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
 import { TestEnrollmentRepository } from './test-enrollment.repository';
 
 @Injectable()
@@ -65,8 +66,14 @@ export class TestEnrollmentService {
       throw e;
     }
   }
-  async getAllScores(examId: number): Promise<TestEnrollment[]> {
-    return await this.testEnrollmentRepository.getAllScores(examId);
+  async getAllScores(examId: number, user: User): Promise<EnrollmentDataToTeacher[]> {
+    try{
+      const exam = await this.examRepository.findOne(examId);
+      if(!exam || exam.ownerId !== user.id) throw new ForbiddenException("You are not allowed to access the endpoint");
+      return await this.testEnrollmentRepository.getAllScores(examId);
+    } catch (e) {
+      return e;
+    }
   }
   async getScore(examId: number, user: User): Promise<TestEnrollment> {
     return await this.testEnrollmentRepository.getScore(examId, user);

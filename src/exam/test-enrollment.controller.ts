@@ -18,6 +18,7 @@ import { getUser } from 'src/auth/decorator/getUser.decorator';
 import { User } from 'src/auth/entities/user.entity';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
 import { TestEnrollment } from './entities/test-enrollment.entity';
+import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
 import { TestEnrollmentValidationPipe } from './pipes/test-enrollment.pipe';
 import { TestEnrollmentService } from './test-enrollment.service';
 
@@ -66,11 +67,14 @@ export class TestEnrollmentController {
     return await this.testEnrollmentService.getScore(examId, user);
   }
 
+  // Method for teacher to get information about all enrollments in one exam
   @Get('/:examId/enrollments')
+  @UseGuards(AuthGuard())
   async getAllScores(
     @Param('examId', ParseIntPipe) examId: number,
-  ): Promise<TestEnrollment[]> {
-    return await this.testEnrollmentService.getAllScores(examId);
+    @getUser() user: User,
+  ): Promise<EnrollmentDataToTeacher[]> {
+    return await this.testEnrollmentService.getAllScores(examId, user);
   }
 
   @Get('/:examId/enrollments/:enrollmentId')

@@ -6,6 +6,7 @@ import { Exam } from './entities/exam.entity';
 import { TestEnrollment } from './entities/test-enrollment.entity';
 import * as config from 'config';
 import axios from 'axios';
+import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
 
 @EntityRepository(TestEnrollment)
 export class TestEnrollmentRepository extends Repository<TestEnrollment> {
@@ -44,7 +45,6 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
         .getMany();
       return enrollments;
     } catch (e) {
-      console.log(e);
       throw new BadRequestException();
     }
   }
@@ -133,12 +133,30 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
     }
   }
 
-  async getAllScores(examId: number): Promise<TestEnrollment[]> {
+  async getAllScores(examId: number): 
+  Promise<EnrollmentDataToTeacher[]> {
     try {
-      const enrollments = await this.find({ where: { examId } });
-      return enrollments;
+      const enrollments = await this.createQueryBuilder('e')  
+        .innerJoinAndSelect('e.student', 'user', 'user.id = e.studentId')
+        .where('e.examId = :examId', { examId })
+        .getMany();
+      const results : EnrollmentDataToTeacher[] = [];
+      enrollments.forEach((e : TestEnrollment) => {
+        const item : EnrollmentDataToTeacher = {
+          id: e.id,
+          email: e.student.email,
+          name: e.student.firstName + " "+ e.student.lastName,
+          lastAttempt: e.updatedBy,
+          noOfAttempt: e.timeTaken,
+          score: e.score,
+          totalScore: e.totalScore,
+          didTeacherComment: Boolean(e.teacherGrading)
+        };
+        results.push(item);
+      })
+      return results;
     } catch (e) {
-      throw new NotFoundException("You haven't enrolled in the exam");
+      throw new BadRequestException();
     }
   }
 
