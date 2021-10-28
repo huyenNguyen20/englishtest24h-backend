@@ -14,15 +14,48 @@ export class TestEnrollmentService {
     private testEnrollmentRepository: TestEnrollmentRepository,
     private examRepository: ExamRepository,
   ) {}
+  /********READ******** */
+  //Indexing frontend routes
   async getAllEnrollmentIndexes(): Promise<Partial<TestEnrollment>[]> {
     return await this.testEnrollmentRepository.getAllEnrollmentIndexes();
   }
   async getTestTakersScores(examId: number) {
     return await this.testEnrollmentRepository.getTestTakersScores(examId);
   }
+  // Get Past Exams for STUDENTS
   async getMyTests(user: User) {
     return await this.testEnrollmentRepository.getMyTest(user);
   }
+  // Get all enrollment records for TEACHERS
+  async getAllScores(examId: number, user: User): Promise<EnrollmentDataToTeacher[]> {
+    try{
+      const exam = await this.examRepository.findOne(examId);
+      if(!exam || exam.ownerId !== user.id) throw new ForbiddenException("You are not allowed to access the endpoint");
+      return await this.testEnrollmentRepository.getAllScores(examId);
+    } catch (e) {
+      return e;
+    }
+  }
+  // Check if the student has taken test for STUDENT
+  async getScore(examId: number, user: User): Promise<TestEnrollment> {
+    return await this.testEnrollmentRepository.getScore(examId, user);
+  }
+
+  // Get student's past exam review for STUDENT and TEACHER
+  async getExamResult(examId: number, enrollmentId: number)
+  : Promise<{enrollment: TestEnrollment; teacherId: number, isPublished: boolean}> {
+    try {
+      const exam = await this.examRepository.findOne(examId);
+      if(!exam) throw new NotFoundException("Exam Not Found");
+      const enrollment = await this.testEnrollmentRepository.getExamResult(enrollmentId);
+      return {enrollment, teacherId: exam.ownerId, isPublished: exam.isPublished}
+    } catch(e){
+      return e;
+    }
+  }
+
+   /********CREATE ******** */
+   // Post and update the student's answers and score for STUDENT
   async postTestScore(
     createTestEnrollmentDto: CreateTestEnrollmentDto,
     examId: number,
@@ -36,6 +69,9 @@ export class TestEnrollmentService {
       user,
     );
   }
+
+   /********UPDATE******** */
+  // Update student's score for TEACHER
   async updateScore(
     score: number, 
     examId: number, 
@@ -51,6 +87,7 @@ export class TestEnrollmentService {
       throw e;
     }
   }
+  // Update teacher grading of the exam for TEACHER
   async updateTeacherGrading(
     teacherGrading: string, 
     examId: number, 
@@ -66,27 +103,23 @@ export class TestEnrollmentService {
       throw e;
     }
   }
-  async getAllScores(examId: number, user: User): Promise<EnrollmentDataToTeacher[]> {
-    try{
-      const exam = await this.examRepository.findOne(examId);
-      if(!exam || exam.ownerId !== user.id) throw new ForbiddenException("You are not allowed to access the endpoint");
-      return await this.testEnrollmentRepository.getAllScores(examId);
-    } catch (e) {
-      return e;
-    }
-  }
-  async getScore(examId: number, user: User): Promise<TestEnrollment> {
-    return await this.testEnrollmentRepository.getScore(examId, user);
-  }
-  async getExamResult(examId: number, enrollmentId: number)
-  : Promise<{enrollment: TestEnrollment; teacherId: number, isPublished: boolean}> {
+
+   /********DELETE******** */
+   // Remove a student's enrollment record by TEACHER
+  async removeTestEnrollments(
+    examId: number,
+    list: string[],
+    user: User,
+  ){
     try {
+      // Check the user permission
       const exam = await this.examRepository.findOne(examId);
-      if(!exam) throw new NotFoundException("Exam Not Found");
-      const enrollment = await this.testEnrollmentRepository.getExamResult(enrollmentId);
-      return {enrollment, teacherId: exam.ownerId, isPublished: exam.isPublished}
-    } catch(e){
-      return e;
+      if((!exam) || (exam.ownerId !== user.id)) throw new ForbiddenException("You have no permission to perform the task");
+      // Update TestEnrollment
+      return await this.testEnrollmentRepository.removeEnrollments(exam, list);
+    } catch (e) {
+      throw e;
     }
   }
+  
 }

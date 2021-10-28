@@ -10,6 +10,7 @@ import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.
 
 @EntityRepository(TestEnrollment)
 export class TestEnrollmentRepository extends Repository<TestEnrollment> {
+  /************READ**********/
   async getAllEnrollmentIndexes(): Promise<Partial<TestEnrollment>[]> {
     return await this.createQueryBuilder('e')
       .select('e.id')
@@ -46,74 +47,6 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       return enrollments;
     } catch (e) {
       throw new BadRequestException();
-    }
-  }
-  async postTestScore(
-    createTestEnrollmentDto: CreateTestEnrollmentDto,
-    exam: Exam,
-    user: User,
-  ): Promise<TestEnrollment> {
-    const { score, totalScore, answerObj, sectionsObj } = createTestEnrollmentDto;
-    const enrollment = await this.findOne({
-      where: { examId: exam.id, studentId: user.id },
-    });
-    if (!enrollment) {
-      const newEnrollment = new TestEnrollment();
-      newEnrollment.exam = exam;
-      newEnrollment.subjectId = exam.subject;
-      newEnrollment.student = user;
-      newEnrollment.totalScore = totalScore;
-      if(score || score === 0) newEnrollment.score = score;
-      newEnrollment.answerObj = answerObj;
-      newEnrollment.sectionsObj = sectionsObj;
-      newEnrollment.timeTaken = 1;
-      await newEnrollment.save();
-      delete newEnrollment.exam;
-      delete newEnrollment.student;
-      //Update TestTaker
-      await getConnection()
-        .createQueryBuilder()
-        .update(Exam)
-        .set({
-          testTakers: exam.testTakers + 1,
-        })
-        .where('id = :examId', { examId: exam.id })
-        .execute();
-    } else {
-      const subject = exam.subject;
-      if (subject === 3) {
-        const urlArr = [];
-        const answers = JSON.parse(enrollment.answerObj);
-        for (const a in answers) {
-          if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
-            urlArr.push(answers[a].userAnswer[0]);
-        }
-        for (const url of urlArr) {
-          const filename = url.substring(url.lastIndexOf('/') + 1);
-          const audioPath = `${config.get('deleteAudio').url}/${filename}`;
-          await axios.delete(audioPath);
-        }
-      }
-      enrollment.timeTaken++;
-      if(score || score === 0) enrollment.score = score;
-      enrollment.totalScore = totalScore;
-      enrollment.answerObj = answerObj;
-      enrollment.sectionsObj = sectionsObj;
-      await enrollment.save();
-    }
-    return await this.getScore(exam.id, user);
-  }
-
-  async updateEnrollment(payload: {score?:number, teacherGrading?: string}, enrollmentId: number): Promise<TestEnrollment>{
-    try {
-      const testEnrollment = await this.findOne(enrollmentId);
-      if(!testEnrollment) throw new Error("The student hasn't taken the test. The enrollment is not found.");
-      if(payload.score || payload.score === 0) testEnrollment.score = payload.score;
-      if(payload.teacherGrading) testEnrollment.teacherGrading = payload.teacherGrading;
-      await testEnrollment.save();
-      return testEnrollment;
-    } catch (e){
-      throw e;
     }
   }
   async getScore(examId: number, user: User): Promise<TestEnrollment> {
@@ -166,6 +99,109 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       return enrollment;
     } catch (e) {
       throw new NotFoundException("You haven't enrolled in the exam");
+    }
+  }
+  /************CREATE**********/
+  async postTestScore(
+    createTestEnrollmentDto: CreateTestEnrollmentDto,
+    exam: Exam,
+    user: User,
+  ): Promise<TestEnrollment> {
+    const { score, totalScore, answerObj, sectionsObj } = createTestEnrollmentDto;
+    const enrollment = await this.findOne({
+      where: { examId: exam.id, studentId: user.id },
+    });
+    if (!enrollment) {
+      const newEnrollment = new TestEnrollment();
+      newEnrollment.exam = exam;
+      newEnrollment.subjectId = exam.subject;
+      newEnrollment.student = user;
+      newEnrollment.totalScore = totalScore;
+      if(score || score === 0) newEnrollment.score = score;
+      newEnrollment.answerObj = answerObj;
+      newEnrollment.sectionsObj = sectionsObj;
+      newEnrollment.timeTaken = 1;
+      await newEnrollment.save();
+      delete newEnrollment.exam;
+      delete newEnrollment.student;
+      //Update TestTaker
+      await getConnection()
+        .createQueryBuilder()
+        .update(Exam)
+        .set({
+          testTakers: exam.testTakers + 1,
+        })
+        .where('id = :examId', { examId: exam.id })
+        .execute();
+    } else {
+      const subject = exam.subject;
+      // Student's speaking answer will container recording audio url, so old audio urls must be removed
+      if (subject === 3) {
+        const urlArr = [];
+        const answers = JSON.parse(enrollment.answerObj);
+        for (const a in answers) {
+          if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
+            urlArr.push(answers[a].userAnswer[0]);
+        }
+        for (const url of urlArr) {
+          const filename = url.substring(url.lastIndexOf('/') + 1);
+          const audioPath = `${config.get('deleteAudio').url}/${filename}`;
+          await axios.delete(audioPath);
+        }
+      }
+      enrollment.timeTaken++;
+      if(score || score === 0) enrollment.score = score;
+      enrollment.totalScore = totalScore;
+      enrollment.answerObj = answerObj;
+      enrollment.sectionsObj = sectionsObj;
+      await enrollment.save();
+    }
+    return await this.getScore(exam.id, user);
+  }
+  /************UPDATE**********/
+  async updateEnrollment(payload: {score?:number, teacherGrading?: string}, enrollmentId: number): Promise<TestEnrollment>{
+    try {
+      const testEnrollment = await this.findOne(enrollmentId);
+      if(!testEnrollment) throw new Error("The student hasn't taken the test. The enrollment is not found.");
+      if(payload.score || payload.score === 0) testEnrollment.score = payload.score;
+      if(payload.teacherGrading) testEnrollment.teacherGrading = payload.teacherGrading;
+      await testEnrollment.save();
+      return testEnrollment;
+    } catch (e){
+      throw e;
+    }
+  }
+  /************DELETE**********/
+  async removeEnrollments(exam: Exam, list: string[]) {
+    try{
+      // If this is Enrollment Record for speaking test, the recording audio urls need to be removed
+      if(exam.subject === 3){
+        for(let id of list){
+          const enrollment = await this.findOne(id);
+          if (enrollment) {
+            const urlArr = [];
+            const answers = JSON.parse(enrollment.answerObj);
+            for (const a in answers) {
+              if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
+                urlArr.push(answers[a].userAnswer[0]);
+            }
+            for (const url of urlArr) {
+              const filename = url.substring(url.lastIndexOf('/') + 1);
+              const audioPath = `${config.get('deleteAudio').url}/${filename}`;
+              await axios.delete(audioPath);
+            }
+          }
+        } 
+      }
+      // Remove the enrollment
+      return await getConnection()
+          .createQueryBuilder()
+          .delete()
+          .from(TestEnrollment)
+          .where("id IN (:...Ids)", { Ids: [...list] })
+          .execute();
+    } catch(e){
+      return e;
     }
   }
 }

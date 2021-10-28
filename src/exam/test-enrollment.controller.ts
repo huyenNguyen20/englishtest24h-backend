@@ -2,11 +2,13 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
   Post,
   Put,
+  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -25,6 +27,7 @@ import { TestEnrollmentService } from './test-enrollment.service';
 @Controller('testEnrollment')
 export class TestEnrollmentController {
   constructor(private readonly testEnrollmentService: TestEnrollmentService) {}
+  /****GET methods*** */
   @Get('/')
   async getAllEnrollmentIndexes(): Promise<Partial<TestEnrollment>[]> {
     return await this.testEnrollmentService.getAllEnrollmentIndexes();
@@ -41,21 +44,6 @@ export class TestEnrollmentController {
     @Param('examId', ParseIntPipe) examId: number,
   ): Promise<any> {
     return await this.testEnrollmentService.getTestTakersScores(examId);
-  }
-
-  @Post('/:examId')
-  @UseGuards(AuthGuard())
-  async postTestScore(
-    @Body(new TestEnrollmentValidationPipe())
-    createTestEnrollmentDto: CreateTestEnrollmentDto,
-    @Param('examId', ParseIntPipe) examId: number,
-    @getUser() user: User,
-  ): Promise<TestEnrollment> {
-    return await this.testEnrollmentService.postTestScore(
-      createTestEnrollmentDto,
-      examId,
-      user,
-    );
   }
 
   @Get('/:examId')
@@ -85,6 +73,23 @@ export class TestEnrollmentController {
     return await this.testEnrollmentService.getExamResult(examId, enrollmentId);
   }
 
+   /****POST methods*** */
+  @Post('/:examId')
+  @UseGuards(AuthGuard())
+  async postTestScore(
+    @Body(new TestEnrollmentValidationPipe())
+    createTestEnrollmentDto: CreateTestEnrollmentDto,
+    @Param('examId', ParseIntPipe) examId: number,
+    @getUser() user: User,
+  ): Promise<TestEnrollment> {
+    return await this.testEnrollmentService.postTestScore(
+      createTestEnrollmentDto,
+      examId,
+      user,
+    );
+  }
+
+   /****PUT methods*** */
   // Teacher update student's test score
   @Put('/:examId/enrollments/:enrollmentId/updateScore')
   @UseGuards(AuthGuard())
@@ -117,6 +122,23 @@ export class TestEnrollmentController {
       body.teacherGrading,
       examId,
       enrollmentId,
+      user,
+    );
+  }
+
+   /****DELETE methods*** */
+  // Teacher delete test enrollment
+  @Delete('/:examId/enrollments')
+  @UseGuards(AuthGuard())
+  async removeTestEnrollments(
+    @Param('examId', ParseIntPipe) examId: number,
+    @Query('idList') idList: string,
+    @getUser() user: User
+  ){
+    const list =  idList.split("+");
+    return await this.testEnrollmentService.removeTestEnrollments(
+      examId,
+      list,
       user,
     );
   }
