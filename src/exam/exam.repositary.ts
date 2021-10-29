@@ -6,8 +6,8 @@ import { CreateExamDto, FilterExamDto, UpdateExamDto } from './dto';
 import { User } from 'src/auth/entities/user.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Question } from './entities/question.entity';
+import { StudentQuestion } from '../studentQuestion/entities/question.entity';
 import { TestEnrollment } from './entities/test-enrollment.entity';
-import { Post, Comment } from 'src/post/entities/post.entity';
 import { Section } from './entities/section.entity';
 import { QuestionGroup } from './entities/questionGroup.entity';
 import { Answer } from './entities/answer.entity';
@@ -322,7 +322,7 @@ export class ExamRepository extends Repository<Exam> {
             .execute();
           if (questions.length > 0) {
             const questionIds = questions.map((question) => question.id);
-            //Delete Images of Corresponding Questions
+            //Delete Images of Corresponding Exam Questions
             for (let question of questions) {
               if (Boolean(question.imageUrl)) {
                 const filename = question.imageUrl.substring(
@@ -341,7 +341,7 @@ export class ExamRepository extends Repository<Exam> {
                 questionIds: [...questionIds],
               })
               .execute();
-            //Delete Questions
+            //Delete Exam Questions
             await getConnection()
               .createQueryBuilder()
               .delete()
@@ -367,7 +367,7 @@ export class ExamRepository extends Repository<Exam> {
           .where('id IN (:...sectionIds)', { sectionIds: [...sectionIds] })
           .execute();
       }
-      // Delete Exam
+      // Delete Corresponding Enrollment Records
       await getConnection()
         .createQueryBuilder()
         .delete()
@@ -375,29 +375,14 @@ export class ExamRepository extends Repository<Exam> {
         .where('examId =:examId', { examId })
         .execute();
 
-      const posts = await getConnection()
+      // Delete Corresponding Students' questions
+      await getConnection()
         .createQueryBuilder()
-        .select('id')
-        .from(Post, 'post')
-        .where('post.examId =:examId', { examId })
-        .getMany();
-
-      if (posts.length > 0) {
-        const postIds = posts.map((post) => post.id);
-        await getConnection()
-          .createQueryBuilder()
-          .delete()
-          .from(Comment)
-          .where('postId IN (:...postIds)', { postIds: [...postIds] })
-          .execute();
-
-        await getConnection()
-          .createQueryBuilder()
-          .delete()
-          .from(Post)
-          .where('examId =:examId', { examId })
-          .execute();
-      }
+        .delete()
+        .from(StudentQuestion)
+        .where('examId =:examId', { examId })
+        .execute();
+      
 
       await this.delete(examId);
       return await this.getExams(user);

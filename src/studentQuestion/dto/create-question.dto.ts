@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class CreatePostDto {
+export class CreateQuestionDto {
   @IsNotEmpty()
   @IsString()
-  body: string;
+  question: string;
 }
