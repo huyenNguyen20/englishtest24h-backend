@@ -27,46 +27,46 @@ export class StudentQuestionController {
   // Route for STUDENT to create their questions
   @Post('/student/:examId')
   @UseGuards(AuthGuard())
-  createQuestion(
+  async createQuestion(
     @Body(new ValidationPipe()) createQuestionDto: CreateQuestionDto,
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
   ): Promise<StudentQuestion[]>  {
-    return this.studentQuestionService.createQuestion(createQuestionDto, examId, user);
+    return await this.studentQuestionService.createQuestion(createQuestionDto, examId, user);
   }
 
   /*****GET****** */
   //Route for STUDENTS to get their questions for one exam 
   @Get('/student/:examId')
   @UseGuards(AuthGuard())
-  getQuestionsForStudent(
+  async getQuestionsForStudent(
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
     ): Promise<StudentQuestion[]> {
-    return this.studentQuestionService.getQuestionsForStudent(examId, user);
+    return await  this.studentQuestionService.getQuestionsForStudent(examId, user);
   }
 
   //Route for TEACHER to get all students' questions for one exam
   @Get('/teacher/:examId')
   @UseGuards(AuthGuard())
-  getQuestionsForTeacher(
+  async getQuestionsForTeacher(
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
   ) : Promise<StudentQuestion[]>{
-    return this.studentQuestionService.getQuestionsForTeacher(examId, user);
+    return  await this.studentQuestionService.getQuestionsForTeacher(examId, user);
   }
 
   /*****UPDATE****** */
   //Method for STUDENT to edit their question
   @Put('/student/:examId/:questionId')
   @UseGuards(AuthGuard())
-  updateQuestion(
+  async updateQuestion(
     @Body() updateQuestionDto: UpdateQuestionDto,
     @Param('examId', ParseIntPipe) examId: number,
     @Param('questionId', ParseIntPipe) questionId: number,
     @getUser() user: User,
   ) : Promise<StudentQuestion[]>{
-    return this.studentQuestionService.updateQuestion(
+    return await  this.studentQuestionService.updateQuestion(
       updateQuestionDto,
       examId,
       questionId,
@@ -77,13 +77,13 @@ export class StudentQuestionController {
   //Method for TEACHER to post/edit their answers to students' question
   @Put('/teacher/:examId/:questionId')
   @UseGuards(AuthGuard())
-  updatePostByEnrollment(
+  async updateAnswer(
     @Body() createAnswerDto: CreateTeacherAnswerDto,
     @Param('examId', ParseIntPipe) examId: number,
     @Param('questionId', ParseIntPipe) questionId: number,
     @getUser() user: User,
   ): Promise<StudentQuestion[]>  {
-    return this.studentQuestionService.updateAnswer(
+    return await  this.studentQuestionService.updateAnswer(
       createAnswerDto,
       examId,
       questionId,
@@ -96,12 +96,12 @@ export class StudentQuestionController {
   //Method for STUDENT to delete their questions
   @Delete('/student/:examId/:questionId')
   @UseGuards(AuthGuard())
-  deleteQuestionForStudent(
+  async deleteQuestionForStudent(
     @Param('examId', ParseIntPipe) examId: number,
     @Param('questionId', ParseIntPipe) questionId: number,
     @getUser() user: User,
   ): Promise<StudentQuestion[]>  {
-    return this.studentQuestionService.deleteQuestionForStudent(
+    return await  this.studentQuestionService.deleteQuestionForStudent(
       questionId,
       examId,
       user
@@ -110,13 +110,13 @@ export class StudentQuestionController {
 
   @Delete('/teacher/:examId')
   @UseGuards(AuthGuard())
-  deleteQuestionsForTeacher(
+  async deleteQuestionsForTeacher(
     @Param('examId', ParseIntPipe) examId: number,
     @Query('idList') idList: string,
     @getUser() user: User,
   ): Promise<StudentQuestion[]>  {
-    const list : string[]= idList.split('+');
-    return this.studentQuestionService.deleteQuestionsForTeacher(
+    const list : string[] = idList.split('+');
+    return await this.studentQuestionService.deleteQuestionsForTeacher(
       list,
       examId,
       user

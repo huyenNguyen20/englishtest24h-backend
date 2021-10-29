@@ -17,6 +17,15 @@ export class StudentQuestion extends BaseEntity {
   @Column()
   userId: number;
 
+  @Column()
+  email: string;
+
+  @Column()
+  name: string;
+
+  @Column()
+  title: string;
+
   @Column('longtext')
   question: string;
 

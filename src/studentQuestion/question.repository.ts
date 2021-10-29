@@ -20,13 +20,17 @@ export class StudentQuestionRepository extends Repository<Question> {
   ): Promise<Question[]> {
     try {
       const newQuestion = new Question();
-      const { question } = createQuestionDto;
+      const { title, question } = createQuestionDto;
+      newQuestion.title = title;
       newQuestion.question = question;
       newQuestion.examId = examId;
       newQuestion.userId = user.id;
+      newQuestion.email = user.email;
+      newQuestion.name = `${user.firstName} ${user.lastName}`;
       await newQuestion.save();
       return await this.getQuestionsForStudent(examId, user.id);
     } catch (e) {
+      console.log(e);
       throw new BadRequestException('Something went wrong. Please try again');
     }
   }
@@ -51,8 +55,9 @@ export class StudentQuestionRepository extends Repository<Question> {
     const whereClause = { id: questionId, userId: user.id }
     const oldQuestion = await this.findOne({ where: whereClause });
     if (!oldQuestion) throw new NotFoundException('Question Not Found');
-    const { question } = updateQuestionDto;
-    oldQuestion.question = question;
+    const { title, question } = updateQuestionDto;
+    if(question) oldQuestion.question = question;
+    if(title) oldQuestion.title = title;
     await oldQuestion.save();
     return await this.getQuestionsForStudent(examId, user.id);
   }

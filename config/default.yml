@@ -2,7 +2,7 @@
 db:
   type: 'mysql'
   port: '3306'
-  synchronize: false
+  synchronize: true
   
 jwt:
   expiresIn:  86400
