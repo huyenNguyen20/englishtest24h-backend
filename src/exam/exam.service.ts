@@ -62,15 +62,21 @@ export class ExamService {
     return await this.examRepository.getPublishedExam(examId);
   }
 
-  async getRestrictedExam(email:string, examId: number): Promise<Exam> {
+  async getRestrictedExam(user: User, examId: number): Promise<Exam> {
     try {
       const exam = await this.examRepository.findOne({
         where: { id: examId },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
+      // Exam owner can access the test
+      if(exam.ownerId === user.id){ 
+          delete exam.sections;
+          return exam;
+      }
+      // Student whose email listed in the restricted access list can access the test
       if(exam.restrictedAccessList){ 
         const list = JSON.parse(exam.restrictedAccessList);
-        const isIncluded = list.filter(item => item.content === email);
+        const isIncluded = list.filter(item => item.content === user.email);
         if(isIncluded[0]) {
           delete exam.sections;
           return exam;
@@ -110,19 +116,24 @@ export class ExamService {
   }
 
   async getRestrictedExamForTestTaker (
-    email: string,
+    user: User,
     examId: number
   ): Promise<{ exam: Exam; sections: Section[] }> {
     try {
       const exam = await this.examRepository.findOne({
         where: { id: examId },
       });
+      const sections = await this.sectionRepository.find({ where: { examId } });
       if (!exam) throw new NotFoundException('Exam Not Found');
+      // Exam owner can access the test
+      if(exam.ownerId === user.id){ 
+        return { exam, sections };
+      }
+      // Student whose email listed in the restricted access list can access the test
       if(exam.restrictedAccessList){ 
         const list = JSON.parse(exam.restrictedAccessList);
-        const isIncluded = list.filter(item => item.content === email);
+        const isIncluded = list.filter(item => item.content === user.email);
         if(isIncluded[0]) {
-          const sections = await this.sectionRepository.find({ where: { examId } });
           return { exam, sections };
         }
       }

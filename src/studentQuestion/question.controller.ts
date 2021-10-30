@@ -115,7 +115,7 @@ export class StudentQuestionController {
     @Query('idList') idList: string,
     @getUser() user: User,
   ): Promise<StudentQuestion[]>  {
-    const list : string[] = idList.split('+');
+    const list : string[] = idList.split(' ');
     return await this.studentQuestionService.deleteQuestionsForTeacher(
       list,
       examId,

@@ -124,7 +124,7 @@ export class ExamController {
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
   ): Promise<Exam> {
-    return await this.examService.getRestrictedExam(user.email, examId);
+    return await this.examService.getRestrictedExam(user, examId);
   }
 
   @ApiOperation({ summary: 'Get an Published Exam for test takers' })
@@ -134,7 +134,7 @@ export class ExamController {
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
   ): Promise<{ exam: Exam; sections: Section[] }> {
-    return await this.examService.getRestrictedExamForTestTaker(user.email, examId);
+    return await this.examService.getRestrictedExamForTestTaker(user, examId);
   }
 
   @ApiOperation({ summary: 'Update rating for an Published Exam' })
