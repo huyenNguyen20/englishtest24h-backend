@@ -8,6 +8,7 @@ import {
   UseGuards,
   HttpStatus,
   UseInterceptors,
+  Put,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
@@ -167,6 +168,23 @@ export class AuthController {
     const updatedUser = await this.authService.updateProfile(
       user,
       updateProfile,
+    );
+    return res.status(200).json(updatedUser);
+  }
+
+  @ApiOperation({ summary: 'Toggle isEducator' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return updated user profile',
+  })
+  @Put('/toggleIsEducator')
+  @UseGuards(AuthGuard())
+  async toggleIsEducator(
+    @getUser() user: User,
+    @Response() res,
+  ) {
+    const updatedUser = await this.authService.toggleIsEducator(
+      user
     );
     return res.status(200).json(updatedUser);
   }

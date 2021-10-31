@@ -56,22 +56,11 @@ export class AuthService {
   }
 
   async updateProfile(user: User, updates: ProfileDto): Promise<ProfileDto> {
-    const profile = await this.authRepository.findOne(user.id);
-    if (profile && Boolean(profile.avatarUrl)) {
-      const fs = require('fs');
-      const fileName = profile.avatarUrl.split('/');
-      try {
-        fs.unlinkSync(
-          join(
-            process.cwd(),
-            `public/usersFile/images/${fileName[fileName.length - 1]}`,
-          ),
-        );
-        console.log('File was deleted');
-      } catch (e) {
-        console.log('File Deletion Error: Something went wrong');
-      }
-    }
     return await this.authRepository.updateProfile(user, updates);
+  }
+
+  async toggleIsEducator (user: User) {
+    const profile = await this.authRepository.findOne(user.id);
+    return await this.authRepository.updateProfile(user, {isEducator: !profile.isEducator})
   }
 }

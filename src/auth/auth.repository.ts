@@ -96,4 +96,6 @@ export class AuthRepository extends Repository<User> {
       throw new BadRequestException(e.toString());
     }
   }
+
+  
 }

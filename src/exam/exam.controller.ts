@@ -112,6 +112,14 @@ export class ExamController {
     );
   }
   /*****************Methods for Restricted Access*************** */
+  @Get('/restricted')
+  @UseGuards(AuthGuard())
+  async getRestrictedExams(
+    @getUser() user: User,
+  ): Promise<Partial<Exam>[]> {
+    return await this.examService.getRestrictedExams(user);
+  }
+
   @Get('/restricted/indexes')
   async getRestrictedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.examService.getRestrictedExamIndexes();

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as config from 'config';
 import { Exam, Subjects } from './entities/exam.entity';
-import { EntityRepository, getConnection, Repository } from 'typeorm';
+import { EntityRepository, getConnection, IsNull, Not, Repository } from 'typeorm';
 import { CreateExamDto, FilterExamDto, UpdateExamDto } from './dto';
 import { User } from 'src/auth/entities/user.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
@@ -59,7 +59,6 @@ export class ExamRepository extends Repository<Exam> {
       const exams = await query.getMany();
       return exams;
     } catch (e) {
-      console.log('error --- ', e);
       throw new BadRequestException('Something went wrong.');
     }
   }
@@ -143,6 +142,30 @@ export class ExamRepository extends Repository<Exam> {
       .addSelect('exam.subject')
       .where('exam.restrictedAccessList is NOT NULL')
       .getMany();
+  }
+
+  async getRestrictedExams(user: User): Promise<Exam[]> {
+    try {
+      const query = this.createQueryBuilder('exam')
+        .select('exam.id')
+        .addSelect('exam.isPublished')
+        .addSelect('exam.imageUrl')
+        .addSelect('exam.title')
+        .addSelect('exam.ownerId')
+        .addSelect('exam.authorName')
+        .addSelect('exam.totalRating')
+        .addSelect('exam.ratingPeople')
+        .addSelect('exam.testTakers')
+        .addSelect('exam.description')
+        .addSelect('exam.updatedBy')
+        .addSelect('exam.timeAllowed')
+        .addSelect('exam.subject')
+        .where('exam.restrictedAccessList LIKE :email',{email: `%${user.email}%`})
+      const exams = await query.getMany();
+      return exams;
+    } catch (e) {
+      throw new BadRequestException('Something went wrong.');
+    }
   }
 
   /****Exams Methods for Owner*** */
