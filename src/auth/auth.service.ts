@@ -59,7 +59,6 @@ export class AuthService {
   async updateProfile(user: User, updates: ProfileDto): Promise<ProfileDto> {
     // If there is a new avatarUrl, delete the old one
     const { avatarUrl } = updates;
-    console.log(avatarUrl);
     if (avatarUrl && Boolean(user.avatarUrl) && user.avatarUrl !== avatarUrl) {
       const filename = user.avatarUrl.substring(
         user.avatarUrl.lastIndexOf('/') + 1,
@@ -73,5 +72,28 @@ export class AuthService {
   async toggleIsEducator (user: User) {
     const profile = await this.authRepository.findOne(user.id);
     return await this.authRepository.updateProfile(user, {isEducator: !profile.isEducator})
+  }
+
+  /*****Admin Methods***** */
+  async getEducators() : Promise<User[]> {
+    return await this.authRepository.find({
+      select: ["id", "email", "firstName", "lastName"],
+      where: {isEducator : true}})
+  }
+
+  async getStudents() : Promise<User[]> {
+    return await this.authRepository.find({
+      select: ["id", "email", "firstName", "lastName"],
+      where: {isEducator : false}})
+  }
+
+  async deleteEducator(educatorId: number) : Promise<User[]> {
+    await this.authRepository.deleteUser(educatorId);
+    return await this.getEducators();
+  }
+
+  async deleteStudent(studentId: number) : Promise<User[]> {
+    await this.authRepository.deleteUser(studentId);
+    return await this.getStudents();
   }
 }

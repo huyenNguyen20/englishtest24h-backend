@@ -1,4 +1,4 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/createUser.dto';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcryptjs';
@@ -98,5 +98,12 @@ export class AuthRepository extends Repository<User> {
     }
   }
 
-  
+  async deleteUser(id: number) {
+    await getConnection()
+    .createQueryBuilder()
+    .delete()
+    .from(User)
+    .where("id = :id", { id })
+    .execute();
+  }
 }

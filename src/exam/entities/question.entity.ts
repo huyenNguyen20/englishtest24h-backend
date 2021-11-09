@@ -33,7 +33,10 @@ export class Question extends BaseEntity {
   @Column({ default: null, type: 'longtext' })
   question: string;
 
-  @OneToMany((type) => Answer, (answer) => answer.question, { eager: true })
+  @OneToMany(
+    (type) => Answer, 
+    (answer) => answer.question, 
+    { eager: true, cascade: ['remove', 'soft-remove'] })
   answers: Answer[];
 
   @Column()

@@ -35,14 +35,17 @@ export class Section extends BaseEntity {
   @OneToMany(
     (type) => QuestionGroup,
     (questionGroup) => questionGroup.section,
-    { eager: true },
+    { eager: true, cascade: ['remove', 'soft-remove'] },
   )
   questionGroups: QuestionGroup[];
 
   @Column()
   ownerId: number;
 
-  @ManyToOne((type) => Exam, (exam) => exam.sections, { eager: false })
+  @ManyToOne(
+    (type) => Exam, 
+    (exam) => exam.sections, 
+    { eager: false })
   exam: Exam;
 
   @Column()

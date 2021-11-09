@@ -15,11 +15,11 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { getUser } from 'src/auth/decorator/getUser.decorator';
 import { User } from 'src/auth/entities/user.entity';
-import { FilterExamDto } from './dto';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
+import { FilterDto } from './dto/filter.dto';
 import { TestEnrollment } from './entities/test-enrollment.entity';
 import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
-import { ExamFilterValidationPipe } from './pipes/exam-filter.pipe';
+import { FilterValidationPipe } from './pipes/filter.pipe';
 import { TestEnrollmentValidationPipe } from './pipes/test-enrollment.pipe';
 import { TestEnrollmentService } from './test-enrollment.service';
 
@@ -36,7 +36,7 @@ export class TestEnrollmentController {
   @UseGuards(AuthGuard())
   async getMyTests(
     @getUser() user: User,
-    @Query(new ExamFilterValidationPipe) filter: Partial<FilterExamDto>
+    @Query(new FilterValidationPipe) filter: FilterDto
     ): Promise<any> {
     return await this.testEnrollmentService.getMyTests(user, filter);
   }

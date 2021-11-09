@@ -57,11 +57,17 @@ export class Exam extends BaseEntity {
   testTakers: number;
 
   /***For Reading and Writing Exam**/
-  @OneToMany((type) => Section, (section) => section.exam, { eager: true })
+  @OneToMany(
+    (type) => Section, 
+    (section) => section.exam, 
+    { eager: true, cascade: ['remove', 'soft-remove'] })
   sections: Section[];
   /*****************************/
 
-  @ManyToOne((type) => User, (user) => user.exams, { eager: false })
+  @ManyToOne(
+    (type) => User, 
+    (user) => user.exams, 
+    { eager: false })
   owner: User;
 
   @Column()
@@ -73,7 +79,7 @@ export class Exam extends BaseEntity {
   @OneToMany(
     (type) => TestEnrollment,
     (testEnrollment) => testEnrollment.exam,
-    { eager: false },
+    { eager: false, cascade: ['remove', 'soft-remove'] },
   )
   testErollments: TestEnrollment[];
 }

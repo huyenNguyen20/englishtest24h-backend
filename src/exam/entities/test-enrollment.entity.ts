@@ -23,7 +23,10 @@ export class TestEnrollment extends BaseEntity {
   @Column()
   subjectId: number;
 
-  @ManyToOne((type) => User, (user) => user.testErollments, { eager: false })
+  @ManyToOne(
+    (type) => User, 
+    (user) => user.testErollments, 
+    { eager: false })
   student: User;
 
   @Column()

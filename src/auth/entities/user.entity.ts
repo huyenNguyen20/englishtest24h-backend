@@ -43,8 +43,10 @@ export class User extends BaseEntity {
   @Column()
   salt: string;
 
-  @OneToMany((type) => Exam, (exam) => exam.owner, {
-    eager: true,
+  @OneToMany(
+    (type) => Exam, 
+    (exam) => exam.owner, {
+    eager: false,
     cascade: ['remove', 'soft-remove'],
   })
   exams: Exam[];
@@ -52,7 +54,7 @@ export class User extends BaseEntity {
   @OneToMany(
     (type) => TestEnrollment,
     (testEnrollment) => testEnrollment.student,
-    { eager: true, cascade: ['remove', 'soft-remove'] },
+    { eager: false, cascade: ['remove', 'soft-remove'] },
   )
   testErollments: TestEnrollment[];
 

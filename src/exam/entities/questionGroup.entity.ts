@@ -49,8 +49,10 @@ export class QuestionGroup extends BaseEntity {
   @Column({type:'longtext', default: null})
   matchingOptions: string;
 
-  @OneToMany((type) => Question, (question) => question.questionGroup, {
-    eager: true,
+  @OneToMany(
+    (type) => Question, 
+    (question) => question.questionGroup, {
+    eager: true, cascade: ['remove', 'soft-remove']
   })
   questions: Question[];
 

@@ -1,8 +1,8 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/entities/user.entity';
-import { FilterExamDto } from './dto';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
+import { FilterDto } from './dto/filter.dto';
 import { TestEnrollment } from './entities/test-enrollment.entity';
 import { ExamRepository } from './exam.repositary';
 import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
@@ -13,6 +13,8 @@ export class TestEnrollmentService {
   constructor(
     @InjectRepository(TestEnrollmentRepository)
     private testEnrollmentRepository: TestEnrollmentRepository,
+
+    @InjectRepository(ExamRepository)
     private examRepository: ExamRepository,
   ) {}
   /********READ******** */
@@ -24,7 +26,7 @@ export class TestEnrollmentService {
     return await this.testEnrollmentRepository.getTestTakersScores(examId);
   }
   // Get Past Exams for STUDENTS
-  async getMyTests(user: User, filter: Partial<FilterExamDto>) {
+  async getMyTests(user: User, filter: FilterDto) {
     return await this.testEnrollmentRepository.getMyTest(user, filter);
   }
   // Get Total Past Exams for STUDENTS

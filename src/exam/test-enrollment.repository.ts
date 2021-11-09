@@ -7,7 +7,7 @@ import { TestEnrollment } from './entities/test-enrollment.entity';
 import * as config from 'config';
 import axios from 'axios';
 import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
-import { FilterExamDto } from './dto';
+import { FilterDto } from './dto/filter.dto';
 
 @EntityRepository(TestEnrollment)
 export class TestEnrollmentRepository extends Repository<TestEnrollment> {
@@ -39,7 +39,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       throw new BadRequestException();
     }
   }
-  async getMyTest(user: User, filter: Partial<FilterExamDto>) {
+  async getMyTest(user: User, filter: FilterDto) {
     try {
       const {limit, offset} = filter;
       const enrollments = await this.createQueryBuilder('e')
