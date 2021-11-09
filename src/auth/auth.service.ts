@@ -1,7 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { join } from 'path';
+import axios from 'axios';
+import * as config from 'config';
 import { AuthRepository } from './auth.repository';
 import { CreateUserDto } from './dto/createUser.dto';
 import { CreateUserOAuthDto } from './dto/createUserOAuth.dto';
@@ -56,6 +57,16 @@ export class AuthService {
   }
 
   async updateProfile(user: User, updates: ProfileDto): Promise<ProfileDto> {
+    // If there is a new avatarUrl, delete the old one
+    const { avatarUrl } = updates;
+    console.log(avatarUrl);
+    if (avatarUrl && Boolean(user.avatarUrl) && user.avatarUrl !== avatarUrl) {
+      const filename = user.avatarUrl.substring(
+        user.avatarUrl.lastIndexOf('/') + 1,
+      );
+      const url = `${config.get('deleteImage').url}/${filename}`;
+      await axios.delete(url);
+    }
     return await this.authRepository.updateProfile(user, updates);
   }
 

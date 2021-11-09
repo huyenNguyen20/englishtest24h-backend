@@ -9,18 +9,17 @@ import {
   Post,
   Put,
   Query,
-  UploadedFiles,
   UseGuards,
-  UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { getUser } from 'src/auth/decorator/getUser.decorator';
 import { User } from 'src/auth/entities/user.entity';
+import { FilterExamDto } from './dto';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
 import { TestEnrollment } from './entities/test-enrollment.entity';
 import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
+import { ExamFilterValidationPipe } from './pipes/exam-filter.pipe';
 import { TestEnrollmentValidationPipe } from './pipes/test-enrollment.pipe';
 import { TestEnrollmentService } from './test-enrollment.service';
 
@@ -35,8 +34,20 @@ export class TestEnrollmentController {
 
   @Get('/myTests')
   @UseGuards(AuthGuard())
-  async getMyTests(@getUser() user: User): Promise<any> {
-    return await this.testEnrollmentService.getMyTests(user);
+  async getMyTests(
+    @getUser() user: User,
+    @Query(new ExamFilterValidationPipe) filter: Partial<FilterExamDto>
+    ): Promise<any> {
+    return await this.testEnrollmentService.getMyTests(user, filter);
+  }
+
+
+  @Get('/myTests/count')
+  @UseGuards(AuthGuard())
+  async getMyTestsCount(
+    @getUser() user: User
+    ): Promise<number> {
+    return await this.testEnrollmentService.getMyTestsCount(user);
   }
 
   @Get('/testTakers/:examId')

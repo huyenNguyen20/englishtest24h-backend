@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
 
 export class FilterExamDto {
   @IsOptional()
@@ -13,13 +13,12 @@ export class FilterExamDto {
   @IsNumber()
   authorId: number;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
   @IsPositive()
   limit: number;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
-  @IsPositive()
   offset: number;
 }

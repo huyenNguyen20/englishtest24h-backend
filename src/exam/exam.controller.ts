@@ -51,6 +51,14 @@ export class ExamController {
   ): Promise<Exam[]> {
     return await this.examService.getPublishedExams(filterExamDto);
   }
+
+  @ApiOperation({ summary: 'Get Total Published Exams' })
+  @ApiResponse({ status: 200, description: 'Number' })
+  @Get('/published/total')
+  async getPublishedExamsCount(): Promise<number> {
+    return await this.examService.getPublishedExamsCount();
+  }
+
   @Get('/published/indexes')
   async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.examService.getPublishedExamIndexes();
@@ -112,14 +120,27 @@ export class ExamController {
     );
   }
   /*****************Methods for Restricted Access*************** */
+  @ApiOperation({ summary: 'Get Restricted Exams for a Specific Student' })
   @Get('/restricted')
   @UseGuards(AuthGuard())
   async getRestrictedExams(
     @getUser() user: User,
-  ): Promise<Partial<Exam>[]> {
-    return await this.examService.getRestrictedExams(user);
+    @Query(new ExamFilterValidationPipe()) filterExamDto: FilterExamDto,
+  ): Promise<Exam[]> {
+    return await this.examService.getRestrictedExams(user, filterExamDto);
   }
 
+  @ApiOperation({ summary: 'Get Total Restricted Exams' })
+  @ApiResponse({ status: 200, description: 'Number' })
+  @Get('/restricted/total')
+  @UseGuards(AuthGuard())
+  async getRestrictedExamsCount(
+    @getUser() user: User,
+  ): Promise<number> {
+    return await this.examService.getRestrictedExamsCount(user);
+  }
+
+  @ApiOperation({ summary: 'Get Indexes of Restricted Exams' })
   @Get('/restricted/indexes')
   async getRestrictedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.examService.getRestrictedExamIndexes();

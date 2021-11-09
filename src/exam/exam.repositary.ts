@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as config from 'config';
 import { Exam, Subjects } from './entities/exam.entity';
-import { EntityRepository, getConnection, IsNull, Not, Repository } from 'typeorm';
+import { EntityRepository, getConnection, IsNull, Like, Not, Repository } from 'typeorm';
 import { CreateExamDto, FilterExamDto, UpdateExamDto } from './dto';
 import { User } from 'src/auth/entities/user.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
@@ -26,38 +26,19 @@ export class ExamRepository extends Repository<Exam> {
 
   async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {
     try {
-      const { search, subject, authorId, limit, offset } = filterExamDto;
-      const query = this.createQueryBuilder('exam')
-        .select('exam.id')
-        .addSelect('exam.isPublished')
-        .addSelect('exam.imageUrl')
-        .addSelect('exam.title')
-        .addSelect('exam.ownerId')
-        .addSelect('exam.authorName')
-        .addSelect('exam.totalRating')
-        .addSelect('exam.ratingPeople')
-        .addSelect('exam.testTakers')
-        .addSelect('exam.description')
-        .addSelect('exam.updatedBy')
-        .addSelect('exam.timeAllowed')
-        .addSelect('exam.subject')
-        .where('exam.isPublished = :value', { value: true });
-      if (search)
-        query.andWhere(
-          'LOWER(exam.title) LIKE :search OR LOWER(exam.description) LIKE :search',
-          { search: `%${search.toLowerCase()}%` },
-        );
-      if (subject === 0 || subject) {
-        query.andWhere('exam.subject = :subjectId', { subjectId: subject });
-      }
-      if (authorId === 0 || authorId) {
-        query.andWhere('exam.ownerId = :ownerId', { ownerId: authorId });
-      }
-      query.orderBy('exam.updatedBy', 'DESC');
-      if (offset) query.offset(offset);
-      if (limit) query.limit(limit);
+      const total = await this.find({where: {isPublished: true}});
+      const query = this.createQuery(true, null, filterExamDto);
       const exams = await query.getMany();
       return exams;
+    } catch (e) {
+      throw new BadRequestException('Something went wrong.');
+    }
+  }
+
+  async getPublishedExamsCount(): Promise<number> {
+    try {
+      const total = await this.find({where: {isPublished: true}});
+      return total.length;
     } catch (e) {
       throw new BadRequestException('Something went wrong.');
     }
@@ -144,25 +125,21 @@ export class ExamRepository extends Repository<Exam> {
       .getMany();
   }
 
-  async getRestrictedExams(user: User): Promise<Exam[]> {
+  async getRestrictedExams(user: User, filterExamDto: FilterExamDto): Promise<Exam[]> {
     try {
-      const query = this.createQueryBuilder('exam')
-        .select('exam.id')
-        .addSelect('exam.isPublished')
-        .addSelect('exam.imageUrl')
-        .addSelect('exam.title')
-        .addSelect('exam.ownerId')
-        .addSelect('exam.authorName')
-        .addSelect('exam.totalRating')
-        .addSelect('exam.ratingPeople')
-        .addSelect('exam.testTakers')
-        .addSelect('exam.description')
-        .addSelect('exam.updatedBy')
-        .addSelect('exam.timeAllowed')
-        .addSelect('exam.subject')
-        .where('exam.restrictedAccessList LIKE :email',{email: `%${user.email}%`})
+      const total = await this.find({where: {restrictedAccessList: Like(`%${user.email}%`)}});
+      const query = this.createQuery(null,user.email, filterExamDto);
       const exams = await query.getMany();
       return exams;
+    } catch (e) {
+      throw new BadRequestException('Something went wrong.');
+    }
+  }
+
+  async getRestrictedExamsCount(user: User): Promise<number> {
+    try {
+      const total = await this.find({where: {restrictedAccessList: Like(`%${user.email}%`)}});
+      return total.length;
     } catch (e) {
       throw new BadRequestException('Something went wrong.');
     }
@@ -412,5 +389,44 @@ export class ExamRepository extends Repository<Exam> {
     } catch (e){
       throw new NotFoundException('Exam Not Found');
     }
+  }
+  /******Helper Methods***** */
+  createQuery (isPublished: boolean | null, userEmail: string | null, filterExamDto: FilterExamDto) {
+    const { search, subject, authorId, limit, offset } = filterExamDto;
+      const query = this.createQueryBuilder('exam')
+        .select('exam.id')
+        .addSelect('exam.isPublished')
+        .addSelect('exam.imageUrl')
+        .addSelect('exam.title')
+        .addSelect('exam.ownerId')
+        .addSelect('exam.authorName')
+        .addSelect('exam.totalRating')
+        .addSelect('exam.ratingPeople')
+        .addSelect('exam.testTakers')
+        .addSelect('exam.description')
+        .addSelect('exam.updatedBy')
+        .addSelect('exam.timeAllowed')
+        .addSelect('exam.subject')
+
+      if(isPublished)
+        query.where('exam.isPublished = :value',{value: true})
+      else if(userEmail)
+        query.where('exam.restrictedAccessList LIKE :email',{email: `%${userEmail}%`})
+
+      if (search)
+        query.andWhere(
+          'LOWER(exam.title) LIKE :search OR LOWER(exam.description) LIKE :search',
+          { search: `%${search.toLowerCase()}%` },
+        );
+      if (subject === 0 || subject) {
+        query.andWhere('exam.subject = :subjectId', { subjectId: subject });
+      }
+      if (authorId === 0 || authorId) {
+        query.andWhere('exam.ownerId = :ownerId', { ownerId: authorId });
+      }
+      query.orderBy('exam.updatedBy', 'DESC');
+      if (offset) query.offset(offset);
+      if (limit) query.limit(limit);
+      return query;
   }
 }

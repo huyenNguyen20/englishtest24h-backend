@@ -58,8 +58,14 @@ export class ExamService {
   async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {
     return await this.examRepository.getPublishedExams(filterExamDto);
   }
-  async getRestrictedExams(user: User): Promise<Exam[]> {
-    return await this.examRepository.getRestrictedExams(user);
+  async getPublishedExamsCount(): Promise<number> {
+    return await this.examRepository.getPublishedExamsCount();
+  }
+  async getRestrictedExams(user: User, filterExamDto: FilterExamDto): Promise<Exam[]> {
+    return await this.examRepository.getRestrictedExams(user, filterExamDto);
+  }
+  async getRestrictedExamsCount(user: User): Promise<number> {
+    return await this.examRepository.getRestrictedExamsCount(user);
   }
   async getPublishedExam(examId: number): Promise<Exam> {
     return await this.examRepository.getPublishedExam(examId);

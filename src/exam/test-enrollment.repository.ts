@@ -7,6 +7,7 @@ import { TestEnrollment } from './entities/test-enrollment.entity';
 import * as config from 'config';
 import axios from 'axios';
 import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
+import { FilterExamDto } from './dto';
 
 @EntityRepository(TestEnrollment)
 export class TestEnrollmentRepository extends Repository<TestEnrollment> {
@@ -38,17 +39,32 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       throw new BadRequestException();
     }
   }
-  async getMyTest(user: User) {
+  async getMyTest(user: User, filter: Partial<FilterExamDto>) {
     try {
+      const {limit, offset} = filter;
       const enrollments = await this.createQueryBuilder('e')
         .innerJoinAndSelect('e.exam', 'exam', 'exam.id = e.examId')
         .where('e.studentId = :studentId', { studentId: user.id })
+        .offset(offset)
+        .limit(limit)
         .getMany();
       return enrollments;
     } catch (e) {
       throw new BadRequestException();
     }
   }
+
+  async getMyTestCount(user: User) : Promise<number> {
+    try {
+      const enrollments = await this.find({
+        where: { studentId: user.id }
+      })
+      return enrollments.length;
+    } catch (e) {
+      throw new BadRequestException();
+    }
+  }
+
   async getScore(examId: number, user: User): Promise<TestEnrollment> {
     try {
       const enrollment = await this.findOne({

@@ -6,6 +6,7 @@ import { BadRequestException } from '@nestjs/common';
 import { SignInUserDto } from './dto/signinUser.dto';
 import { CreateUserOAuthDto } from './dto/createUserOAuth.dto';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
+import { ProfileDto } from './dto/profile.dto';
 
 @EntityRepository(User)
 export class AuthRepository extends Repository<User> {
@@ -75,7 +76,7 @@ export class AuthRepository extends Repository<User> {
     return await user.validatePassword(password);
   }
 
-  async updateProfile(user: User, updates: any): Promise<any> {
+  async updateProfile(user: User, updates): Promise<any> {
     try {
       const updatedUser = await this.createQueryBuilder()
         .update(User)
