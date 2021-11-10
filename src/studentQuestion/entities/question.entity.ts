@@ -29,7 +29,7 @@ export class StudentQuestion extends BaseEntity {
   @Column('longtext')
   question: string;
 
-  @Column({type: 'longtext', default: null})
+  @Column({ type: 'longtext', default: null })
   teacherAnswer: string;
 
   @UpdateDateColumn()

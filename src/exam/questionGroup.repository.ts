@@ -26,7 +26,8 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
     section: Section,
     user: User,
   ): Promise<QuestionGroup> {
-    const { type, title, htmlContent, imageUrl, matchingOptions } = createQuestionGroupDto;
+    const { type, title, htmlContent, imageUrl, matchingOptions } =
+      createQuestionGroupDto;
     const q = new QuestionGroup();
     q.title = title;
     if (htmlContent) q.htmlContent = htmlContent;
@@ -61,7 +62,8 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
     questionGroupId: number,
     user: User,
   ): Promise<QuestionGroup> {
-    const { title, htmlContent, imageUrl, matchingOptions} = updateQuestionGroupDto;
+    const { title, htmlContent, imageUrl, matchingOptions } =
+      updateQuestionGroupDto;
     const q = await this.findOne(questionGroupId);
     if (title) q.title = title;
     if (htmlContent) q.htmlContent = htmlContent;
@@ -85,6 +87,7 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
       .execute();
     if (questions.length > 0) {
       const questionIds = questions.map((question) => question.id);
+      // 1. Delete corresponding answers
       await getConnection()
         .createQueryBuilder()
         .delete()
@@ -93,7 +96,7 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
           questionIds: [...questionIds],
         })
         .execute();
-
+      // 2. Delete corresponding questions
       await getConnection()
         .createQueryBuilder()
         .delete()
@@ -101,6 +104,7 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
         .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
         .execute();
     }
+    // 3. Delete question group
     await getConnection()
       .createQueryBuilder()
       .delete()

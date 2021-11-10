@@ -17,7 +17,7 @@ export class Question extends BaseEntity {
   @Column({ default: null })
   order: number;
 
-  @Column({ default: null})
+  @Column({ default: null })
   imageUrl: string;
 
   @ManyToOne(
@@ -33,10 +33,10 @@ export class Question extends BaseEntity {
   @Column({ default: null, type: 'longtext' })
   question: string;
 
-  @OneToMany(
-    (type) => Answer, 
-    (answer) => answer.question, 
-    { eager: true, cascade: ['remove', 'soft-remove'] })
+  @OneToMany((type) => Answer, (answer) => answer.question, {
+    eager: true,
+    cascade: ['remove', 'soft-remove'],
+  })
   answers: Answer[];
 
   @Column()

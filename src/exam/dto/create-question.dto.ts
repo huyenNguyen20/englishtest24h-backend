@@ -9,7 +9,10 @@ import {
 import { CreateAnswerDto } from './create-answer.dto';
 
 export class CreateQuestionDto {
-  @ApiProperty({ example: 'http://example.com/image1.jpeg', description: 'Image URL for the question' })
+  @ApiProperty({
+    example: 'http://example.com/image1.jpeg',
+    description: 'Image URL for the question',
+  })
   @IsOptional()
   @IsString()
   imageUrl: string;
@@ -26,7 +29,10 @@ export class CreateQuestionDto {
   @Min(1)
   order: number;
 
-  @ApiProperty({ example: '200', description: 'Minimum Words Required for a Writing question' })
+  @ApiProperty({
+    example: '200',
+    description: 'Minimum Words Required for a Writing question',
+  })
   @IsOptional()
   @IsNumber()
   @Min(1)

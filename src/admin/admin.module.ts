@@ -5,10 +5,7 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
 @Module({
-  imports: [
-    ExamModule,
-    AuthModule,
-  ],
+  imports: [ExamModule, AuthModule],
   controllers: [AdminController],
   providers: [AdminService],
 })

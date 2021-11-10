@@ -31,17 +31,15 @@ export class QuestionRepository extends Repository<Question> {
     q.questionGroup = questionGroup;
     q.questionGroupId = questionGroup.id;
     q.ownerId = user.id;
-    if(order) q.order = order;
+    if (order) q.order = order;
     await q.save();
     return q;
   }
 
   async getQuestion(questionId: number, user: User): Promise<Question> {
-    const question = await this.findOne({
+    return await this.findOne({
       where: { id: questionId, ownerId: user.id },
     });
-    if (!question) throw new NotFoundException('Question Not Found');
-    return question;
   }
 
   async updateQuestion(
@@ -50,10 +48,10 @@ export class QuestionRepository extends Repository<Question> {
     questionId: number,
     user: User,
   ): Promise<void> {
-    const { order, question, score, minWords, imageUrl, htmlExplaination} =
+    const { order, question, score, minWords, imageUrl, htmlExplaination } =
       updateQuestionDto;
     const q = await this.getQuestion(questionId, user);
-
+    if (!q) throw new NotFoundException('Question Not Found');
     if (score) q.score = score;
     if (question) q.question = question;
     if (htmlExplaination) q.htmlExplaination = htmlExplaination;
@@ -66,14 +64,15 @@ export class QuestionRepository extends Repository<Question> {
     await q.save();
   }
 
-  async removeQuestion(questionId: number, user: User) {
-    const q = await this.getQuestion(questionId, user);
+  async removeQuestion(questionId: number) {
+    // 1. Remove Corresponding Answers
     await getConnection()
       .createQueryBuilder()
       .delete()
       .from(Answer)
       .where('questionId = :questionId', { questionId })
       .execute();
+    // 2. Remove Question
     await getConnection()
       .createQueryBuilder()
       .delete()

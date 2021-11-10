@@ -22,7 +22,9 @@ import { CreateTeacherAnswerDto } from './dto/create-answer.dto';
 
 @Controller('studentQuestion')
 export class StudentQuestionController {
-  constructor(private readonly studentQuestionService: StudentQuestionService) {}
+  constructor(
+    private readonly studentQuestionService: StudentQuestionService,
+  ) {}
   /*******Post Routes*********/
   // Route for STUDENT to create their questions
   @Post('/student/:examId')
@@ -31,19 +33,26 @@ export class StudentQuestionController {
     @Body(new ValidationPipe()) createQuestionDto: CreateQuestionDto,
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
-  ): Promise<StudentQuestion[]>  {
-    return await this.studentQuestionService.createQuestion(createQuestionDto, examId, user);
+  ): Promise<StudentQuestion[]> {
+    return await this.studentQuestionService.createQuestion(
+      createQuestionDto,
+      examId,
+      user,
+    );
   }
 
   /*****GET****** */
-  //Route for STUDENTS to get their questions for one exam 
+  //Route for STUDENTS to get their questions for one exam
   @Get('/student/:examId')
   @UseGuards(AuthGuard())
   async getQuestionsForStudent(
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
-    ): Promise<StudentQuestion[]> {
-    return await  this.studentQuestionService.getQuestionsForStudent(examId, user);
+  ): Promise<StudentQuestion[]> {
+    return await this.studentQuestionService.getQuestionsForStudent(
+      examId,
+      user,
+    );
   }
 
   //Route for TEACHER to get all students' questions for one exam
@@ -52,8 +61,11 @@ export class StudentQuestionController {
   async getQuestionsForTeacher(
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
-  ) : Promise<StudentQuestion[]>{
-    return  await this.studentQuestionService.getQuestionsForTeacher(examId, user);
+  ): Promise<StudentQuestion[]> {
+    return await this.studentQuestionService.getQuestionsForTeacher(
+      examId,
+      user,
+    );
   }
 
   /*****UPDATE****** */
@@ -65,8 +77,8 @@ export class StudentQuestionController {
     @Param('examId', ParseIntPipe) examId: number,
     @Param('questionId', ParseIntPipe) questionId: number,
     @getUser() user: User,
-  ) : Promise<StudentQuestion[]>{
-    return await  this.studentQuestionService.updateQuestion(
+  ): Promise<StudentQuestion[]> {
+    return await this.studentQuestionService.updateQuestion(
       updateQuestionDto,
       examId,
       questionId,
@@ -82,15 +94,14 @@ export class StudentQuestionController {
     @Param('examId', ParseIntPipe) examId: number,
     @Param('questionId', ParseIntPipe) questionId: number,
     @getUser() user: User,
-  ): Promise<StudentQuestion[]>  {
-    return await  this.studentQuestionService.updateAnswer(
+  ): Promise<StudentQuestion[]> {
+    return await this.studentQuestionService.updateAnswer(
       createAnswerDto,
       examId,
       questionId,
-      user
+      user,
     );
   }
-
 
   /*****DELETE****** */
   //Method for STUDENT to delete their questions
@@ -100,11 +111,11 @@ export class StudentQuestionController {
     @Param('examId', ParseIntPipe) examId: number,
     @Param('questionId', ParseIntPipe) questionId: number,
     @getUser() user: User,
-  ): Promise<StudentQuestion[]>  {
-    return await  this.studentQuestionService.deleteQuestionForStudent(
+  ): Promise<StudentQuestion[]> {
+    return await this.studentQuestionService.deleteQuestionForStudent(
       questionId,
       examId,
-      user
+      user,
     );
   }
 
@@ -114,12 +125,12 @@ export class StudentQuestionController {
     @Param('examId', ParseIntPipe) examId: number,
     @Query('idList') idList: string,
     @getUser() user: User,
-  ): Promise<StudentQuestion[]>  {
-    const list : string[] = idList.split(' ');
+  ): Promise<StudentQuestion[]> {
+    const list: string[] = idList.split(' ');
     return await this.studentQuestionService.deleteQuestionsForTeacher(
       list,
       examId,
-      user
+      user,
     );
   }
 }

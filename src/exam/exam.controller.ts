@@ -134,9 +134,7 @@ export class ExamController {
   @ApiResponse({ status: 200, description: 'Number' })
   @Get('/restricted/total')
   @UseGuards(AuthGuard())
-  async getRestrictedExamsCount(
-    @getUser() user: User,
-  ): Promise<number> {
+  async getRestrictedExamsCount(@getUser() user: User): Promise<number> {
     return await this.examService.getRestrictedExamsCount(user);
   }
 
@@ -228,15 +226,19 @@ export class ExamController {
   ): Promise<Exam[]> {
     return await this.examService.togglePublishExam(examId, user);
   }
-   
+
   @Put('/:examId/restrictedList')
   @UseGuards(AuthGuard())
   async postRestrictedAccessList(
-    @Body(new ValidationPipe()) body : {restrictedList: string},
+    @Body(new ValidationPipe()) body: { restrictedList: string },
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
   ): Promise<Exam[]> {
-    return await this.examService.postRestrictedAccessList(body.restrictedList, examId, user);
+    return await this.examService.postRestrictedAccessList(
+      body.restrictedList,
+      examId,
+      user,
+    );
   }
 
   @Delete('/:examId')
@@ -261,7 +263,9 @@ export class ExamController {
     return await this.examService.getSections(examId, user);
   }
 
-  @ApiOperation({ summary: 'Create a section of an reading/listening/speaking exam' })
+  @ApiOperation({
+    summary: 'Create a section of an reading/listening/speaking exam',
+  })
   @Post('/:examId/sections')
   @UseGuards(AuthGuard())
   @UseInterceptors(FileFieldsInterceptor([]))
@@ -278,11 +282,16 @@ export class ExamController {
   @UseGuards(AuthGuard())
   @UseInterceptors(FileFieldsInterceptor([]))
   async createWritingSection(
-    @Body(new CreateWritingSectionValidationPipe()) createWritingSectionDto: CreateWritingSectionDto,
+    @Body(new CreateWritingSectionValidationPipe())
+    createWritingSectionDto: CreateWritingSectionDto,
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
   ): Promise<Section> {
-    return await this.examService.createWritingSection(createWritingSectionDto, examId, user);
+    return await this.examService.createWritingSection(
+      createWritingSectionDto,
+      examId,
+      user,
+    );
   }
 
   @ApiOperation({ summary: 'Get an section with a specific id' })
@@ -296,7 +305,9 @@ export class ExamController {
     return await this.examService.getSection(examId, sectionId, user);
   }
 
-  @ApiOperation({ summary: 'Update a section of an reading/listening/speaking exam' })
+  @ApiOperation({
+    summary: 'Update a section of an reading/listening/speaking exam',
+  })
   @Put('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
   @UseInterceptors(FileFieldsInterceptor([]))
@@ -319,7 +330,8 @@ export class ExamController {
   @UseGuards(AuthGuard())
   @UseInterceptors(FileFieldsInterceptor([]))
   async updateWritingSection(
-    @Body(new CreateWritingSectionValidationPipe()) updateWritingSectionDto: UpdateWritingSectionDto,
+    @Body(new CreateWritingSectionValidationPipe())
+    updateWritingSectionDto: UpdateWritingSectionDto,
     @Param('examId', ParseIntPipe) examId: number,
     @Param('sectionId', ParseIntPipe) sectionId: number,
     @getUser() user: User,

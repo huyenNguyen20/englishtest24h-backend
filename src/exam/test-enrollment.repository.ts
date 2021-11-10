@@ -41,7 +41,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
   }
   async getMyTest(user: User, filter: FilterDto) {
     try {
-      const {limit, offset} = filter;
+      const { limit, offset } = filter;
       const enrollments = await this.createQueryBuilder('e')
         .innerJoinAndSelect('e.exam', 'exam', 'exam.id = e.examId')
         .where('e.studentId = :studentId', { studentId: user.id })
@@ -54,11 +54,11 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
     }
   }
 
-  async getMyTestCount(user: User) : Promise<number> {
+  async getMyTestCount(user: User): Promise<number> {
     try {
       const enrollments = await this.find({
-        where: { studentId: user.id }
-      })
+        where: { studentId: user.id },
+      });
       return enrollments.length;
     } catch (e) {
       throw new BadRequestException();
@@ -82,27 +82,26 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
     }
   }
 
-  async getAllScores(examId: number): 
-  Promise<EnrollmentDataToTeacher[]> {
+  async getAllScores(examId: number): Promise<EnrollmentDataToTeacher[]> {
     try {
-      const enrollments = await this.createQueryBuilder('e')  
+      const enrollments = await this.createQueryBuilder('e')
         .innerJoinAndSelect('e.student', 'user', 'user.id = e.studentId')
         .where('e.examId = :examId', { examId })
         .getMany();
-      const results : EnrollmentDataToTeacher[] = [];
-      enrollments.forEach((e : TestEnrollment) => {
-        const item : EnrollmentDataToTeacher = {
+      const results: EnrollmentDataToTeacher[] = [];
+      enrollments.forEach((e: TestEnrollment) => {
+        const item: EnrollmentDataToTeacher = {
           id: e.id,
           email: e.student.email,
-          name: e.student.firstName + " "+ e.student.lastName,
+          name: e.student.firstName + ' ' + e.student.lastName,
           lastAttempt: e.updatedBy,
           noOfAttempt: e.timeTaken,
           score: e.score,
           totalScore: e.totalScore,
-          didTeacherComment: Boolean(e.teacherGrading)
+          didTeacherComment: Boolean(e.teacherGrading),
         };
         results.push(item);
-      })
+      });
       return results;
     } catch (e) {
       throw new BadRequestException();
@@ -123,7 +122,8 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
     exam: Exam,
     user: User,
   ): Promise<TestEnrollment> {
-    const { score, totalScore, answerObj, sectionsObj } = createTestEnrollmentDto;
+    const { score, totalScore, answerObj, sectionsObj } =
+      createTestEnrollmentDto;
     const enrollment = await this.findOne({
       where: { examId: exam.id, studentId: user.id },
     });
@@ -133,7 +133,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       newEnrollment.subjectId = exam.subject;
       newEnrollment.student = user;
       newEnrollment.totalScore = totalScore;
-      if(score || score === 0) newEnrollment.score = score;
+      if (score || score === 0) newEnrollment.score = score;
       newEnrollment.answerObj = answerObj;
       newEnrollment.sectionsObj = sectionsObj;
       newEnrollment.timeTaken = 1;
@@ -166,7 +166,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
         }
       }
       enrollment.timeTaken++;
-      if(score || score === 0) enrollment.score = score;
+      if (score || score === 0) enrollment.score = score;
       enrollment.totalScore = totalScore;
       enrollment.answerObj = answerObj;
       enrollment.sectionsObj = sectionsObj;
@@ -175,24 +175,32 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
     return await this.getScore(exam.id, user);
   }
   /************UPDATE**********/
-  async updateEnrollment(payload: {score?:number, teacherGrading?: string}, enrollmentId: number): Promise<TestEnrollment>{
+  async updateEnrollment(
+    payload: { score?: number; teacherGrading?: string },
+    enrollmentId: number,
+  ): Promise<TestEnrollment> {
     try {
       const testEnrollment = await this.findOne(enrollmentId);
-      if(!testEnrollment) throw new Error("The student hasn't taken the test. The enrollment is not found.");
-      if(payload.score || payload.score === 0) testEnrollment.score = payload.score;
-      if(payload.teacherGrading) testEnrollment.teacherGrading = payload.teacherGrading;
+      if (!testEnrollment)
+        throw new Error(
+          "The student hasn't taken the test. The enrollment is not found.",
+        );
+      if (payload.score || payload.score === 0)
+        testEnrollment.score = payload.score;
+      if (payload.teacherGrading)
+        testEnrollment.teacherGrading = payload.teacherGrading;
       await testEnrollment.save();
       return testEnrollment;
-    } catch (e){
+    } catch (e) {
       throw e;
     }
   }
   /************DELETE**********/
-  async removeEnrollments(exam: Exam, list: string[]) {
-    try{
+  async removeEnrollments(subject: number, list: string[]) {
+    try {
       // If this is Enrollment Record for speaking test, the recording audio urls need to be removed
-      if(exam.subject === 3){
-        for(let id of list){
+      if (subject === 3) {
+        for (let id of list) {
           const enrollment = await this.findOne(id);
           if (enrollment) {
             const urlArr = [];
@@ -207,16 +215,16 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
               await axios.delete(audioPath);
             }
           }
-        } 
+        }
       }
       // Remove the enrollment
       return await getConnection()
-          .createQueryBuilder()
-          .delete()
-          .from(TestEnrollment)
-          .where("id IN (:...Ids)", { Ids: [...list] })
-          .execute();
-    } catch(e){
+        .createQueryBuilder()
+        .delete()
+        .from(TestEnrollment)
+        .where('id IN (:...Ids)', { Ids: [...list] })
+        .execute();
+    } catch (e) {
       return e;
     }
   }

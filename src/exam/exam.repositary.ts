@@ -1,7 +1,14 @@
 import axios from 'axios';
 import * as config from 'config';
 import { Exam, Subjects } from './entities/exam.entity';
-import { EntityRepository, getConnection, IsNull, Like, Not, Repository } from 'typeorm';
+import {
+  EntityRepository,
+  getConnection,
+  IsNull,
+  Like,
+  Not,
+  Repository,
+} from 'typeorm';
 import { CreateExamDto, FilterExamDto, UpdateExamDto } from './dto';
 import { User } from 'src/auth/entities/user.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
@@ -26,7 +33,7 @@ export class ExamRepository extends Repository<Exam> {
 
   async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {
     try {
-      const total = await this.find({where: {isPublished: true}});
+      const total = await this.find({ where: { isPublished: true } });
       const query = this.createQuery(true, null, filterExamDto);
       const exams = await query.getMany();
       return exams;
@@ -37,7 +44,7 @@ export class ExamRepository extends Repository<Exam> {
 
   async getPublishedExamsCount(): Promise<number> {
     try {
-      const total = await this.find({where: {isPublished: true}});
+      const total = await this.find({ where: { isPublished: true } });
       return total.length;
     } catch (e) {
       throw new BadRequestException('Something went wrong.');
@@ -125,10 +132,15 @@ export class ExamRepository extends Repository<Exam> {
       .getMany();
   }
 
-  async getRestrictedExams(user: User, filterExamDto: FilterExamDto): Promise<Exam[]> {
+  async getRestrictedExams(
+    user: User,
+    filterExamDto: FilterExamDto,
+  ): Promise<Exam[]> {
     try {
-      const total = await this.find({where: {restrictedAccessList: Like(`%${user.email}%`)}});
-      const query = this.createQuery(null,user.email, filterExamDto);
+      const total = await this.find({
+        where: { restrictedAccessList: Like(`%${user.email}%`) },
+      });
+      const query = this.createQuery(null, user.email, filterExamDto);
       const exams = await query.getMany();
       return exams;
     } catch (e) {
@@ -138,7 +150,9 @@ export class ExamRepository extends Repository<Exam> {
 
   async getRestrictedExamsCount(user: User): Promise<number> {
     try {
-      const total = await this.find({where: {restrictedAccessList: Like(`%${user.email}%`)}});
+      const total = await this.find({
+        where: { restrictedAccessList: Like(`%${user.email}%`) },
+      });
       return total.length;
     } catch (e) {
       throw new BadRequestException('Something went wrong.');
@@ -146,7 +160,7 @@ export class ExamRepository extends Repository<Exam> {
   }
 
   /****Exams Methods for Owner*** */
-  async getExams(user: User): Promise<Exam[]> {
+  async getExams(userId: number): Promise<Exam[]> {
     const exams = await this.createQueryBuilder('exam')
       .select('exam.id')
       .addSelect('exam.isPublished')
@@ -160,7 +174,7 @@ export class ExamRepository extends Repository<Exam> {
       .addSelect('exam.timeAllowed')
       .addSelect('exam.subject')
       .addSelect('exam.restrictedAccessList')
-      .where('exam.ownerId = :userId', { userId: user.id })
+      .where('exam.ownerId = :userId', { userId })
       .orderBy('exam.updatedBy', 'DESC')
       .getMany();
     return exams;
@@ -178,7 +192,7 @@ export class ExamRepository extends Repository<Exam> {
     exam.timeAllowed = timeAllowed;
     exam.subject = subject;
     await exam.save();
-    return await this.getExams(user);
+    return await this.getExams(user.id);
   }
 
   async getExam(examId: number, user: User): Promise<Exam> {
@@ -206,13 +220,13 @@ export class ExamRepository extends Repository<Exam> {
       const { title, description, imageUrl } = updatedExamDto;
       if (title) exam.title = title;
       if (description) exam.description = description;
-      
+
       if (imageUrl) exam.imageUrl = imageUrl;
       else exam.imageUrl = null;
 
       await exam.save();
-      return await this.getExams(user);
-    } catch(e){
+      return await this.getExams(user.id);
+    } catch (e) {
       throw new NotFoundException('Exam Not Found');
     }
   }
@@ -226,14 +240,18 @@ export class ExamRepository extends Repository<Exam> {
       else {
         exam.isPublished = !exam.isPublished;
         await exam.save();
-        return await this.getExams(user);
+        return await this.getExams(user.id);
       }
     } catch (e) {
       throw new NotFoundException('Exam Not Found');
     }
   }
 
-  async postRestrictedAccessList(restrictedList: string, examId: number, user: User) : Promise<Exam[]>{
+  async postRestrictedAccessList(
+    restrictedList: string,
+    examId: number,
+    user: User,
+  ): Promise<Exam[]> {
     try {
       const exam = await this.findOne({
         where: { id: examId, ownerId: user.id },
@@ -242,36 +260,42 @@ export class ExamRepository extends Repository<Exam> {
       else {
         exam.restrictedAccessList = restrictedList;
         await exam.save();
-        const exams = await this.getExams(user);
+        const exams = await this.getExams(user.id);
         return exams.map((e) => {
-          if(e.id === exam.id 
-            &&  e.restrictedAccessList !== restrictedList){ 
+          if (e.id === exam.id && e.restrictedAccessList !== restrictedList) {
             e.restrictedAccessList = restrictedList;
           }
           return e;
-        })
+        });
       }
     } catch (e) {
       throw new NotFoundException('Exam Not Found');
     }
   }
 
-  async removeExam(examId: number, user: User): Promise<Exam[]> {
+  async removeExam(examId: number, userId: number): Promise<Exam[]> {
     try {
       const exam = await this.findOne({
-        where: { id: examId, ownerId: user.id },
+        where: { id: examId },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
+      // 1. Remove all corresponding images of Exam
+      if (exam && Boolean(exam.imageUrl)) {
+        const filename = exam.imageUrl.substring(
+          exam.imageUrl.lastIndexOf('/') + 1,
+        );
+        const url = `${config.get('deleteImage').url}/${filename}`;
+        await axios.delete(url);
+      }
       const sections = await getConnection()
         .createQueryBuilder()
         .select('section.id')
         .from(Section, 'section')
         .where('section.examId =:examId', { examId })
         .getMany();
-      //TODO: Remove Images and Audios of Questions, QuestionGroup, and Sections
       if (sections.length > 0) {
         const sectionIds = sections.map((section) => section.id);
-        //Delete Images and Audios of Corresponding Sections
+        // 2. Delete Images and Audios of Corresponding Sections
         for (let section of sections) {
           if (Boolean(section.imageUrl)) {
             const filename = section.imageUrl.substring(
@@ -301,7 +325,7 @@ export class ExamRepository extends Repository<Exam> {
           const questionGroupIds = questionGroups.map(
             (questionGroup) => questionGroup.id,
           );
-          //Delete Images of Corresponding Question Groups
+          // 3. Delete Images of Corresponding Question Groups
           for (let questionGroup of questionGroups) {
             if (Boolean(questionGroup.imageUrl)) {
               const filename = questionGroup.imageUrl.substring(
@@ -322,7 +346,7 @@ export class ExamRepository extends Repository<Exam> {
             .execute();
           if (questions.length > 0) {
             const questionIds = questions.map((question) => question.id);
-            //Delete Images of Corresponding Exam Questions
+            // 4. Delete Images of Corresponding Exam Questions
             for (let question of questions) {
               if (Boolean(question.imageUrl)) {
                 const filename = question.imageUrl.substring(
@@ -332,7 +356,7 @@ export class ExamRepository extends Repository<Exam> {
                 await axios.delete(url);
               }
             }
-            //Delete Answers of Corresponding Questions
+            //5. Delete Answers of Corresponding Questions
             await getConnection()
               .createQueryBuilder()
               .delete()
@@ -341,15 +365,17 @@ export class ExamRepository extends Repository<Exam> {
                 questionIds: [...questionIds],
               })
               .execute();
-            //Delete Exam Questions
+            //6. Delete Exam Questions
             await getConnection()
               .createQueryBuilder()
               .delete()
               .from(Question)
-              .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
+              .where('id IN (:...questionIds)', {
+                questionIds: [...questionIds],
+              })
               .execute();
           }
-          //Delete Question Group
+          //7. Delete Question Group
           await getConnection()
             .createQueryBuilder()
             .delete()
@@ -359,7 +385,7 @@ export class ExamRepository extends Repository<Exam> {
             })
             .execute();
         }
-        //Delete Section
+        //8. Delete Section
         await getConnection()
           .createQueryBuilder()
           .delete()
@@ -367,7 +393,33 @@ export class ExamRepository extends Repository<Exam> {
           .where('id IN (:...sectionIds)', { sectionIds: [...sectionIds] })
           .execute();
       }
-      // Delete Corresponding Enrollment Records
+      // 9. Delete Corresponding Enrollment Records
+      // 9.1. If this is Enrollment Record for speaking test,
+      // the recording audio urls need to be removed
+      if (exam.subject === 3) {
+        const testEnrollments = await getConnection()
+          .createQueryBuilder()
+          .select('id')
+          .from(TestEnrollment, 'e')
+          .where('e.examId = :examId', { examId })
+          .execute();
+        if (testEnrollments.length > 0) {
+          for (let e of testEnrollments) {
+            const urlArr = [];
+            const answers = JSON.parse(e.answerObj);
+            for (const a in answers) {
+              if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
+                urlArr.push(answers[a].userAnswer[0]);
+            }
+            for (const url of urlArr) {
+              const filename = url.substring(url.lastIndexOf('/') + 1);
+              const audioPath = `${config.get('deleteAudio').url}/${filename}`;
+              await axios.delete(audioPath);
+            }
+          }
+        }
+      }
+      // 9.2. Remove Test Enrollment Records
       await getConnection()
         .createQueryBuilder()
         .delete()
@@ -375,58 +427,63 @@ export class ExamRepository extends Repository<Exam> {
         .where('examId =:examId', { examId })
         .execute();
 
-      // Delete Corresponding Students' questions
+      // 10. Delete Corresponding Students' questions
       await getConnection()
         .createQueryBuilder()
         .delete()
         .from(StudentQuestion)
         .where('examId =:examId', { examId })
         .execute();
-      
 
+      //11. Delete Exam
       await this.delete(examId);
-      return await this.getExams(user);
-    } catch (e){
+      return await this.getExams(userId);
+    } catch (e) {
       throw new NotFoundException('Exam Not Found');
     }
   }
   /******Helper Methods***** */
-  createQuery (isPublished: boolean | null, userEmail: string | null, filterExamDto: FilterExamDto) {
+  createQuery(
+    isPublished: boolean | null,
+    userEmail: string | null,
+    filterExamDto: FilterExamDto,
+  ) {
     const { search, subject, authorId, limit, offset } = filterExamDto;
-      const query = this.createQueryBuilder('exam')
-        .select('exam.id')
-        .addSelect('exam.isPublished')
-        .addSelect('exam.imageUrl')
-        .addSelect('exam.title')
-        .addSelect('exam.ownerId')
-        .addSelect('exam.authorName')
-        .addSelect('exam.totalRating')
-        .addSelect('exam.ratingPeople')
-        .addSelect('exam.testTakers')
-        .addSelect('exam.description')
-        .addSelect('exam.updatedBy')
-        .addSelect('exam.timeAllowed')
-        .addSelect('exam.subject')
+    const query = this.createQueryBuilder('exam')
+      .select('exam.id')
+      .addSelect('exam.isPublished')
+      .addSelect('exam.imageUrl')
+      .addSelect('exam.title')
+      .addSelect('exam.ownerId')
+      .addSelect('exam.authorName')
+      .addSelect('exam.totalRating')
+      .addSelect('exam.ratingPeople')
+      .addSelect('exam.testTakers')
+      .addSelect('exam.description')
+      .addSelect('exam.updatedBy')
+      .addSelect('exam.timeAllowed')
+      .addSelect('exam.subject');
 
-      if(isPublished)
-        query.where('exam.isPublished = :value',{value: true})
-      else if(userEmail)
-        query.where('exam.restrictedAccessList LIKE :email',{email: `%${userEmail}%`})
+    if (isPublished) query.where('exam.isPublished = :value', { value: true });
+    else if (userEmail)
+      query.where('exam.restrictedAccessList LIKE :email', {
+        email: `%${userEmail}%`,
+      });
 
-      if (search)
-        query.andWhere(
-          'LOWER(exam.title) LIKE :search OR LOWER(exam.description) LIKE :search',
-          { search: `%${search.toLowerCase()}%` },
-        );
-      if (subject === 0 || subject) {
-        query.andWhere('exam.subject = :subjectId', { subjectId: subject });
-      }
-      if (authorId === 0 || authorId) {
-        query.andWhere('exam.ownerId = :ownerId', { ownerId: authorId });
-      }
-      query.orderBy('exam.updatedBy', 'DESC');
-      if (offset) query.offset(offset);
-      if (limit) query.limit(limit);
-      return query;
+    if (search)
+      query.andWhere(
+        'LOWER(exam.title) LIKE :search OR LOWER(exam.description) LIKE :search',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    if (subject === 0 || subject) {
+      query.andWhere('exam.subject = :subjectId', { subjectId: subject });
+    }
+    if (authorId === 0 || authorId) {
+      query.andWhere('exam.ownerId = :ownerId', { ownerId: authorId });
+    }
+    query.orderBy('exam.updatedBy', 'DESC');
+    if (offset) query.offset(offset);
+    if (limit) query.limit(limit);
+    return query;
   }
 }

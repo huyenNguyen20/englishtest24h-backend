@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreateTeacherAnswerDto } from './dto/create-answer.dto';
@@ -36,7 +33,10 @@ export class StudentQuestionRepository extends Repository<Question> {
   }
   /*****READ****** */
   //Methods for STUDENTS to get their questions for one exam
-  async getQuestionsForStudent(examId: number, userId: number): Promise<Question[]> {
+  async getQuestionsForStudent(
+    examId: number,
+    userId: number,
+  ): Promise<Question[]> {
     return await this.find({ examId, userId });
   }
 
@@ -52,12 +52,12 @@ export class StudentQuestionRepository extends Repository<Question> {
     questionId: number,
     user: User,
   ): Promise<Question[]> {
-    const whereClause = { id: questionId, userId: user.id }
+    const whereClause = { id: questionId, userId: user.id };
     const oldQuestion = await this.findOne({ where: whereClause });
     if (!oldQuestion) throw new NotFoundException('Question Not Found');
     const { title, question } = updateQuestionDto;
-    if(question) oldQuestion.question = question;
-    if(title) oldQuestion.title = title;
+    if (question) oldQuestion.question = question;
+    if (title) oldQuestion.title = title;
     await oldQuestion.save();
     return await this.getQuestionsForStudent(examId, user.id);
   }
@@ -83,7 +83,9 @@ export class StudentQuestionRepository extends Repository<Question> {
     examId: number,
     user: User,
   ): Promise<Question[]> {
-    const question = await this.findOne({where: {id: questionId, userId: user.id}});
+    const question = await this.findOne({
+      where: { id: questionId, userId: user.id },
+    });
     if (!question) throw new NotFoundException('Question Not Found');
     await getConnection()
       .createQueryBuilder()
@@ -110,4 +112,3 @@ export class StudentQuestionRepository extends Repository<Question> {
     return await this.getQuestionsForTeacher(examId);
   }
 }
-

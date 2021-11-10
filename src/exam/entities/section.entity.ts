@@ -42,10 +42,7 @@ export class Section extends BaseEntity {
   @Column()
   ownerId: number;
 
-  @ManyToOne(
-    (type) => Exam, 
-    (exam) => exam.sections, 
-    { eager: false })
+  @ManyToOne((type) => Exam, (exam) => exam.sections, { eager: false })
   exam: Exam;
 
   @Column()

@@ -23,22 +23,19 @@ export class TestEnrollment extends BaseEntity {
   @Column()
   subjectId: number;
 
-  @ManyToOne(
-    (type) => User, 
-    (user) => user.testErollments, 
-    { eager: false })
+  @ManyToOne((type) => User, (user) => user.testErollments, { eager: false })
   student: User;
 
   @Column()
   studentId: number;
 
-  @Column({default: null})
+  @Column({ default: null })
   score: number;
 
   @Column()
   totalScore: number;
 
-  @Column({type: 'longtext', default: null})
+  @Column({ type: 'longtext', default: null })
   teacherGrading: string;
 
   @Column({ default: 0 })

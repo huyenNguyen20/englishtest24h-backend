@@ -34,18 +34,16 @@ export class User extends BaseEntity {
   @Column()
   avatarUrl: string;
 
-  @Column({ default: false})
+  @Column({ default: false })
   isEducator: boolean;
 
-  @Column({ default: false})
+  @Column({ default: false })
   isAdmin: boolean;
 
   @Column()
   salt: string;
 
-  @OneToMany(
-    (type) => Exam, 
-    (exam) => exam.owner, {
+  @OneToMany((type) => Exam, (exam) => exam.owner, {
     eager: false,
     cascade: ['remove', 'soft-remove'],
   })

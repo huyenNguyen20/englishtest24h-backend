@@ -27,7 +27,7 @@ export class SectionRepository extends Repository<Section> {
     const s = new Section();
     s.title = title;
     if (audioUrl) s.audioUrl = audioUrl;
-    
+
     if (imageUrl) s.imageUrl = imageUrl;
     else s.imageUrl = null;
 
@@ -59,8 +59,14 @@ export class SectionRepository extends Repository<Section> {
     sectionId: number,
     user: User,
   ): Promise<Section> {
-    const { title, imageUrl, audioUrl, htmlContent, directions, transcription } =
-      updateQuestionDto;
+    const {
+      title,
+      imageUrl,
+      audioUrl,
+      htmlContent,
+      directions,
+      transcription,
+    } = updateQuestionDto;
     const s = await this.getSection(examId, sectionId, user);
     if (title) s.title = title;
     if (audioUrl) s.audioUrl = audioUrl;
@@ -89,7 +95,7 @@ export class SectionRepository extends Repository<Section> {
         (questionGroup) => questionGroup.id,
       );
 
-      //Delete Images of Corresponding Question Groups
+      // 1. Delete Images of Corresponding Question Groups
       for (let questionGroup of questionGroups) {
         if (Boolean(questionGroup.imageUrl)) {
           const filename = questionGroup.imageUrl.substring(
@@ -110,10 +116,9 @@ export class SectionRepository extends Repository<Section> {
         .execute();
 
       if (questions.length > 0) {
-
         const questionIds = questions.map((question) => question.id);
 
-        //Delete Images of Corresponding Questions
+        // 2. Delete Images of Corresponding Questions
         for (let question of questions) {
           if (Boolean(question.imageUrl)) {
             const filename = question.imageUrl.substring(
@@ -123,7 +128,7 @@ export class SectionRepository extends Repository<Section> {
             await axios.delete(url);
           }
         }
-
+        // 3. Delete Answers
         await getConnection()
           .createQueryBuilder()
           .delete()
@@ -132,7 +137,7 @@ export class SectionRepository extends Repository<Section> {
             questionIds: [...questionIds],
           })
           .execute();
-
+        // 4. Delete Questions
         await getConnection()
           .createQueryBuilder()
           .delete()
@@ -140,7 +145,7 @@ export class SectionRepository extends Repository<Section> {
           .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
           .execute();
       }
-      
+      // 5. Delete Question Group
       await getConnection()
         .createQueryBuilder()
         .delete()
@@ -150,7 +155,7 @@ export class SectionRepository extends Repository<Section> {
         })
         .execute();
     }
-
+    // 6. Delete Section
     await getConnection()
       .createQueryBuilder()
       .delete()

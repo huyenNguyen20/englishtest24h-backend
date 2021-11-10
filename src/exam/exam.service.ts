@@ -1,10 +1,16 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateQuestionDto, FilterExamDto, UpdateExamDto, UpdateQuestionDto } from './dto';
+import {
+  CreateQuestionDto,
+  FilterExamDto,
+  UpdateExamDto,
+  UpdateQuestionDto,
+} from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExamRepository } from './exam.repositary';
 import { User } from 'src/auth/entities/user.entity';
@@ -47,7 +53,7 @@ export class ExamService {
   ) {}
 
   /************************************* */
-  /****Exam Services For Public Users*****/
+  /****Exam Services For Public Users & Students*****/
   /************************************* */
   async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.examRepository.getPublishedExamIndexes();
@@ -61,7 +67,10 @@ export class ExamService {
   async getPublishedExamsCount(): Promise<number> {
     return await this.examRepository.getPublishedExamsCount();
   }
-  async getRestrictedExams(user: User, filterExamDto: FilterExamDto): Promise<Exam[]> {
+  async getRestrictedExams(
+    user: User,
+    filterExamDto: FilterExamDto,
+  ): Promise<Exam[]> {
     return await this.examRepository.getRestrictedExams(user, filterExamDto);
   }
   async getRestrictedExamsCount(user: User): Promise<number> {
@@ -78,20 +87,20 @@ export class ExamService {
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
       // Exam owner can access the test
-      if(exam.ownerId === user.id){ 
-          delete exam.sections;
-          return exam;
+      if (exam.ownerId === user.id) {
+        delete exam.sections;
+        return exam;
       }
       // Student whose email listed in the restricted access list can access the test
-      if(exam.restrictedAccessList){ 
+      if (exam.restrictedAccessList) {
         const list = JSON.parse(exam.restrictedAccessList);
-        const isIncluded = list.filter(item => item.content === user.email);
-        if(isIncluded[0]) {
+        const isIncluded = list.filter((item) => item.content === user.email);
+        if (isIncluded[0]) {
           delete exam.sections;
           return exam;
         }
       }
-      throw new UnauthorizedException("You are not permitted to take the test");
+      throw new UnauthorizedException('You are not permitted to take the test');
     } catch (e) {
       return e;
     }
@@ -124,9 +133,9 @@ export class ExamService {
     }
   }
 
-  async getRestrictedExamForTestTaker (
+  async getRestrictedExamForTestTaker(
     user: User,
-    examId: number
+    examId: number,
   ): Promise<{ exam: Exam; sections: Section[] }> {
     try {
       const exam = await this.examRepository.findOne({
@@ -135,18 +144,18 @@ export class ExamService {
       const sections = await this.sectionRepository.find({ where: { examId } });
       if (!exam) throw new NotFoundException('Exam Not Found');
       // Exam owner can access the test
-      if(exam.ownerId === user.id){ 
+      if (exam.ownerId === user.id) {
         return { exam, sections };
       }
       // Student whose email listed in the restricted access list can access the test
-      if(exam.restrictedAccessList){ 
+      if (exam.restrictedAccessList) {
         const list = JSON.parse(exam.restrictedAccessList);
-        const isIncluded = list.filter(item => item.content === user.email);
-        if(isIncluded[0]) {
+        const isIncluded = list.filter((item) => item.content === user.email);
+        if (isIncluded[0]) {
           return { exam, sections };
         }
       }
-      throw new UnauthorizedException("You are not permitted to take the test");
+      throw new UnauthorizedException('You are not permitted to take the test');
     } catch (e) {
       return e;
     }
@@ -172,7 +181,7 @@ export class ExamService {
   /************************************* */
 
   async getExams(user: User): Promise<Exam[]> {
-    return await this.examRepository.getExams(user);
+    return await this.examRepository.getExams(user.id);
   }
 
   async createExam(createExamDto: any, user: User): Promise<Exam[]> {
@@ -206,32 +215,26 @@ export class ExamService {
     return await this.examRepository.togglePublishExam(examId, user);
   }
 
-  async postRestrictedAccessList(restrictedList: string, examId: number, user: User): Promise<Exam[]>{
-    return await this.examRepository.postRestrictedAccessList(restrictedList, examId, user);
+  async postRestrictedAccessList(
+    restrictedList: string,
+    examId: number,
+    user: User,
+  ): Promise<Exam[]> {
+    return await this.examRepository.postRestrictedAccessList(
+      restrictedList,
+      examId,
+      user,
+    );
   }
 
   async removeExam(examId: number, user: User): Promise<Exam[]> {
     try {
+      //1. Check if the user's permission
       const exam = await this.getExam(examId, user);
-      //1. Remove corresponding images
-      if (exam && Boolean(exam.imageUrl)) {
-        const filename = exam.imageUrl.substring(
-          exam.imageUrl.lastIndexOf('/') + 1,
-        );
-        const url = `${config.get('deleteImage').url}/${filename}`;
-        await axios.delete(url);
-      }
-      //2. Remove  all corresponding image and audio files in sections
-      const sections = await this.getSections(examId, user);
-      if (sections.length > 0) {
-        sections.map(async (s) => {
-          await this.removeSection(examId, s.id, user);
-        });
-      }
-      //3. Remove the exam
-      return await this.examRepository.removeExam(examId, user);
+      if (!exam) throw new ForbiddenException('You are not allowed');
+      //2. Remove the exam
+      return await this.examRepository.removeExam(examId, user.id);
     } catch (e) {
-      console.log(e);
       throw new BadRequestException('Something went wrong! Try again');
     }
   }
@@ -255,8 +258,7 @@ export class ExamService {
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
-      /***********************************/ 
-      else {
+      /***********************************/ else {
         return await this.sectionRepository.createSection(
           createSectionDto,
           exam,
@@ -271,53 +273,56 @@ export class ExamService {
   async createWritingSection(
     createWritingSectionDto: any,
     examId: number,
-    user: User): Promise<Section>{
-    try{
+    user: User,
+  ): Promise<Section> {
+    try {
       /***Check the User's Permission***/
       const exam = await this.examRepository.findOne({
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
-      /********************************/ 
-      const sectionDto : CreateSectionDto = {
+      /********************************/
+      // 1. Create Section
+      const sectionDto: CreateSectionDto = {
         title: createWritingSectionDto.title,
         directions: createWritingSectionDto.directions,
         imageUrl: createWritingSectionDto.imageUrl || null,
         audioUrl: null,
         htmlContent: null,
         transcription: null,
-      }
+      };
       const section = await this.sectionRepository.createSection(
         sectionDto,
         exam,
         user,
       );
-      const questionDto : CreateQuestionDto = {
+      // 2. Create Question Group
+      const questionDto: CreateQuestionDto = {
         imageUrl: null,
         score: createWritingSectionDto.score,
         order: null,
         minWords: createWritingSectionDto.minWords,
         question: createWritingSectionDto.question,
         htmlExplaination: createWritingSectionDto.htmlExplaination,
-        answers: null
-      }
-      const questionGroupDto : CreateQuestionGroupDto = {
+        answers: null,
+      };
+      const questionGroupDto: CreateQuestionGroupDto = {
         type: 7,
-        title: "",
+        title: '',
         imageUrl: null,
         htmlContent: null,
         matchingOptions: null,
-        questions: [questionDto]
-      }
+        questions: [questionDto],
+      };
       const questionGroups = await this.createQuestionGroup(
         questionGroupDto,
         exam.id,
         section.id,
         user,
-      )
+      );
       section.questionGroups = questionGroups;
       return section;
-    } catch(e){
+    } catch (e) {
       throw new NotFoundException('Exam Not Found');
     }
   }
@@ -336,28 +341,36 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<Section> {
-    try{
+    try {
       /***Check the User's Permission***/
       const exam = await this.examRepository.findOne({
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
-      /********************************/ 
-       //1. Remove Existing Audio and Image Files from File System
+      /********************************/
+      //1. Remove Existing Audio and Image Files from File System
       const { audioUrl, imageUrl } = updateSectionDto;
       const section = await this.sectionRepository.getSection(
         examId,
         sectionId,
         user,
       );
-      if (section && Boolean(section.imageUrl) && section.imageUrl !== imageUrl) {
+      if (
+        section &&
+        Boolean(section.imageUrl) &&
+        section.imageUrl !== imageUrl
+      ) {
         const filename = section.imageUrl.substring(
           section.imageUrl.lastIndexOf('/') + 1,
         );
         const url = `${config.get('deleteImage').url}/${filename}`;
         await axios.delete(url);
       }
-      if (section  && Boolean(section.audioUrl)  && section.audioUrl !== audioUrl) {
+      if (
+        section &&
+        Boolean(section.audioUrl) &&
+        section.audioUrl !== audioUrl
+      ) {
         const filename = section.audioUrl.substring(
           section.audioUrl.lastIndexOf('/') + 1,
         );
@@ -371,8 +384,8 @@ export class ExamService {
         sectionId,
         user,
       );
-    } catch (e){
-      throw new NotFoundException('Exam Not Found')
+    } catch (e) {
+      throw new NotFoundException('Exam Not Found');
     }
   }
 
@@ -382,85 +395,91 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<Section> {
-    try{
+    try {
       /***Check the User's Permission***/
       const exam = await this.examRepository.findOne({
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
-      /**********************************/ 
-      //1. Remove Existing Audio and Image Files from File System
+      /**********************************/
+      //1. Remove Existing Audio and Image Files of Writing Section
       const { imageUrl } = updateWritingSectionDto;
       const section = await this.sectionRepository.getSection(
         examId,
         sectionId,
         user,
       );
-      if (section && Boolean(section.imageUrl) && section.imageUrl !== imageUrl) {
+      if (
+        section &&
+        Boolean(section.imageUrl) &&
+        section.imageUrl !== imageUrl
+      ) {
         const filename = section.imageUrl.substring(
           section.imageUrl.lastIndexOf('/') + 1,
         );
         const url = `${config.get('deleteImage').url}/${filename}`;
         await axios.delete(url);
       }
-      //2. Update the section
-      const sectionDto : UpdateSectionDto = {
+      //2. Create questionDto, sectionDto, and questionGroupDto
+      const sectionDto: UpdateSectionDto = {
         title: updateWritingSectionDto.title,
         directions: updateWritingSectionDto.directions,
         imageUrl: updateWritingSectionDto.imageUrl || null,
-      }
-      const questionDto : CreateQuestionDto = {
+      };
+      const questionDto: CreateQuestionDto = {
         imageUrl: null,
         score: updateWritingSectionDto.score,
         order: null,
         minWords: updateWritingSectionDto.minWords,
         question: updateWritingSectionDto.question,
         htmlExplaination: updateWritingSectionDto.htmlExplaination,
-        answers: null
-      }
-      const questionGroupDto : UpdateQuestionGroupDto = {
-        title: "",
+        answers: null,
+      };
+      const questionGroupDto: UpdateQuestionGroupDto = {
+        title: '',
         imageUrl: null,
         htmlContent: null,
-        questions: [questionDto]
-      }
+        questions: [questionDto],
+      };
+      // 3. Update Section
       const updatedSection = await this.sectionRepository.updateSection(
         sectionDto,
         examId,
         sectionId,
         user,
       );
+      // 4. Update Question Group
       const updatedQuestionGroup = await this.updateQuestionGroup(
-        questionGroupDto, 
-        section.id, 
-        section.questionGroups[0].id, 
-        user)
+        questionGroupDto,
+        section.id,
+        section.questionGroups[0].id,
+        user,
+      );
       updatedSection.questionGroups = updatedQuestionGroup;
       return updatedSection;
-    } catch (e){
-      throw new NotFoundException('Exam Not Found')
+    } catch (e) {
+      throw new NotFoundException('Exam Not Found');
     }
   }
-
 
   async removeSection(
     examId: number,
     sectionId: number,
     user: User,
   ): Promise<Section[]> {
-    try{
+    try {
       /***Check the User's Permission***/
       const exam = await this.examRepository.findOne({
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
       /***************************** */
-      //1. Remove Audio and Image Files from File System
       const section = await this.sectionRepository.getSection(
         examId,
         sectionId,
         user,
       );
+      //1. Remove Audio and Image Files of Section
       if (section && Boolean(section.imageUrl)) {
         const filename = section.imageUrl.substring(
           section.imageUrl.lastIndexOf('/') + 1,
@@ -478,13 +497,13 @@ export class ExamService {
       //2. Remove the section
       await this.sectionRepository.removeSection(examId, sectionId, user);
       return await this.getSections(examId, user);
-    } catch (e){
-      throw new NotFoundException('Exam Not Found')
+    } catch (e) {
+      throw new NotFoundException('Exam Not Found');
     }
   }
 
   /************************************* */
-  /***Question Group Services For  Owner**/
+  /***Question Group Services For Owner**/
   /************************************* */
 
   async getQuestionGroups(
@@ -503,7 +522,7 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<QuestionGroup[]> {
-    try{
+    try {
       /***Check the User's Permission***/
       const exam = await this.examRepository.findOne({
         where: { id: examId, ownerId: user.id },
@@ -511,6 +530,7 @@ export class ExamService {
       if (!exam) throw new NotFoundException('Exam Not Found');
       /***************************** */
       const section = await this.getSection(examId, sectionId, user);
+      // 1. Create question group
       const questionGroup =
         await this.questionGroupRepository.createQuestionGroup(
           createQuestionGroupDto,
@@ -518,7 +538,7 @@ export class ExamService {
           user,
         );
       const { questions } = createQuestionGroupDto;
-      //Create questions and answers
+      // 2. Create questions and answers
       const newQuestions = [];
       for (const q of questions) {
         const question = await this.createQuestion(q, questionGroup.id, user);
@@ -531,8 +551,8 @@ export class ExamService {
         return q;
       });
       return questionGroups;
-    } catch (e){
-      throw new NotFoundException('Exam Not Found')
+    } catch (e) {
+      throw new NotFoundException('Exam Not Found');
     }
   }
 
@@ -553,9 +573,9 @@ export class ExamService {
     user: User,
   ): Promise<QuestionGroup[]> {
     //Update questionGroup
-    try{
+    try {
       /***Check the User's Permission***/
-      const section = await this.sectionRepository.findOne(sectionId)
+      const section = await this.sectionRepository.findOne(sectionId);
       if (!section) throw new NotFoundException('Exam Not Found');
       const exam = await this.examRepository.findOne({
         where: { id: section.examId, ownerId: user.id },
@@ -564,17 +584,23 @@ export class ExamService {
       /************************************ */
 
       const { questions, imageUrl } = updateQuestionGroupDto;
-      const oldQuestionGroup = await this.getQuestionGroup(questionGroupId, user);
-      
-      // Delete image of the question group
-      if (Boolean(oldQuestionGroup.imageUrl) && oldQuestionGroup.imageUrl !== imageUrl) {
+      const oldQuestionGroup = await this.getQuestionGroup(
+        questionGroupId,
+        user,
+      );
+
+      // 1. Delete image of the question group
+      if (
+        Boolean(oldQuestionGroup.imageUrl) &&
+        oldQuestionGroup.imageUrl !== imageUrl
+      ) {
         const filename = oldQuestionGroup.imageUrl.substring(
           oldQuestionGroup.imageUrl.lastIndexOf('/') + 1,
         );
         const url = `${config.get('deleteImage').url}/${filename}`;
         await axios.delete(url);
       }
-      // Update and get updated question group
+      // 2. Update and get updated question group
       const questionGroup =
         await this.questionGroupRepository.updateQuestionGroup(
           updateQuestionGroupDto,
@@ -582,9 +608,11 @@ export class ExamService {
           user,
         );
 
-      const questionIds = questionGroup.questions.map((question) => question.id);
+      const questionIds = questionGroup.questions.map(
+        (question) => question.id,
+      );
 
-      //Delete image file of corresponding questions
+      //3. Delete image file of corresponding questions
       for (let question of questionGroup.questions) {
         if (Boolean(question.imageUrl)) {
           const filename = question.imageUrl.substring(
@@ -594,10 +622,9 @@ export class ExamService {
           await axios.delete(url);
         }
       }
-      
+
       if (questionIds.length > 0) {
-        //console.log(questionIds);
-        //Delete corresponding questions and answers
+        //4. Delete corresponding answers
         await getConnection()
           .createQueryBuilder()
           .delete()
@@ -606,7 +633,7 @@ export class ExamService {
             questionIds: [...questionIds],
           })
           .execute();
-
+        //5. Delete corresponding questions
         await getConnection()
           .createQueryBuilder()
           .delete()
@@ -614,7 +641,7 @@ export class ExamService {
           .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
           .execute();
       }
-      //Create questions and answers
+      //6. Create questions and answers
       const newQuestions = [];
       for (const q of questions) {
         const question = await this.createQuestion(q, questionGroup.id, user);
@@ -622,13 +649,14 @@ export class ExamService {
       }
 
       let questionGroups = await this.getQuestionGroups(sectionId, user);
+      //7. Return new question group array
       questionGroups = questionGroups.map((q) => {
         if (q.id === questionGroup.id) q.questions = newQuestions;
         return q;
       });
       return questionGroups;
-    } catch (e){
-      throw new NotFoundException('Exam Not Found')
+    } catch (e) {
+      throw new NotFoundException('Exam Not Found');
     }
   }
 
@@ -637,21 +665,20 @@ export class ExamService {
     questionGroupId: number,
     user: User,
   ): Promise<QuestionGroup[]> {
-    try{
+    try {
       /***Check the User's Permission***/
-      const section = await this.sectionRepository.findOne(sectionId)
+      const section = await this.sectionRepository.findOne(sectionId);
       if (!section) throw new NotFoundException('Exam Not Found');
       const exam = await this.examRepository.findOne({
         where: { id: section.examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
       /**********************************/
-      const questionGroup =
-      await this.questionGroupRepository.getQuestionGroup(
+      const questionGroup = await this.questionGroupRepository.getQuestionGroup(
         questionGroupId,
         user,
       );
-      // Delete image of the question group
+      // 1. Delete image of the question group
       if (Boolean(questionGroup.imageUrl)) {
         const filename = questionGroup.imageUrl.substring(
           questionGroup.imageUrl.lastIndexOf('/') + 1,
@@ -660,24 +687,24 @@ export class ExamService {
         await axios.delete(url);
       }
 
-      //Delete image file of corresponding questions 
-        for (let question of questionGroup.questions) {
-          if (Boolean(question.imageUrl)) {
-            const filename = question.imageUrl.substring(
-              question.imageUrl.lastIndexOf('/') + 1,
-            );
-            const url = `${config.get('deleteImage').url}/${filename}`;
-            await axios.delete(url);
-          }
+      //2. Delete image file of corresponding questions
+      for (let question of questionGroup.questions) {
+        if (Boolean(question.imageUrl)) {
+          const filename = question.imageUrl.substring(
+            question.imageUrl.lastIndexOf('/') + 1,
+          );
+          const url = `${config.get('deleteImage').url}/${filename}`;
+          await axios.delete(url);
         }
+      }
 
       await this.questionGroupRepository.removeQuestionGroup(
         questionGroupId,
         user,
       );
       return await this.getQuestionGroups(sectionId, user);
-    } catch (e){
-      throw new NotFoundException('Exam Not Found')
+    } catch (e) {
+      throw new NotFoundException('Exam Not Found');
     }
   }
 
@@ -694,12 +721,15 @@ export class ExamService {
     questionGroupId: number,
     user: User,
   ): Promise<Question> {
+    // 1. Get question group
     const questionGroup = await this.getQuestionGroup(questionGroupId, user);
+    // 2. Create question
     const question = await this.questionRepository.createQuestion(
       createQuestionDto,
       questionGroup,
       user,
     );
+    // 3. Create answers
     const { answers } = createQuestionDto;
     const answersArr = [];
     for (const a of answers) {
@@ -711,7 +741,9 @@ export class ExamService {
   }
 
   async getQuestion(questionId: number, user: User): Promise<Question> {
-    return await this.questionRepository.getQuestion(questionId, user);
+    const q = await this.questionRepository.getQuestion(questionId, user);
+    if (!q) throw new NotFoundException('Question Not Found');
+    return q;
   }
 
   async updateQuestion(
@@ -734,7 +766,12 @@ export class ExamService {
     questionId: number,
     user: User,
   ): Promise<Question[]> {
-    await this.questionRepository.removeQuestion(questionId, user);
+    //1. Check the user's permission
+    const q = await this.getQuestion(questionId, user);
+    if (!q) throw new NotFoundException('Question Not Found!');
+    //2. Remove corresponding images of the question
+    //3. Remove question
+    await this.questionRepository.removeQuestion(questionId);
     return await this.getQuestions(questionGroupId, user);
   }
 
@@ -751,7 +788,13 @@ export class ExamService {
     questionId: number,
     user: User,
   ): Promise<Answer> {
-    const question = await this.getQuestion(questionId, user);
+    // Check the user's permission
+    const question = await this.questionRepository.getQuestion(
+      questionId,
+      user,
+    );
+    if (!question) throw new NotFoundException('Question Not Found');
+    // Create question
     return await this.answerRepository.createAnswer(
       createAnswerDto,
       question,
@@ -778,7 +821,37 @@ export class ExamService {
     answerId: number,
     user: User,
   ): Promise<Answer[]> {
-    await this.answerRepository.removeAnswer(answerId, user);
+    //1. Check the user's permission
+    const answer = await this.answerRepository.findOne({
+      where: { id: answerId, ownerId: user.id },
+    });
+
+    if (!answer) throw new NotFoundException('Answer Not Found');
+    //2. Remove Answer
+    await this.answerRepository.removeAnswer(answerId);
     return await this.getAnswers(questionId, user);
+  }
+
+  /************************************* */
+  /***Exam Services For Admin**/
+  /************************************* */
+  async getExamsByEducator(educatorId: number): Promise<Exam[]> {
+    return await this.examRepository.find({
+      select: ['id', 'title', 'subject', 'isPublished', 'restrictedAccessList', 'updatedBy'],
+      where: { ownerId: educatorId },
+    });
+  }
+
+  async getExamForAdmin(examId: number): Promise<Exam> {
+    return await this.examRepository.findOne({
+      where: { id: examId },
+      relations: ['section', 'test_enrollment'],
+    });
+  }
+
+  async deleteExamForAdmin(examId: number): Promise<Exam[]> {
+    const exam = await this.examRepository.findOne(examId);
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    return await this.examRepository.removeExam(examId, exam.ownerId);
   }
 }

@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/entities/user.entity';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
@@ -17,6 +21,9 @@ export class TestEnrollmentService {
     @InjectRepository(ExamRepository)
     private examRepository: ExamRepository,
   ) {}
+  /************************************* */
+  /****Students and Educators Methods*** */
+  /************************************* */
   /********READ******** */
   //Indexing frontend routes
   async getAllEnrollmentIndexes(): Promise<Partial<TestEnrollment>[]> {
@@ -34,10 +41,16 @@ export class TestEnrollmentService {
     return await this.testEnrollmentRepository.getMyTestCount(user);
   }
   // Get all enrollment records for TEACHERS
-  async getAllScores(examId: number, user: User): Promise<EnrollmentDataToTeacher[]> {
-    try{
+  async getAllScores(
+    examId: number,
+    user: User,
+  ): Promise<EnrollmentDataToTeacher[]> {
+    try {
       const exam = await this.examRepository.findOne(examId);
-      if(!exam || exam.ownerId !== user.id) throw new ForbiddenException("You are not allowed to access the endpoint");
+      if (!exam || exam.ownerId !== user.id)
+        throw new ForbiddenException(
+          'You are not allowed to access the endpoint',
+        );
       return await this.testEnrollmentRepository.getAllScores(examId);
     } catch (e) {
       return e;
@@ -49,26 +62,38 @@ export class TestEnrollmentService {
   }
 
   // Get student's past exam review for STUDENT and TEACHER
-  async getExamResult(examId: number, enrollmentId: number)
-  : Promise<{enrollment: TestEnrollment; teacherId: number, isPublished: boolean}> {
+  async getExamResult(
+    examId: number,
+    enrollmentId: number,
+  ): Promise<{
+    enrollment: TestEnrollment;
+    teacherId: number;
+    isPublished: boolean;
+  }> {
     try {
       const exam = await this.examRepository.findOne(examId);
-      if(!exam) throw new NotFoundException("Exam Not Found");
-      const enrollment = await this.testEnrollmentRepository.getExamResult(enrollmentId);
-      return {enrollment, teacherId: exam.ownerId, isPublished: exam.isPublished}
-    } catch(e){
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      const enrollment = await this.testEnrollmentRepository.getExamResult(
+        enrollmentId,
+      );
+      return {
+        enrollment,
+        teacherId: exam.ownerId,
+        isPublished: exam.isPublished,
+      };
+    } catch (e) {
       return e;
     }
   }
 
-   /********CREATE ******** */
-   // Post and update the student's answers and score for STUDENT
+  /********CREATE ******** */
+  // Post and update the student's answers and score for STUDENT
   async postTestScore(
     createTestEnrollmentDto: CreateTestEnrollmentDto,
     examId: number,
     user: User,
   ): Promise<TestEnrollment> {
-    const exam= await this.examRepository.findOne(examId);
+    const exam = await this.examRepository.findOne(examId);
     if (!exam) throw new NotFoundException('Exam Not Found');
     return await this.testEnrollmentRepository.postTestScore(
       createTestEnrollmentDto,
@@ -77,56 +102,93 @@ export class TestEnrollmentService {
     );
   }
 
-   /********UPDATE******** */
+  /********UPDATE******** */
   // Update student's score for TEACHER
   async updateScore(
-    score: number, 
-    examId: number, 
-    enrollmentId: number, 
-    user: User) : Promise<TestEnrollment> {
+    score: number,
+    examId: number,
+    enrollmentId: number,
+    user: User,
+  ): Promise<TestEnrollment> {
     try {
       // Check the user permission
       const exam = await this.examRepository.findOne(examId);
-      if((!exam) || (exam.ownerId !== user.id)) throw new ForbiddenException("You have no permission to perform the task");
+      if (!exam || exam.ownerId !== user.id)
+        throw new ForbiddenException(
+          'You have no permission to perform the task',
+        );
       // Update TestEnrollment
-      return this.testEnrollmentRepository.updateEnrollment({score}, enrollmentId);
+      return this.testEnrollmentRepository.updateEnrollment(
+        { score },
+        enrollmentId,
+      );
     } catch (e) {
       throw e;
     }
   }
   // Update teacher grading of the exam for TEACHER
   async updateTeacherGrading(
-    teacherGrading: string, 
-    examId: number, 
-    enrollmentId: number, 
-    user: User) : Promise<TestEnrollment> {
+    teacherGrading: string,
+    examId: number,
+    enrollmentId: number,
+    user: User,
+  ): Promise<TestEnrollment> {
     try {
       // Check the user permission
       const exam = await this.examRepository.findOne(examId);
-      if((!exam) || (exam.ownerId !== user.id)) throw new ForbiddenException("You have no permission to perform the task");
+      if (!exam || exam.ownerId !== user.id)
+        throw new ForbiddenException(
+          'You have no permission to perform the task',
+        );
       // Update TestEnrollment
-      return this.testEnrollmentRepository.updateEnrollment({teacherGrading}, enrollmentId);
+      return this.testEnrollmentRepository.updateEnrollment(
+        { teacherGrading },
+        enrollmentId,
+      );
     } catch (e) {
       throw e;
     }
   }
 
-   /********DELETE******** */
-   // Remove a student's enrollment record by TEACHER
-  async removeTestEnrollments(
-    examId: number,
-    list: string[],
-    user: User,
-  ){
+  /********DELETE******** */
+  // Remove a student's enrollment record by TEACHER
+  async removeTestEnrollments(examId: number, list: string[], user: User) {
     try {
       // Check the user permission
       const exam = await this.examRepository.findOne(examId);
-      if((!exam) || (exam.ownerId !== user.id)) throw new ForbiddenException("You have no permission to perform the task");
+      if (!exam || exam.ownerId !== user.id)
+        throw new ForbiddenException(
+          'You have no permission to perform the task',
+        );
       // Update TestEnrollment
-      return await this.testEnrollmentRepository.removeEnrollments(exam, list);
+      return await this.testEnrollmentRepository.removeEnrollments(
+        exam.subject,
+        list,
+      );
     } catch (e) {
       throw e;
     }
   }
-  
+
+  /************************************* */
+  /****Admin Methods*** */
+  /************************************* */
+  async getEnrollmentsByUser(studentId: number): Promise<TestEnrollment[]> {
+    return await this.testEnrollmentRepository.find({
+      where: { studentId },
+    });
+  }
+
+  async deleteEnrollmentForAdmin(enrollmentId: number, examId: number) {
+    try {
+      const exam = await this.examRepository.findOne(examId);
+      // Update TestEnrollment
+      return await this.testEnrollmentRepository.removeEnrollments(
+        exam.subject,
+        [`${enrollmentId}`],
+      );
+    } catch (e) {
+      throw e;
+    }
+  }
 }

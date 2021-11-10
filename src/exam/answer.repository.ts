@@ -50,8 +50,7 @@ export class AnswerRepository extends Repository<Answer> {
     await a.save();
   }
 
-  async removeAnswer(answerId: number, user: User) {
-    const a = await this.getAnswer(answerId, user);
+  async removeAnswer(answerId: number) {
     await getConnection()
       .createQueryBuilder()
       .delete()

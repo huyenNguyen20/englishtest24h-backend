@@ -14,7 +14,7 @@ export class StudentQuestionService {
     @InjectRepository(StudentQuestionRepository)
     private questionRepository: StudentQuestionRepository,
 
-    private readonly examService: ExamService
+    private readonly examService: ExamService,
   ) {}
   /*****CREATE****** */
   //Method for STUDENT to create their questions
@@ -23,22 +23,35 @@ export class StudentQuestionService {
     examId: number,
     user: User,
   ): Promise<Question[]> {
-    return await this.questionRepository.createQuestion(createQuestionDto, examId, user);
+    return await this.questionRepository.createQuestion(
+      createQuestionDto,
+      examId,
+      user,
+    );
   }
   /*****READ****** */
   //Methods for STUDENTS to get their questions for one exam
-  async getQuestionsForStudent(examId: number, user: User): Promise<Question[]> {
-    return await this.questionRepository.getQuestionsForStudent(examId, user.id);
+  async getQuestionsForStudent(
+    examId: number,
+    user: User,
+  ): Promise<Question[]> {
+    return await this.questionRepository.getQuestionsForStudent(
+      examId,
+      user.id,
+    );
   }
 
   //Methods for TEACHER to get all students' questions for one exam
-  async getQuestionsForTeacher(examId: number, user: User): Promise<Question[]> {
+  async getQuestionsForTeacher(
+    examId: number,
+    user: User,
+  ): Promise<Question[]> {
     try {
       //Check if user has teacher permission
       await this.examService.getExam(examId, user);
       //Then get questions
       return await this.questionRepository.getQuestionsForTeacher(examId);
-    } catch (e){
+    } catch (e) {
       return e;
     }
   }
@@ -50,7 +63,12 @@ export class StudentQuestionService {
     questionId: number,
     user: User,
   ): Promise<Question[]> {
-    return await this.questionRepository.updateQuestion(updateQuestionDto, examId, questionId, user);
+    return await this.questionRepository.updateQuestion(
+      updateQuestionDto,
+      examId,
+      questionId,
+      user,
+    );
   }
 
   //Method for TEACHER to post/edit their answers to students' question
@@ -58,14 +76,18 @@ export class StudentQuestionService {
     createAnswerDto: CreateTeacherAnswerDto,
     examId: number,
     questionId: number,
-    user: User
+    user: User,
   ): Promise<Question[]> {
     try {
       //Check if user has teacher permission
       await this.examService.getExam(examId, user);
       //Then get questions
-      return await this.questionRepository.updateAnswer(createAnswerDto, examId, questionId);
-    } catch (e){
+      return await this.questionRepository.updateAnswer(
+        createAnswerDto,
+        examId,
+        questionId,
+      );
+    } catch (e) {
       return e;
     }
   }
@@ -77,7 +99,11 @@ export class StudentQuestionService {
     examId: number,
     user: User,
   ): Promise<Question[]> {
-    return await this.questionRepository.deleteQuestionForStudent(questionId, examId, user);
+    return await this.questionRepository.deleteQuestionForStudent(
+      questionId,
+      examId,
+      user,
+    );
   }
 
   //Method for TEACHER to delete questions of one exam
@@ -90,8 +116,11 @@ export class StudentQuestionService {
       //Check if user has teacher permission
       await this.examService.getExam(examId, user);
       //Then get questions
-      return await this.questionRepository.deleteQuestionsForTeacher(idList, examId);
-    } catch (e){
+      return await this.questionRepository.deleteQuestionsForTeacher(
+        idList,
+        examId,
+      );
+    } catch (e) {
       return e;
     }
   }

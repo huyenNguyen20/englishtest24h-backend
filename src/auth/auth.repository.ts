@@ -100,10 +100,10 @@ export class AuthRepository extends Repository<User> {
 
   async deleteUser(id: number) {
     await getConnection()
-    .createQueryBuilder()
-    .delete()
-    .from(User)
-    .where("id = :id", { id })
-    .execute();
+      .createQueryBuilder()
+      .delete()
+      .from(User)
+      .where('id = :id', { id })
+      .execute();
   }
 }

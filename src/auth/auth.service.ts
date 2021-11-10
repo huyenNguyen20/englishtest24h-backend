@@ -29,8 +29,13 @@ export class AuthService {
     const { email } = signInUserDto;
     const isSignedIn = await this.authRepository.signInUser(signInUserDto);
     if (!isSignedIn) throw new UnauthorizedException();
-    const user = await this.getUser({email});
-    const payload: JwtPayload = { id: user.id, email, isEducator: user.isEducator, isAdmin: user.isAdmin };
+    const user = await this.getUser({ email });
+    const payload: JwtPayload = {
+      id: user.id,
+      email,
+      isEducator: user.isEducator,
+      isAdmin: user.isAdmin,
+    };
     const token = await this.jwtService.sign(payload);
     return { token };
   }
@@ -69,30 +74,34 @@ export class AuthService {
     return await this.authRepository.updateProfile(user, updates);
   }
 
-  async toggleIsEducator (user: User) {
+  async toggleIsEducator(user: User) {
     const profile = await this.authRepository.findOne(user.id);
-    return await this.authRepository.updateProfile(user, {isEducator: !profile.isEducator})
+    return await this.authRepository.updateProfile(user, {
+      isEducator: !profile.isEducator,
+    });
   }
 
   /*****Admin Methods***** */
-  async getEducators() : Promise<User[]> {
+  async getEducators(): Promise<User[]> {
     return await this.authRepository.find({
-      select: ["id", "email", "firstName", "lastName"],
-      where: {isEducator : true}})
+      select: ['id', 'email', 'firstName', 'lastName'],
+      where: { isEducator: true },
+    });
   }
 
-  async getStudents() : Promise<User[]> {
+  async getStudents(): Promise<User[]> {
     return await this.authRepository.find({
-      select: ["id", "email", "firstName", "lastName"],
-      where: {isEducator : false}})
+      select: ['id', 'email', 'firstName', 'lastName'],
+      where: { isEducator: false },
+    });
   }
 
-  async deleteEducator(educatorId: number) : Promise<User[]> {
+  async deleteEducator(educatorId: number): Promise<User[]> {
     await this.authRepository.deleteUser(educatorId);
     return await this.getEducators();
   }
 
-  async deleteStudent(studentId: number) : Promise<User[]> {
+  async deleteStudent(studentId: number): Promise<User[]> {
     await this.authRepository.deleteUser(studentId);
     return await this.getStudents();
   }

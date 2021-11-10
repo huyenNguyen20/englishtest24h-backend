@@ -46,13 +46,12 @@ export class QuestionGroup extends BaseEntity {
   @Column({ default: null, type: 'longtext' })
   htmlContent: string;
 
-  @Column({type:'longtext', default: null})
+  @Column({ type: 'longtext', default: null })
   matchingOptions: string;
 
-  @OneToMany(
-    (type) => Question, 
-    (question) => question.questionGroup, {
-    eager: true, cascade: ['remove', 'soft-remove']
+  @OneToMany((type) => Question, (question) => question.questionGroup, {
+    eager: true,
+    cascade: ['remove', 'soft-remove'],
   })
   questions: Question[];
 

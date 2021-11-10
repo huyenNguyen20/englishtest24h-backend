@@ -13,9 +13,7 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
-import {
-  FileFieldsInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
 import { getUser } from './decorator/getUser.decorator';
 import { CreateUserDto } from './dto/createUser.dto';
@@ -67,7 +65,7 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async authWithGoogleCallBack(@getUser() user: User, @Response() res) {
-    const { id, email, isEducator, isAdmin} = user;
+    const { id, email, isEducator, isAdmin } = user;
     const payload: JwtPayload = { id, email, isEducator, isAdmin };
     const token = await this.jwtService.sign(payload);
     return res
@@ -179,13 +177,8 @@ export class AuthController {
   })
   @Put('/toggleIsEducator')
   @UseGuards(AuthGuard())
-  async toggleIsEducator(
-    @getUser() user: User,
-    @Response() res,
-  ) {
-    const updatedUser = await this.authService.toggleIsEducator(
-      user
-    );
+  async toggleIsEducator(@getUser() user: User, @Response() res) {
+    const updatedUser = await this.authService.toggleIsEducator(user);
     return res.status(200).json(updatedUser);
   }
 

@@ -36,17 +36,14 @@ export class TestEnrollmentController {
   @UseGuards(AuthGuard())
   async getMyTests(
     @getUser() user: User,
-    @Query(new FilterValidationPipe) filter: FilterDto
-    ): Promise<any> {
+    @Query(new FilterValidationPipe()) filter: FilterDto,
+  ): Promise<any> {
     return await this.testEnrollmentService.getMyTests(user, filter);
   }
 
-
   @Get('/myTests/count')
   @UseGuards(AuthGuard())
-  async getMyTestsCount(
-    @getUser() user: User
-    ): Promise<number> {
+  async getMyTestsCount(@getUser() user: User): Promise<number> {
     return await this.testEnrollmentService.getMyTestsCount(user);
   }
 
@@ -80,11 +77,15 @@ export class TestEnrollmentController {
   async getExamResult(
     @Param('examId', ParseIntPipe) examId: number,
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
-  ): Promise<{enrollment: TestEnrollment, teacherId: number, isPublished: boolean}> {
+  ): Promise<{
+    enrollment: TestEnrollment;
+    teacherId: number;
+    isPublished: boolean;
+  }> {
     return await this.testEnrollmentService.getExamResult(examId, enrollmentId);
   }
 
-   /****POST methods*** */
+  /****POST methods*** */
   @Post('/:examId')
   @UseGuards(AuthGuard())
   async postTestScore(
@@ -100,19 +101,20 @@ export class TestEnrollmentController {
     );
   }
 
-   /****PUT methods*** */
+  /****PUT methods*** */
   // Teacher update student's test score
   @Put('/:examId/enrollments/:enrollmentId/updateScore')
   @UseGuards(AuthGuard())
   async updateScore(
-    @Body(new ValidationPipe()) body: {score : string},
+    @Body(new ValidationPipe()) body: { score: string },
     @Param('examId', ParseIntPipe) examId: number,
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
     @getUser() user: User,
   ): Promise<TestEnrollment> {
     const score = parseInt(body.score, 10);
-    if(isNaN(score)) throw new BadRequestException("score must be a number");
-    else return await this.testEnrollmentService.updateScore(
+    if (isNaN(score)) throw new BadRequestException('score must be a number');
+    else
+      return await this.testEnrollmentService.updateScore(
         parseInt(body.score),
         examId,
         enrollmentId,
@@ -124,7 +126,7 @@ export class TestEnrollmentController {
   @Put('/:examId/enrollments/:enrollmentId/teacherGrading')
   @UseGuards(AuthGuard())
   async updateTeacherGrading(
-    @Body(new ValidationPipe()) body: {teacherGrading : string},
+    @Body(new ValidationPipe()) body: { teacherGrading: string },
     @Param('examId', ParseIntPipe) examId: number,
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
     @getUser() user: User,
@@ -137,16 +139,16 @@ export class TestEnrollmentController {
     );
   }
 
-   /****DELETE methods*** */
+  /****DELETE methods*** */
   // Teacher delete test enrollment
   @Delete('/:examId/enrollments')
   @UseGuards(AuthGuard())
   async removeTestEnrollments(
     @Param('examId', ParseIntPipe) examId: number,
     @Query('idList') idList: string,
-    @getUser() user: User
-  ){
-    const list =  idList.split("+");
+    @getUser() user: User,
+  ) {
+    const list = idList.split('+');
     return await this.testEnrollmentService.removeTestEnrollments(
       examId,
       list,
