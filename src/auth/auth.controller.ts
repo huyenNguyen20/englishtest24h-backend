@@ -150,6 +150,19 @@ export class AuthController {
     });
   }
 
+  @ApiOperation({ summary: 'Get User Ids to populate routes in Frontend' })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of string',
+  })
+  @Get('/users')
+  async getUserIndexes(
+    @Response() res,
+  ) {
+    const users = await this.authService.getUserIndexes();
+    return res.status(200).json(users);
+  }
+
   @ApiOperation({ summary: 'Update User Profile' })
   @ApiResponse({
     status: 200,

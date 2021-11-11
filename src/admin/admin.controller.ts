@@ -5,6 +5,7 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Response
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { getUser } from 'src/auth/decorator/getUser.decorator';
@@ -13,9 +14,13 @@ import { Exam } from '../exam/entities/exam.entity';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TestEnrollment } from '../exam/entities/test-enrollment.entity';
 import { AdminService } from './admin.service';
+import { PoliciesGuard } from 'src/casl/guards/casl-policy.guard';
+import { CheckPolicies } from 'src/casl/decorators/checkPolicy.decorator';
+import { AdminPolicyHandler } from './policies/AdminPolicyHandler';
 
 @ApiTags('Admin Endpoints')
 @Controller('admin')
+@UseGuards(AuthGuard())
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -24,68 +29,70 @@ export class AdminController {
   /********************* */
   @ApiOperation({ summary: 'Get Educators List' })
   @Get('/educators')
-  @UseGuards(AuthGuard())
-  async getEducators(@getUser() user: User): Promise<User[]> {
-    return await this.adminService.getEducators(user);
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new AdminPolicyHandler())
+  async getEducators(): Promise<User[]> {
+    return await this.adminService.getEducators();
   }
 
   @ApiOperation({ summary: 'Get Students List' })
   @Get('/students')
-  @UseGuards(AuthGuard())
-  async getStudents(@getUser() user: User): Promise<User[]> {
-    return await this.adminService.getStudents(user);
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new AdminPolicyHandler())
+  async getStudents(): Promise<User[]> {
+    return await this.adminService.getStudents();
   }
 
   @ApiOperation({ summary: 'Delete an educator' })
   @Delete('/educators/:educatorId')
-  @UseGuards(AuthGuard())
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new AdminPolicyHandler())
   async deleteEducator(
     @Param('educatorId', ParseIntPipe) educatorId: number,
-    @getUser() user: User,
   ): Promise<User[]> {
-    return await this.adminService.deleteEducator(user, educatorId);
+    return await this.adminService.deleteEducator(educatorId);
   }
 
   @ApiOperation({ summary: 'Delete a student' })
   @Delete('/students/:studentId')
-  @UseGuards(AuthGuard())
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new AdminPolicyHandler())
   async deleteStudent(
     @Param('studentId', ParseIntPipe) studentId: number,
-    @getUser() user: User,
   ): Promise<User[]> {
-    return await this.adminService.deleteStudent(user, studentId);
+    return await this.adminService.deleteStudent(studentId);
   }
   /********************* */
   /***Exams***/
   /********************* */
   @ApiOperation({ summary: 'Get Exams by Educator' })
   @Get('/educators/:educatorId/exams')
-  @UseGuards(AuthGuard())
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new AdminPolicyHandler())
   async getExamsByEducator(
     @Param('educatorId', ParseIntPipe) educatorId: number,
-    @getUser() user: User,
   ): Promise<Exam[]> {
-    return await this.adminService.getExamsByEducator(user, educatorId);
+      return await this.adminService.getExamsByEducator(educatorId);
   }
 
   @ApiOperation({ summary: 'Get Exam' })
   @Get('/exams/:examId')
-  @UseGuards(AuthGuard())
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new AdminPolicyHandler())
   async getExam(
     @Param('examId', ParseIntPipe) examId: number,
-    @getUser() user: User,
   ): Promise<Exam> {
-    return await this.adminService.getExam(user, examId);
+      return await this.adminService.getExam(examId);
   }
 
   @ApiOperation({ summary: 'Delete Exam' })
   @Delete('/exams/:examId')
-  @UseGuards(AuthGuard())
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new AdminPolicyHandler())
   async deleteExam(
     @Param('examId', ParseIntPipe) examId: number,
-    @getUser() user: User,
   ): Promise<Exam[]> {
-    return await this.adminService.deleteExam(user, examId);
+      return await this.adminService.deleteExam(examId);
   }
 
   /********************* */
@@ -93,22 +100,22 @@ export class AdminController {
   /********************* */
   @ApiOperation({ summary: 'Get Exam Enrollments By Student' })
   @Get('/students/:studentId/enrollments')
-  @UseGuards(AuthGuard())
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new AdminPolicyHandler())
   async getEnrollmentsByUser(
     @Param('studentId', ParseIntPipe) studentId: number,
-    @getUser() user: User,
   ): Promise<TestEnrollment[]> {
-    return await this.adminService.getEnrollmentsByUser(user, studentId);
+    return await this.adminService.getEnrollmentsByUser(studentId);
   }
 
   @ApiOperation({ summary: 'Delete Exam Enrollment' })
   @Delete('/exams/:examId/enrollments/:enrollmentId')
-  @UseGuards(AuthGuard())
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(new AdminPolicyHandler())
   async deleteEnrollment(
     @Param('examId', ParseIntPipe) examId: number,
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
-    @getUser() user: User,
   ) {
-    return await this.adminService.deleteEnrollment(user, enrollmentId, examId);
+    return await this.adminService.deleteEnrollment(enrollmentId, examId);
   }
 }

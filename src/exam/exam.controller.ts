@@ -43,6 +43,13 @@ export class ExamController {
   /********************* */
   /***Exam Routes for Public Users***/
   /********************* */
+  @ApiOperation({ summary: 'Get Exam Indexes for Populating FrontEnd Routes' })
+  @ApiResponse({ status: 200, description: 'Exam Object Array' })
+  @Get('/indexes')
+  async getExamIndexes(): Promise<Partial<Exam>[]> {
+    return await this.examService.getExamIndexes();
+  }
+
   @ApiOperation({ summary: 'Get Published Exams with / without filters' })
   @ApiResponse({ status: 200, description: 'Exam Object Array' })
   @Get('/published')
@@ -80,7 +87,7 @@ export class ExamController {
 
   @ApiOperation({ summary: 'Get Subjects' })
   @Get('/subjects')
-  async getSubject(): Promise<Exam[]> {
+  async getSubject(): Promise<any> {
     return await this.examService.getSubjects();
   }
 

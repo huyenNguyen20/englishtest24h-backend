@@ -55,6 +55,11 @@ export class ExamService {
   /************************************* */
   /****Exam Services For Public Users & Students*****/
   /************************************* */
+  async getExamIndexes() : Promise<Partial<Exam>[]> {
+    return await this.examRepository.find({
+      select: ['id', 'ownerId']
+    })
+  }
   async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.examRepository.getPublishedExamIndexes();
   }
@@ -845,7 +850,12 @@ export class ExamService {
   async getExamForAdmin(examId: number): Promise<Exam> {
     return await this.examRepository.findOne({
       where: { id: examId },
-      relations: ['section', 'test_enrollment'],
+      join: {
+        alias: "exam",
+        leftJoinAndSelect: {
+            sections: "exam.sections"
+        },
+      },
     });
   }
 
