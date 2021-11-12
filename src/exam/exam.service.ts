@@ -848,15 +848,12 @@ export class ExamService {
   }
 
   async getExamForAdmin(examId: number): Promise<Exam> {
-    return await this.examRepository.findOne({
-      where: { id: examId },
-      join: {
-        alias: "exam",
-        leftJoinAndSelect: {
-            sections: "exam.sections"
-        },
-      },
+    const exam: Exam = await this.examRepository.findOne(examId);
+    const sections: Section[] = await this.sectionRepository.find({
+      where: { examId }
     });
+    exam.sections = sections;
+    return exam;
   }
 
   async deleteExamForAdmin(examId: number): Promise<Exam[]> {
