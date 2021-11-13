@@ -96,7 +96,7 @@ export class SectionRepository extends Repository<Section> {
       );
 
       // 1. Delete Images of Corresponding Question Groups
-      for (let questionGroup of questionGroups) {
+      for (const questionGroup of questionGroups) {
         if (Boolean(questionGroup.imageUrl)) {
           const filename = questionGroup.imageUrl.substring(
             questionGroup.imageUrl.lastIndexOf('/') + 1,
@@ -119,7 +119,7 @@ export class SectionRepository extends Repository<Section> {
         const questionIds = questions.map((question) => question.id);
 
         // 2. Delete Images of Corresponding Questions
-        for (let question of questions) {
+        for (const question of questions) {
           if (Boolean(question.imageUrl)) {
             const filename = question.imageUrl.substring(
               question.imageUrl.lastIndexOf('/') + 1,

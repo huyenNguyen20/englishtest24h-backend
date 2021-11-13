@@ -156,9 +156,7 @@ export class AuthController {
     description: 'Array of string',
   })
   @Get('/users')
-  async getUserIndexes(
-    @Response() res,
-  ) {
+  async getUserIndexes(@Response() res) {
     const users = await this.authService.getUserIndexes();
     return res.status(200).json(users);
   }

@@ -5,4 +5,4 @@ export const isAdmin = createParamDecorator(
     const request = ctx.switchToHttp().getRequest();
     return request.user.isEducator;
   },
-);  
+);

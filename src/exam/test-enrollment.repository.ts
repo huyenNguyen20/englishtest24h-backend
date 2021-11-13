@@ -200,7 +200,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
     try {
       // If this is Enrollment Record for speaking test, the recording audio urls need to be removed
       if (subject === 3) {
-        for (let id of list) {
+        for (const id of list) {
           const enrollment = await this.findOne(id);
           if (enrollment) {
             const urlArr = [];

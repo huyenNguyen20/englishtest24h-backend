@@ -57,12 +57,12 @@ export class AuthService {
     return await this.authRepository.findOne({ email });
   }
 
-  async getUserIndexes(): Promise<User[]>{
+  async getUserIndexes(): Promise<User[]> {
     return await this.authRepository.find({
-      select: ['id']
-    })
+      select: ['id'],
+    });
   }
-  
+
   async resetPassword(resetPassword: ResetPasswordDto): Promise<boolean> {
     return await this.authRepository.resetPassword(resetPassword);
   }

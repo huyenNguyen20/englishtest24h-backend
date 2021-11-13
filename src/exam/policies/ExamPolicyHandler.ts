@@ -1,12 +1,10 @@
-import { Action } from "../../casl/Action";
-import { AppAbility } from "src/casl/casl-ability.factory";
-import { IPolicyHandler } from "src/casl/policyHandler";
-import { Exam } from "../entities/exam.entity";
-
+import { Action } from '../../casl/Action';
+import { AppAbility } from 'src/casl/casl-ability.factory';
+import { IPolicyHandler } from 'src/casl/policyHandler';
+import { Exam } from '../entities/exam.entity';
 
 export class ReadArticlePolicyHandler implements IPolicyHandler {
-    constructor() {} 
-    async handle(ability: AppAbility) {
-        return ability.can(Action.Read, Exam);
-    }
+  async handle(ability: AppAbility) {
+    return ability.can(Action.Read, Exam);
+  }
 }

@@ -55,10 +55,10 @@ export class ExamService {
   /************************************* */
   /****Exam Services For Public Users & Students*****/
   /************************************* */
-  async getExamIndexes() : Promise<Partial<Exam>[]> {
+  async getExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.examRepository.find({
-      select: ['id', 'ownerId']
-    })
+      select: ['id', 'ownerId'],
+    });
   }
   async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.examRepository.getPublishedExamIndexes();
@@ -618,7 +618,7 @@ export class ExamService {
       );
 
       //3. Delete image file of corresponding questions
-      for (let question of questionGroup.questions) {
+      for (const question of questionGroup.questions) {
         if (Boolean(question.imageUrl)) {
           const filename = question.imageUrl.substring(
             question.imageUrl.lastIndexOf('/') + 1,
@@ -693,7 +693,7 @@ export class ExamService {
       }
 
       //2. Delete image file of corresponding questions
-      for (let question of questionGroup.questions) {
+      for (const question of questionGroup.questions) {
         if (Boolean(question.imageUrl)) {
           const filename = question.imageUrl.substring(
             question.imageUrl.lastIndexOf('/') + 1,
@@ -842,7 +842,14 @@ export class ExamService {
   /************************************* */
   async getExamsByEducator(educatorId: number): Promise<Exam[]> {
     return await this.examRepository.find({
-      select: ['id', 'title', 'subject', 'isPublished', 'restrictedAccessList', 'updatedBy'],
+      select: [
+        'id',
+        'title',
+        'subject',
+        'isPublished',
+        'restrictedAccessList',
+        'updatedBy',
+      ],
       where: { ownerId: educatorId },
     });
   }
@@ -850,7 +857,7 @@ export class ExamService {
   async getExamForAdmin(examId: number): Promise<Exam> {
     const exam: Exam = await this.examRepository.findOne(examId);
     const sections: Section[] = await this.sectionRepository.find({
-      where: { examId }
+      where: { examId },
     });
     exam.sections = sections;
     return exam;

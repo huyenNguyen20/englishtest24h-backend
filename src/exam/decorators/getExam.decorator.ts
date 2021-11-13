@@ -7,12 +7,12 @@ export const getExam = createParamDecorator(
     const request = ctx.switchToHttp().getRequest();
     const { examId } = request.params;
     if (examId) {
-        const exam = await await getConnection()
+      const exam = await await getConnection()
         .createQueryBuilder()
         .from(Exam, 'e')
         .where('e.id =:examId', { examId })
         .getOne();
-        return exam;
+      return exam;
     }
     return null;
   },

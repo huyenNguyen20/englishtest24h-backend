@@ -50,9 +50,7 @@ export class AdminService {
   /********************* */
   /***Exam Enrollment***/
   /********************* */
-  async getEnrollmentsByUser(
-    studentId: number,
-  ): Promise<TestEnrollment[]> {
+  async getEnrollmentsByUser(studentId: number): Promise<TestEnrollment[]> {
     return await this.testEnrollmentService.getEnrollmentsByUser(studentId);
   }
 

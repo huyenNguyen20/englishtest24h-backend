@@ -296,7 +296,7 @@ export class ExamRepository extends Repository<Exam> {
       if (sections.length > 0) {
         const sectionIds = sections.map((section) => section.id);
         // 2. Delete Images and Audios of Corresponding Sections
-        for (let section of sections) {
+        for (const section of sections) {
           if (Boolean(section.imageUrl)) {
             const filename = section.imageUrl.substring(
               section.imageUrl.lastIndexOf('/') + 1,
@@ -326,7 +326,7 @@ export class ExamRepository extends Repository<Exam> {
             (questionGroup) => questionGroup.id,
           );
           // 3. Delete Images of Corresponding Question Groups
-          for (let questionGroup of questionGroups) {
+          for (const questionGroup of questionGroups) {
             if (Boolean(questionGroup.imageUrl)) {
               const filename = questionGroup.imageUrl.substring(
                 questionGroup.imageUrl.lastIndexOf('/') + 1,
@@ -347,7 +347,7 @@ export class ExamRepository extends Repository<Exam> {
           if (questions.length > 0) {
             const questionIds = questions.map((question) => question.id);
             // 4. Delete Images of Corresponding Exam Questions
-            for (let question of questions) {
+            for (const question of questions) {
               if (Boolean(question.imageUrl)) {
                 const filename = question.imageUrl.substring(
                   question.imageUrl.lastIndexOf('/') + 1,
@@ -404,7 +404,7 @@ export class ExamRepository extends Repository<Exam> {
           .where('e.examId = :examId', { examId })
           .execute();
         if (testEnrollments.length > 0) {
-          for (let e of testEnrollments) {
+          for (const e of testEnrollments) {
             const urlArr = [];
             const answers = JSON.parse(e.answerObj);
             for (const a in answers) {

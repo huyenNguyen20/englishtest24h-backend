@@ -5,7 +5,7 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
-  Response
+  Response,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { getUser } from 'src/auth/decorator/getUser.decorator';
@@ -72,17 +72,15 @@ export class AdminController {
   async getExamsByEducator(
     @Param('educatorId', ParseIntPipe) educatorId: number,
   ): Promise<Exam[]> {
-      return await this.adminService.getExamsByEducator(educatorId);
+    return await this.adminService.getExamsByEducator(educatorId);
   }
 
   @ApiOperation({ summary: 'Get Exam' })
   @Get('/exams/:examId')
   @UseGuards(PoliciesGuard)
   @CheckPolicies(new AdminPolicyHandler())
-  async getExam(
-    @Param('examId', ParseIntPipe) examId: number,
-  ): Promise<Exam> {
-      return await this.adminService.getExam(examId);
+  async getExam(@Param('examId', ParseIntPipe) examId: number): Promise<Exam> {
+    return await this.adminService.getExam(examId);
   }
 
   @ApiOperation({ summary: 'Delete Exam' })
@@ -92,7 +90,7 @@ export class AdminController {
   async deleteExam(
     @Param('examId', ParseIntPipe) examId: number,
   ): Promise<Exam[]> {
-      return await this.adminService.deleteExam(examId);
+    return await this.adminService.deleteExam(examId);
   }
 
   /********************* */
