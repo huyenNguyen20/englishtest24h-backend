@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { CreateExamDto, FilterExamDto, UpdateExamDto } from './dto';
 import { User } from 'src/auth/entities/user.entity';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { Question } from './entities/question.entity';
 import { StudentQuestion } from '../studentQuestion/entities/question.entity';
 import { TestEnrollment } from './entities/test-enrollment.entity';
@@ -32,41 +32,36 @@ export class ExamRepository extends Repository<Exam> {
   }
 
   async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {
-    try {
-      const total = await this.find({ where: { isPublished: true } });
       const query = this.createQuery(true, null, filterExamDto);
-      const exams = await query.getMany();
-      return exams;
-    } catch (e) {
-      throw new BadRequestException('Something went wrong.');
-    }
+      return await query.getMany();
   }
 
   async getPublishedExamsCount(): Promise<number> {
     try {
-      const total = await this.find({ where: { isPublished: true } });
+      const total : Exam[] = await this.find({ where: { isPublished: true } });
       return total.length;
     } catch (e) {
-      throw new BadRequestException('Something went wrong.');
+      throw new InternalServerErrorException(e);
     }
   }
 
   async getPublishedExam(examId: number): Promise<Exam> {
     try {
-      const exam = await this.findOne({
+      const exam : Exam = await this.findOne({
         where: { id: examId, isPublished: true },
       });
       delete exam.sections;
       if (!exam) throw new NotFoundException('Exam Not Found');
       return exam;
     } catch (e) {
-      throw new BadRequestException('Something went wrong.');
+      throw new InternalServerErrorException(e);
     }
   }
 
   async getLatestExams(): Promise<Exam[]> {
     try {
-      return await this.createQueryBuilder('exam')
+      const exams : Exam[] = 
+        await this.createQueryBuilder('exam')
         .select('exam.id')
         .addSelect('exam.isPublished')
         .addSelect('exam.imageUrl')
@@ -84,8 +79,9 @@ export class ExamRepository extends Repository<Exam> {
         .orderBy('exam.updatedBy', 'DESC')
         .limit(5)
         .getMany();
+      return exams;
     } catch (e) {
-      throw new BadRequestException('Something went wrong.');
+      throw new InternalServerErrorException(e);
     }
   }
 
@@ -94,7 +90,8 @@ export class ExamRepository extends Repository<Exam> {
       const exam = await this.findOne(examId);
       if (!exam) throw new NotFoundException();
       else {
-        return await this.createQueryBuilder('exam')
+        const exams : Exam[] = 
+         await this.createQueryBuilder('exam')
           .select('exam.id')
           .addSelect('exam.isPublished')
           .addSelect('exam.imageUrl')
@@ -113,14 +110,19 @@ export class ExamRepository extends Repository<Exam> {
           .orderBy('exam.updatedBy', 'DESC')
           .limit(5)
           .getMany();
+        return exams;
       }
     } catch (e) {
-      throw new BadRequestException('Something went wrong.');
+      throw new InternalServerErrorException(e);
     }
   }
 
   async getSubjects(): Promise<any> {
-    return Subjects;
+    try {
+      return Subjects;
+    } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
   }
   /******Exams Methods for Restricted Users** */
   async getRestrictedExamIndexes(): Promise<Partial<Exam>[]> {
@@ -136,32 +138,24 @@ export class ExamRepository extends Repository<Exam> {
     user: User,
     filterExamDto: FilterExamDto,
   ): Promise<Exam[]> {
-    try {
-      const total = await this.find({
-        where: { restrictedAccessList: Like(`%${user.email}%`) },
-      });
-      const query = this.createQuery(null, user.email, filterExamDto);
-      const exams = await query.getMany();
-      return exams;
-    } catch (e) {
-      throw new BadRequestException('Something went wrong.');
-    }
+    const query = this.createQuery(null, user.email, filterExamDto);
+    return await query.getMany();
   }
 
   async getRestrictedExamsCount(user: User): Promise<number> {
     try {
-      const total = await this.find({
+      const total : Exam [] = await this.find({
         where: { restrictedAccessList: Like(`%${user.email}%`) },
       });
       return total.length;
     } catch (e) {
-      throw new BadRequestException('Something went wrong.');
+      throw new InternalServerErrorException(e);
     }
   }
 
   /****Exams Methods for Owner*** */
   async getExams(userId: number): Promise<Exam[]> {
-    const exams = await this.createQueryBuilder('exam')
+    return await this.createQueryBuilder('exam')
       .select('exam.id')
       .addSelect('exam.isPublished')
       .addSelect('exam.title')
@@ -177,7 +171,6 @@ export class ExamRepository extends Repository<Exam> {
       .where('exam.ownerId = :userId', { userId })
       .orderBy('exam.updatedBy', 'DESC')
       .getMany();
-    return exams;
   }
 
   async createExam(createExamDto: CreateExamDto, user: User): Promise<Exam[]> {
@@ -196,14 +189,12 @@ export class ExamRepository extends Repository<Exam> {
   }
 
   async getExam(examId: number, user: User): Promise<Exam> {
-    const exam = await this.createQueryBuilder('exam')
+    const exam : Exam = await this.createQueryBuilder('exam')
       .leftJoinAndSelect('exam.sections', 'section')
       .where('exam.id = :examId', { examId })
       .andWhere('exam.ownerId = :ownerId', { ownerId: user.id })
       .getOne();
     if (!exam) throw new NotFoundException('Exam Not Found');
-    if (exam.ownerId !== user.id)
-      throw new NotFoundException('You are not permitted');
     return exam;
   }
 
@@ -213,27 +204,25 @@ export class ExamRepository extends Repository<Exam> {
     user: User,
   ): Promise<Exam[]> {
     try {
-      const exam = await this.findOne({
+      const exam : Exam= await this.findOne({
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
       const { title, description, imageUrl } = updatedExamDto;
       if (title) exam.title = title;
       if (description) exam.description = description;
-
       if (imageUrl) exam.imageUrl = imageUrl;
       else exam.imageUrl = null;
-
       await exam.save();
       return await this.getExams(user.id);
     } catch (e) {
-      throw new NotFoundException('Exam Not Found');
+      throw new InternalServerErrorException(e);
     }
   }
 
   async togglePublishExam(examId: number, user: User): Promise<Exam[]> {
     try {
-      const exam = await this.findOne({
+      const exam : Exam = await this.findOne({
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
@@ -243,7 +232,7 @@ export class ExamRepository extends Repository<Exam> {
         return await this.getExams(user.id);
       }
     } catch (e) {
-      throw new NotFoundException('Exam Not Found');
+      throw new InternalServerErrorException(e);
     }
   }
 
@@ -253,14 +242,14 @@ export class ExamRepository extends Repository<Exam> {
     user: User,
   ): Promise<Exam[]> {
     try {
-      const exam = await this.findOne({
+      const exam : Exam = await this.findOne({
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
       else {
         exam.restrictedAccessList = restrictedList;
         await exam.save();
-        const exams = await this.getExams(user.id);
+        const exams : Exam [] = await this.getExams(user.id);
         return exams.map((e) => {
           if (e.id === exam.id && e.restrictedAccessList !== restrictedList) {
             e.restrictedAccessList = restrictedList;
@@ -269,13 +258,13 @@ export class ExamRepository extends Repository<Exam> {
         });
       }
     } catch (e) {
-      throw new NotFoundException('Exam Not Found');
+      throw new InternalServerErrorException(e);
     }
   }
 
   async removeExam(examId: number, userId: number): Promise<Exam[]> {
     try {
-      const exam = await this.findOne({
+      const exam : Exam = await this.findOne({
         where: { id: examId },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
@@ -287,7 +276,7 @@ export class ExamRepository extends Repository<Exam> {
         const url = `${config.get('deleteImage').url}/${filename}`;
         await axios.delete(url);
       }
-      const sections = await getConnection()
+      const sections : Section[] = await getConnection()
         .createQueryBuilder()
         .select('section.id')
         .from(Section, 'section')
@@ -313,7 +302,7 @@ export class ExamRepository extends Repository<Exam> {
           }
         }
 
-        const questionGroups = await getConnection()
+        const questionGroups : QuestionGroup[] = await getConnection()
           .createQueryBuilder()
           .select('id')
           .from(QuestionGroup, 'questionGroup')
@@ -336,7 +325,7 @@ export class ExamRepository extends Repository<Exam> {
             }
           }
 
-          const questions = await getConnection()
+          const questions : Question[] = await getConnection()
             .createQueryBuilder()
             .select('id')
             .from(Question, 'question')
@@ -397,12 +386,13 @@ export class ExamRepository extends Repository<Exam> {
       // 9.1. If this is Enrollment Record for speaking test,
       // the recording audio urls need to be removed
       if (exam.subject === 3) {
-        const testEnrollments = await getConnection()
-          .createQueryBuilder()
-          .select('id')
-          .from(TestEnrollment, 'e')
-          .where('e.examId = :examId', { examId })
-          .execute();
+        const testEnrollments : TestEnrollment[] = 
+          await getConnection()
+            .createQueryBuilder()
+            .select('id')
+            .from(TestEnrollment, 'e')
+            .where('e.examId = :examId', { examId })
+            .execute();
         if (testEnrollments.length > 0) {
           for (const e of testEnrollments) {
             const urlArr = [];
@@ -439,7 +429,7 @@ export class ExamRepository extends Repository<Exam> {
       await this.delete(examId);
       return await this.getExams(userId);
     } catch (e) {
-      throw new NotFoundException('Exam Not Found');
+      throw new InternalServerErrorException(e)
     }
   }
   /******Helper Methods***** */

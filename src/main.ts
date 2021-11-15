@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -10,6 +11,9 @@ async function bootstrap() {
   const serverConfig = sconfig.get('server');
   const clientConfig = sconfig.get('client');
 
+  // User winston logger across the app
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+  
   //Bootstrap Swagger API
   const config = new DocumentBuilder()
     .setTitle('englishtest24')
@@ -27,6 +31,7 @@ async function bootstrap() {
   //Set up /public for serving static assets
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
+  // Set up CORS
   if (process.env.NODE_ENV === 'development') {
     app.enableCors();
   } else {

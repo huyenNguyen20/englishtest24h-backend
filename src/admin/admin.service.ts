@@ -54,10 +54,10 @@ export class AdminService {
     return await this.testEnrollmentService.getEnrollmentsByUser(studentId);
   }
 
-  async deleteEnrollment(enrollmentId: number, examId: number) {
+  async deleteEnrollment(enrollmentId: number, exam: Exam) {
     return await this.testEnrollmentService.deleteEnrollmentForAdmin(
       enrollmentId,
-      examId,
+      exam,
     );
   }
 }

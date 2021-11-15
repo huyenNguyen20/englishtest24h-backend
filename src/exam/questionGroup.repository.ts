@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
@@ -47,12 +47,13 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
     questionGroupId: number,
     user: User,
   ): Promise<QuestionGroup> {
-    const questionGroup = await this.findOne({
-      where: {
-        id: questionGroupId,
-        ownerId: user.id,
-      },
-    });
+    const questionGroup : QuestionGroup = 
+      await this.findOne({
+        where: {
+          id: questionGroupId,
+          ownerId: user.id,
+        },
+      });
     if (!questionGroup) throw new NotFoundException('Section Not Found');
     return questionGroup;
   }
@@ -64,7 +65,7 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
   ): Promise<QuestionGroup> {
     const { title, htmlContent, imageUrl, matchingOptions } =
       updateQuestionGroupDto;
-    const q = await this.findOne(questionGroupId);
+    const q : QuestionGroup = await this.findOne(questionGroupId);
     if (title) q.title = title;
     if (htmlContent) q.htmlContent = htmlContent;
     if (Boolean(matchingOptions)) q.matchingOptions = matchingOptions;
@@ -76,10 +77,11 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
   }
 
   async removeQuestionGroup(questionGroupId: number, user: User) {
-    const questionGroup = this.findOne({
+    const questionGroup : QuestionGroup = await this.findOne({
       where: { id: questionGroupId, ownerId: user.id },
     });
-    const questions = await getConnection()
+    if(!questionGroup) throw new NotFoundException("Question Group Not Found");
+    const questions : Question[] = await getConnection()
       .createQueryBuilder()
       .select('id')
       .from(Question, 'question')

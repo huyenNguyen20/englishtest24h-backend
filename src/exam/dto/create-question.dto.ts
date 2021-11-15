@@ -48,6 +48,7 @@ export class CreateQuestionDto {
   @IsString()
   htmlExplaination: string;
 
+  @ApiProperty({ description: 'Answer Array' })
   @IsOptional()
   answers: CreateAnswerDto[];
 }

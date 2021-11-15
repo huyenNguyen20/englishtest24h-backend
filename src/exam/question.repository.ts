@@ -44,7 +44,6 @@ export class QuestionRepository extends Repository<Question> {
 
   async updateQuestion(
     updateQuestionDto: UpdateQuestionDto,
-    questionGroupId: number,
     questionId: number,
     user: User,
   ): Promise<void> {

@@ -12,6 +12,7 @@ export const getExam = createParamDecorator(
         .from(Exam, 'e')
         .where('e.id =:examId', { examId })
         .getOne();
+      console.log(exam);
       return exam;
     }
     return null;

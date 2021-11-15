@@ -3,7 +3,6 @@ import * as config from 'config';
 import { NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
-import { CreateSectionDto } from './dto/create-section.dto';
 import { UpdateSectionDto } from './dto/update-section.dto';
 import { Answer } from './entities/answer.entity';
 import { Exam } from './entities/exam.entity';
@@ -67,7 +66,7 @@ export class SectionRepository extends Repository<Section> {
       directions,
       transcription,
     } = updateQuestionDto;
-    const s = await this.getSection(examId, sectionId, user);
+    const s : Section = await this.getSection(examId, sectionId, user);
     if (title) s.title = title;
     if (audioUrl) s.audioUrl = audioUrl;
     else s.audioUrl = null;
@@ -83,13 +82,15 @@ export class SectionRepository extends Repository<Section> {
   }
 
   async removeSection(examId: number, sectionId: number, user: User) {
-    const s = await this.getSection(examId, sectionId, user);
-    const questionGroups = await getConnection()
-      .createQueryBuilder()
-      .select('id')
-      .from(QuestionGroup, 'questionGroup')
-      .where('questionGroup.sectionId = :sectionId', { sectionId })
-      .execute();
+    const s : Section = await this.getSection(examId, sectionId, user);
+    if(!s) throw new NotFoundException("Section Not Found");
+    const questionGroups : QuestionGroup[] = 
+      await getConnection()
+        .createQueryBuilder()
+        .select('id')
+        .from(QuestionGroup, 'questionGroup')
+        .where('questionGroup.sectionId = :sectionId', { sectionId })
+        .execute();
     if (questionGroups.length > 0) {
       const questionGroupIds = questionGroups.map(
         (questionGroup) => questionGroup.id,
@@ -106,7 +107,7 @@ export class SectionRepository extends Repository<Section> {
         }
       }
 
-      const questions = await getConnection()
+      const questions : Question[] = await getConnection()
         .createQueryBuilder()
         .select('id')
         .from(Question, 'question')

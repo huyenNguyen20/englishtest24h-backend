@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
@@ -21,7 +21,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
   }
   async getTestTakersScores(examId: number) {
     try {
-      const enrollments = await this.createQueryBuilder('e')
+      const enrollments : TestEnrollment[] = await this.createQueryBuilder('e')
         .innerJoinAndSelect('e.student', 'user', 'user.id = e.studentId')
         .where('e.examId = :examId', { examId })
         .getMany();
@@ -35,14 +35,13 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       });
       return results;
     } catch (e) {
-      console.log(e);
-      throw new BadRequestException();
+      throw new InternalServerErrorException(e);
     }
   }
   async getMyTest(user: User, filter: FilterDto) {
     try {
       const { limit, offset } = filter;
-      const enrollments = await this.createQueryBuilder('e')
+      const enrollments : TestEnrollment[] = await this.createQueryBuilder('e')
         .innerJoinAndSelect('e.exam', 'exam', 'exam.id = e.examId')
         .where('e.studentId = :studentId', { studentId: user.id })
         .offset(offset)
@@ -50,24 +49,24 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
         .getMany();
       return enrollments;
     } catch (e) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException(e);
     }
   }
 
   async getMyTestCount(user: User): Promise<number> {
     try {
-      const enrollments = await this.find({
+      const enrollments : TestEnrollment[] = await this.find({
         where: { studentId: user.id },
       });
       return enrollments.length;
     } catch (e) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException(e);
     }
   }
 
   async getScore(examId: number, user: User): Promise<TestEnrollment> {
     try {
-      const enrollment = await this.findOne({
+      const enrollment : TestEnrollment = await this.findOne({
         where: { examId, studentId: user.id },
       });
       if (!enrollment)
@@ -78,13 +77,13 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
         return enrollment;
       }
     } catch (e) {
-      throw new NotFoundException("You haven't enrolled in the exam");
+      throw new InternalServerErrorException(e);
     }
   }
 
   async getAllScores(examId: number): Promise<EnrollmentDataToTeacher[]> {
     try {
-      const enrollments = await this.createQueryBuilder('e')
+      const enrollments : TestEnrollment[] = await this.createQueryBuilder('e')
         .innerJoinAndSelect('e.student', 'user', 'user.id = e.studentId')
         .where('e.examId = :examId', { examId })
         .getMany();
@@ -104,16 +103,16 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       });
       return results;
     } catch (e) {
-      throw new BadRequestException();
+      throw new InternalServerErrorException(e);
     }
   }
 
   async getExamResult(enrollmentId: number): Promise<TestEnrollment> {
     try {
-      const enrollment = await this.findOne(enrollmentId);
+      const enrollment : TestEnrollment = await this.findOne(enrollmentId);
       return enrollment;
     } catch (e) {
-      throw new NotFoundException("You haven't enrolled in the exam");
+      throw new InternalServerErrorException(e);
     }
   }
   /************CREATE**********/
@@ -124,7 +123,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
   ): Promise<TestEnrollment> {
     const { score, totalScore, answerObj, sectionsObj } =
       createTestEnrollmentDto;
-    const enrollment = await this.findOne({
+    const enrollment : TestEnrollment = await this.findOne({
       where: { examId: exam.id, studentId: user.id },
     });
     if (!enrollment) {
@@ -192,7 +191,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       await testEnrollment.save();
       return testEnrollment;
     } catch (e) {
-      throw e;
+      throw new InternalServerErrorException(e);
     }
   }
   /************DELETE**********/
@@ -201,7 +200,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       // If this is Enrollment Record for speaking test, the recording audio urls need to be removed
       if (subject === 3) {
         for (const id of list) {
-          const enrollment = await this.findOne(id);
+          const enrollment : TestEnrollment = await this.findOne(id);
           if (enrollment) {
             const urlArr = [];
             const answers = JSON.parse(enrollment.answerObj);
@@ -225,7 +224,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
         .where('id IN (:...Ids)', { Ids: [...list] })
         .execute();
     } catch (e) {
-      return e;
+      throw new InternalServerErrorException(e);
     }
   }
 }

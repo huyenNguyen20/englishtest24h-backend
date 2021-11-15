@@ -11,8 +11,14 @@ import {
   Query,
   UseGuards,
   ValidationPipe,
+  Response,
+  Inject,
+  InternalServerErrorException,
+  HttpStatus
 } from '@nestjs/common';
+import { Logger } from "winston";
 import { AuthGuard } from '@nestjs/passport';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { getUser } from 'src/auth/decorator/getUser.decorator';
 import { User } from 'src/auth/entities/user.entity';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
@@ -22,107 +28,283 @@ import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.
 import { FilterValidationPipe } from './pipes/filter.pipe';
 import { TestEnrollmentValidationPipe } from './pipes/test-enrollment.pipe';
 import { TestEnrollmentService } from './test-enrollment.service';
+import { isTeacher } from 'src/auth/decorator/isTeacher.decorator';
+import { getExam } from './decorators/getExam.decorator';
+import { Exam } from './entities/exam.entity';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Test Enrollment Endpoints')
 @Controller('testEnrollment')
 export class TestEnrollmentController {
-  constructor(private readonly testEnrollmentService: TestEnrollmentService) {}
+  constructor(
+    private readonly testEnrollmentService: TestEnrollmentService,
+
+    @Inject(WINSTON_MODULE_PROVIDER) 
+      private readonly logger: Logger,
+    ) {}
   /****GET methods*** */
+  @ApiOperation({ 
+    summary: 'Get Test Enrollment Indexes for Populating FrontEnd Routes' 
+  })
   @Get('/')
-  async getAllEnrollmentIndexes(): Promise<Partial<TestEnrollment>[]> {
-    return await this.testEnrollmentService.getAllEnrollmentIndexes();
+  async getAllEnrollmentIndexes(
+    @Response() res
+  ): Promise<Partial<TestEnrollment>[]> {
+    try {
+      const testEnrollments: Partial<TestEnrollment>[] = 
+        await this.testEnrollmentService.getAllEnrollmentIndexes();
+      return testEnrollments;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
+   
   }
 
+  @ApiOperation({ 
+    summary: 'Method for STUDENT to get their exam enrollments' 
+  })
   @Get('/myTests')
   @UseGuards(AuthGuard())
   async getMyTests(
     @getUser() user: User,
     @Query(new FilterValidationPipe()) filter: FilterDto,
-  ): Promise<any> {
-    return await this.testEnrollmentService.getMyTests(user, filter);
+    @getExam() exam: Exam,
+    @Response() res
+  ): Promise<TestEnrollment[]> {
+    try {
+      if(!exam) 
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({message: "Exam Not Found"});
+      const testEnrollments: TestEnrollment[] =  await this.testEnrollmentService.getMyTests(user, filter);
+      return testEnrollments;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
+  @ApiOperation({ 
+    summary: 'Method for STUDENT to get the total exams' 
+  })
   @Get('/myTests/count')
   @UseGuards(AuthGuard())
-  async getMyTestsCount(@getUser() user: User): Promise<number> {
-    return await this.testEnrollmentService.getMyTestsCount(user);
+  async getMyTestsCount(
+    @getUser() user: User,
+    @getExam() exam: Exam,
+    @Response() res
+    ): Promise<number> {
+    try {
+      if(!exam) 
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({message: "Exam Not Found"});
+      const total: number = await this.testEnrollmentService.getMyTestsCount(user);
+      return total;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
+  @ApiOperation({ 
+    summary: 'Method to get all test scores of one exam' 
+  })
   @Get('/testTakers/:examId')
   async getTestTakers(
     @Param('examId', ParseIntPipe) examId: number,
-  ): Promise<any> {
-    return await this.testEnrollmentService.getTestTakersScores(examId);
+    @getExam() exam: Exam,
+    @Response() res
+  ): Promise<any[]> {
+    try {
+      if(!exam) 
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({message: "Exam Not Found"});
+      const scores: any[] = await this.testEnrollmentService.getTestTakersScores(examId);
+      return scores;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
+  @ApiOperation({ 
+    summary: 'Method for STUDENT to get their test result for one exam' 
+  })
   @Get('/:examId')
   @UseGuards(AuthGuard())
   async getScore(
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
+    @getExam() exam: Exam,
+    @Response() res
   ): Promise<TestEnrollment> {
-    return await this.testEnrollmentService.getScore(examId, user);
+    try {
+      if(!exam) 
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({message: "Exam Not Found"});
+      const enrollment : TestEnrollment = await this.testEnrollmentService.getScore(examId, user);
+      return enrollment;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
-  // Method for teacher to get information about all enrollments in one exam
+  @ApiOperation({ 
+    summary: 'Method for TEACHER to get information about all enrollments in one exam' 
+  })
   @Get('/:examId/enrollments')
   @UseGuards(AuthGuard())
   async getAllScores(
-    @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
+    @getExam() exam: Exam,
+    @isTeacher() isTeacher: Boolean,
+    @Response() res,
   ): Promise<EnrollmentDataToTeacher[]> {
-    return await this.testEnrollmentService.getAllScores(examId, user);
+    try {
+      if(!exam) 
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({message: "Exam Not Found"});
+      if(!isTeacher || exam.ownerId !== user.id) 
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({message: "You are forbidden!"});
+      const enrollmentData: EnrollmentDataToTeacher[] = 
+        await this.testEnrollmentService.getAllScores(exam);
+      return enrollmentData;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
+  @ApiOperation({ 
+    summary: 'Method to get exam results ' 
+  })
   @Get('/:examId/enrollments/:enrollmentId')
   async getExamResult(
-    @Param('examId', ParseIntPipe) examId: number,
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
+    @getExam() exam: Exam,
+    @Response() res
   ): Promise<{
     enrollment: TestEnrollment;
     teacherId: number;
     isPublished: boolean;
   }> {
-    return await this.testEnrollmentService.getExamResult(examId, enrollmentId);
+    try {
+      if(!exam) 
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({message: "Exam Not Found"});
+      const examResult: {
+        enrollment: TestEnrollment;
+        teacherId: number;
+        isPublished: boolean;
+      } =  await this.testEnrollmentService.getExamResult(exam, enrollmentId);
+      return examResult;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   /****POST methods*** */
+  @ApiOperation({ 
+    summary: 'Method for post student test result' 
+  })
   @Post('/:examId')
   @UseGuards(AuthGuard())
   async postTestScore(
     @Body(new TestEnrollmentValidationPipe())
     createTestEnrollmentDto: CreateTestEnrollmentDto,
-    @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
+    @getExam() exam: Exam,
+    @Response() res
   ): Promise<TestEnrollment> {
-    return await this.testEnrollmentService.postTestScore(
-      createTestEnrollmentDto,
-      examId,
-      user,
-    );
+    try {
+      if(!exam) 
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({message: "Exam Not Found"});
+      const testEnrollment : TestEnrollment = 
+        await this.testEnrollmentService.postTestScore(
+        createTestEnrollmentDto,
+        exam,
+        user,
+      );
+      return testEnrollment;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   /****PUT methods*** */
-  // Teacher update student's test score
+  @ApiOperation({ 
+    summary: 'Teacher update student test score' 
+  })
   @Put('/:examId/enrollments/:enrollmentId/updateScore')
   @UseGuards(AuthGuard())
   async updateScore(
     @Body(new ValidationPipe()) body: { score: string },
-    @Param('examId', ParseIntPipe) examId: number,
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
     @getUser() user: User,
+    @getExam() exam: Exam,
+    @isTeacher() isTeacher: Boolean,
+    @Response() res
   ): Promise<TestEnrollment> {
-    const score = parseInt(body.score, 10);
-    if (isNaN(score)) throw new BadRequestException('score must be a number');
-    else
-      return await this.testEnrollmentService.updateScore(
-        parseInt(body.score),
-        examId,
-        enrollmentId,
-        user,
-      );
+      try {
+        if(!exam) 
+          return res
+            .status(HttpStatus.NOT_FOUND)
+            .json({message: "Exam Not Found"});
+        if(!isTeacher || exam.ownerId !== user.id) 
+          return res
+            .status(HttpStatus.FORBIDDEN)
+            .json({message: "You are forbidden!"});
+        const score = parseInt(body.score, 10);
+        if (isNaN(score)) 
+          return res
+          .status(HttpStatus.BAD_REQUEST)
+          .json({message: "Score must be a number"});
+        const testEnrollment : TestEnrollment = 
+           await this.testEnrollmentService.updateScore(
+            parseInt(body.score),
+            enrollmentId,
+        );
+        return testEnrollment;
+      } catch (e){
+        this.logger.error(JSON.stringify(e));
+        return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
+      }
   }
 
-  // Teacher update teacher grading
+  @ApiOperation({ 
+    summary: 'Teacher update teacher grading' 
+  })
   @Put('/:examId/enrollments/:enrollmentId/teacherGrading')
   @UseGuards(AuthGuard())
   async updateTeacherGrading(
@@ -130,29 +312,69 @@ export class TestEnrollmentController {
     @Param('examId', ParseIntPipe) examId: number,
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
     @getUser() user: User,
+    @getExam() exam: Exam,
+    @isTeacher() isTeacher: Boolean,
+    @Response() res
   ): Promise<TestEnrollment> {
-    return await this.testEnrollmentService.updateTeacherGrading(
-      body.teacherGrading,
-      examId,
-      enrollmentId,
-      user,
-    );
+    try {
+      if(!exam) 
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({message: "Exam Not Found"});
+      if(!isTeacher || exam.ownerId !== user.id) 
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({message: "You are forbidden!"});
+      const testEnrollment : TestEnrollment = 
+        await this.testEnrollmentService.updateTeacherGrading(
+        body.teacherGrading,
+        enrollmentId,
+      );
+      return testEnrollment;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   /****DELETE methods*** */
-  // Teacher delete test enrollment
+  @ApiOperation({ 
+    summary: 'Teacher delete test enrollment' 
+  })
   @Delete('/:examId/enrollments')
   @UseGuards(AuthGuard())
   async removeTestEnrollments(
     @Param('examId', ParseIntPipe) examId: number,
     @Query('idList') idList: string,
     @getUser() user: User,
+    @isTeacher() isTeacher: Boolean,
+    @getExam() exam: Exam,
+    @Response() res
   ) {
-    const list = idList.split('+');
-    return await this.testEnrollmentService.removeTestEnrollments(
-      examId,
-      list,
-      user,
-    );
+    try {
+      if(!exam) 
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({message: "Exam Not Found"});
+      if(!isTeacher || exam.ownerId !== user.id) 
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({message: "You are forbidden!"});
+      const list = idList.split('+');
+      await this.testEnrollmentService.removeTestEnrollments(
+        exam,
+        list,
+      );
+      return res
+      .status(HttpStatus.OK)
+      .json({message: "Test Enrollment has been removed successfully"});
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 }

@@ -9,7 +9,9 @@ import {
   HttpStatus,
   UseInterceptors,
   Put,
+  Inject,
 } from '@nestjs/common';
+import { Logger } from "winston";
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
@@ -28,11 +30,15 @@ import { Express } from 'express';
 import { ContactUsFormDto } from './dto/contactUsForm.dto';
 import * as config from 'config';
 import axios from 'axios';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 @ApiTags('Authentication and User Endpoints')
 @Controller('auth')
 export class AuthController {
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) 
+    private readonly logger: Logger,
+
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
   ) {}
@@ -40,15 +46,39 @@ export class AuthController {
   @ApiOperation({ summary: 'Sign Up' })
   @ApiResponse({ status: 200, description: 'true' })
   @Post('signup')
-  async signUp(@Body(new ValidationPipe()) createUserDto: CreateUserDto) {
-    return await this.authService.signUp(createUserDto);
+  async signUp(
+    @Body(new ValidationPipe()) createUserDto: CreateUserDto,
+    @Response() res
+    ): Promise<void> {
+    try {
+      const result: boolean = await this.authService.signUp(createUserDto);
+      if(result) return res.status(HttpStatus.OK).json({message: "Signed Up Successfully"});
+      throw new Error("Something went wrong with signing up user.");
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
+    }
+
   }
 
   @ApiOperation({ summary: 'Sign In' })
   @ApiResponse({ status: 200, description: '{token: string}' })
   @Post('signin')
-  async signIn(@Body(new ValidationPipe()) signInUserDto: SignInUserDto) {
-    return await this.authService.signIn(signInUserDto);
+  async signIn(
+    @Body(new ValidationPipe()) signInUserDto: SignInUserDto,
+    @Response() res
+    ):Promise<{token: string}> {
+    try {
+      const result: {token: string} = await this.authService.signIn(signInUserDto);
+      return result;
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Sign In and Sign Up with Google' })
@@ -65,16 +95,23 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async authWithGoogleCallBack(@getUser() user: User, @Response() res) {
-    const { id, email, isEducator, isAdmin } = user;
-    const payload: JwtPayload = { id, email, isEducator, isAdmin };
-    const token = await this.jwtService.sign(payload);
-    return res
-      .status(HttpStatus.OK)
-      .redirect(
-        `${config.get('client.url')}/oAuthRedirect?token=${encodeURIComponent(
-          token,
-        )}`,
-      );
+    try {
+      const { id, email, isEducator, isAdmin } = user;
+      const payload: JwtPayload = { id, email, isEducator, isAdmin };
+      const token = await this.jwtService.sign(payload);
+      return res
+        .status(HttpStatus.OK)
+        .redirect(
+          `${config.get('client.url')}/oAuthRedirect?token=${encodeURIComponent(
+            token,
+          )}`,
+        );
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Send Email for Resetting Password' })
@@ -87,30 +124,30 @@ export class AuthController {
     @Body(new ValidationPipe()) emailForResetPassword: EmailForResetPasswordDto,
     @Response() res,
   ) {
-    const { email } = emailForResetPassword;
-    const user = await this.authService.getUser(emailForResetPassword);
-    if (!user) {
-      return res.send({
-        message: "Account associated to the email doesn't exist.",
-      });
-    }
-
-    const body = {
-      senderEmail: 'englishtest24@gmail.com',
-      recipientEmail: email,
-      subject: 'Reset Password for englishtest24 Account',
-      htmlMessage: `
-            <p style="font-size: 16px">Thank you for sending the message! </p>
-            <p style="font-size: 16px">Please click the following link for password reset: </p>
-            <p style="font-size: 16px">${config.get(
-              'client.url',
-            )}/resetPassword</p>
-            <p style="font-size: 16px">From, </p>
-            <p style="font-size: 16px">englishtest24 </p>
-            `,
-    };
-
     try {
+      const { email } = emailForResetPassword;
+      const user : User = await this.authService.getUser(emailForResetPassword);
+      if (!user) {
+        return res.send({
+          message: "Account associated to the email doesn't exist.",
+        });
+      }
+
+      const body = {
+        senderEmail: 'englishtest24@gmail.com',
+        recipientEmail: email,
+        subject: 'Reset Password for englishtest24 Account',
+        htmlMessage: `
+              <p style="font-size: 16px">Thank you for sending the message! </p>
+              <p style="font-size: 16px">Please click the following link for password reset: </p>
+              <p style="font-size: 16px">${config.get(
+                'client.url',
+              )}/resetPassword</p>
+              <p style="font-size: 16px">From, </p>
+              <p style="font-size: 16px">englishtest24 </p>
+              `,
+      };
+
       const resp = await axios.post(config.get('sendEmail').url, body);
       if (resp.status === 200)
         return res.send({
@@ -118,8 +155,11 @@ export class AuthController {
             'Reset password link was sent to your email. Please check your email!',
         });
       else throw new Error('Something went wrong. Please try again!');
-    } catch (err) {
-      return res.send({ message: err.message || err.toString() });
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
     }
   }
 
@@ -130,8 +170,16 @@ export class AuthController {
     @Body(new ValidationPipe()) resetPassword: ResetPasswordDto,
     @Response() res,
   ) {
-    await this.authService.resetPassword(resetPassword);
-    return res.status(HttpStatus.OK).json({ message: true });
+    try{
+      const result : boolean = await this.authService.resetPassword(resetPassword);
+      if(result) return res.status(HttpStatus.OK).json({ message: true });
+      throw new Error();
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Get User Profile' })
@@ -141,13 +189,23 @@ export class AuthController {
   })
   @Get('/profile')
   @UseGuards(AuthGuard())
-  async getProfile(@getUser() user: User, @Response() res) {
-    return res.status(HttpStatus.OK).json({
-      avatarUrl: user.avatarUrl,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    });
+  async getProfile(
+    @getUser() user: User, 
+    @Response() res) 
+    {
+    try {
+      return res.status(HttpStatus.OK).json({
+        avatarUrl: user.avatarUrl,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Get User Ids to populate routes in Frontend' })
@@ -157,8 +215,15 @@ export class AuthController {
   })
   @Get('/users')
   async getUserIndexes(@Response() res) {
-    const users = await this.authService.getUserIndexes();
-    return res.status(200).json(users);
+    try {
+      const users : User[] = await this.authService.getUserIndexes();
+      return res.status(200).json(users);
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Update User Profile' })
@@ -174,11 +239,18 @@ export class AuthController {
     @Body(new ValidationPipe()) updateProfile: ProfileDto,
     @Response() res,
   ) {
-    const updatedUser = await this.authService.updateProfile(
-      user,
-      updateProfile,
-    );
-    return res.status(200).json(updatedUser);
+    try {
+      const updatedUser : ProfileDto = await this.authService.updateProfile(
+        user,
+        updateProfile,
+      );
+      return res.status(200).json(updatedUser);
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Toggle isEducator' })
@@ -189,8 +261,15 @@ export class AuthController {
   @Put('/toggleIsEducator')
   @UseGuards(AuthGuard())
   async toggleIsEducator(@getUser() user: User, @Response() res) {
-    const updatedUser = await this.authService.toggleIsEducator(user);
-    return res.status(200).json(updatedUser);
+    try{
+      const updatedUser = await this.authService.toggleIsEducator(user);
+      return res.status(200).json(updatedUser);
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Forward User Message To Admin Email' })
@@ -224,8 +303,11 @@ export class AuthController {
           message: 'Your message has been sent successfully!',
         });
       else throw new Error('Something went wrong. Please try again!');
-    } catch (err) {
-      return res.send({ message: err.message || err.toString() });
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({message: "Something went wrong. Please try again!"});
     }
   }
 }

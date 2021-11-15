@@ -6,23 +6,32 @@ import {
   ParseIntPipe,
   UseGuards,
   Response,
+  HttpStatus,
+  Inject,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { getUser } from 'src/auth/decorator/getUser.decorator';
+import { Logger } from 'winston';
 import { User } from 'src/auth/entities/user.entity';
 import { Exam } from '../exam/entities/exam.entity';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TestEnrollment } from '../exam/entities/test-enrollment.entity';
 import { AdminService } from './admin.service';
 import { PoliciesGuard } from 'src/casl/guards/casl-policy.guard';
 import { CheckPolicies } from 'src/casl/decorators/checkPolicy.decorator';
 import { AdminPolicyHandler } from './policies/AdminPolicyHandler';
+import { getExam } from 'src/exam/decorators/getExam.decorator';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 @ApiTags('Admin Endpoints')
 @Controller('admin')
 @UseGuards(AuthGuard())
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) 
+    private readonly logger: Logger,
+
+    private readonly adminService: AdminService
+    ) {}
 
   /********************* */
   /***Users Endpoint***/
@@ -31,16 +40,36 @@ export class AdminController {
   @Get('/educators')
   @UseGuards(PoliciesGuard)
   @CheckPolicies(new AdminPolicyHandler())
-  async getEducators(): Promise<User[]> {
-    return await this.adminService.getEducators();
+  async getEducators(
+    @Response() res
+  ): Promise<User[]> {
+    try {
+      const users: User[] = await this.adminService.getEducators();
+      return users;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Get Students List' })
   @Get('/students')
   @UseGuards(PoliciesGuard)
   @CheckPolicies(new AdminPolicyHandler())
-  async getStudents(): Promise<User[]> {
-    return await this.adminService.getStudents();
+  async getStudents(
+    @Response() res
+  ): Promise<User[]> {
+    try {
+      const users: User[] = await this.adminService.getStudents();
+      return users;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Delete an educator' })
@@ -49,8 +78,17 @@ export class AdminController {
   @CheckPolicies(new AdminPolicyHandler())
   async deleteEducator(
     @Param('educatorId', ParseIntPipe) educatorId: number,
+    @Response() res
   ): Promise<User[]> {
-    return await this.adminService.deleteEducator(educatorId);
+    try {
+      const users: User[] = await this.adminService.deleteEducator(educatorId);
+      return users;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Delete a student' })
@@ -59,8 +97,17 @@ export class AdminController {
   @CheckPolicies(new AdminPolicyHandler())
   async deleteStudent(
     @Param('studentId', ParseIntPipe) studentId: number,
+    @Response() res
   ): Promise<User[]> {
-    return await this.adminService.deleteStudent(studentId);
+    try {
+      const users: User[] = await this.adminService.deleteStudent(studentId);
+      return users;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
   /********************* */
   /***Exams***/
@@ -71,16 +118,40 @@ export class AdminController {
   @CheckPolicies(new AdminPolicyHandler())
   async getExamsByEducator(
     @Param('educatorId', ParseIntPipe) educatorId: number,
+    @Response() res
   ): Promise<Exam[]> {
-    return await this.adminService.getExamsByEducator(educatorId);
+    try {
+      const exams: Exam[] = await this.adminService.getExamsByEducator(educatorId);
+      return exams;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Get Exam' })
   @Get('/exams/:examId')
   @UseGuards(PoliciesGuard)
   @CheckPolicies(new AdminPolicyHandler())
-  async getExam(@Param('examId', ParseIntPipe) examId: number): Promise<Exam> {
-    return await this.adminService.getExam(examId);
+  async getExam(
+    @Param('examId', ParseIntPipe) examId: number,
+    @Response() res
+    ): Promise<Exam> {
+    try {
+      const exam: Exam =  await this.adminService.getExam(examId);
+      if(!exam) 
+        return res
+        .status(HttpStatus.NOT_FOUND)
+        .json({message: "Exam Not Found"});
+      return exam;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Delete Exam' })
@@ -89,8 +160,17 @@ export class AdminController {
   @CheckPolicies(new AdminPolicyHandler())
   async deleteExam(
     @Param('examId', ParseIntPipe) examId: number,
+    @Response() res
   ): Promise<Exam[]> {
-    return await this.adminService.deleteExam(examId);
+    try {
+      const exams: Exam[] =  await this.adminService.deleteExam(examId);
+      return exams;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   /********************* */
@@ -102,8 +182,17 @@ export class AdminController {
   @CheckPolicies(new AdminPolicyHandler())
   async getEnrollmentsByUser(
     @Param('studentId', ParseIntPipe) studentId: number,
+    @Response() res
   ): Promise<TestEnrollment[]> {
-    return await this.adminService.getEnrollmentsByUser(studentId);
+    try {
+      const testEnrollments : TestEnrollment[] =  await this.adminService.getEnrollmentsByUser(studentId);
+      return testEnrollments;
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 
   @ApiOperation({ summary: 'Delete Exam Enrollment' })
@@ -111,9 +200,21 @@ export class AdminController {
   @UseGuards(PoliciesGuard)
   @CheckPolicies(new AdminPolicyHandler())
   async deleteEnrollment(
-    @Param('examId', ParseIntPipe) examId: number,
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
+    @getExam() exam: Exam,
+    @Response() res
   ) {
-    return await this.adminService.deleteEnrollment(enrollmentId, examId);
+    try {
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      await this.adminService.deleteEnrollment(enrollmentId, exam);
+      return res
+        .status(HttpStatus.OK)
+        .json({message: "Test Enrollment has been deleted successfully"});
+    } catch (e){
+      this.logger.error(JSON.stringify(e));
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"});
+    }
   }
 }
