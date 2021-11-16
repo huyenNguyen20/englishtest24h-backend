@@ -810,6 +810,15 @@ export class ExamService {
   }
 
   /************************************* */
+  /***Exam Services For Middleware**/
+  /************************************* */
+
+  async getExamForMiddleware(examId: string): Promise<Exam> {
+    const exam: Exam = await this.examRepository.findOne(examId);
+    return exam;
+  }
+
+  /************************************* */
   /***Exam Services For Admin**/
   /************************************* */
   async getExamsByEducator(educatorId: number): Promise<Exam[]> {
@@ -829,7 +838,7 @@ export class ExamService {
   async getExamForAdmin(examId: number): Promise<Exam> {
     const exam: Exam = await this.examRepository.findOne(examId);
     const sections: Section[] = await this.sectionRepository.find({
-      where: { examId },
+      where: { examId: examId },
     });
     exam.sections = sections;
     return exam;

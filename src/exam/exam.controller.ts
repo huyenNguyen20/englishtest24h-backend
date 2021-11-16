@@ -14,7 +14,6 @@ import {
   Inject,
   Response,
   HttpStatus,
-  NotFoundException
 } from '@nestjs/common';
 import { ExamService } from './exam.service';
 import { CreateExamDto, UpdateExamDto, FilterExamDto } from './dto';
@@ -65,7 +64,25 @@ export class ExamController {
       const exams : Partial<Exam>[] = await this.examService.getExamIndexes();
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/indexes --- ${JSON.stringify(e)}`);
+      return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({message: "Something went wrong. Please try again!"})
+    }
+  }
+
+  @ApiOperation({ summary: 'Get Published Exams with / without filters' })
+  @ApiResponse({ status: 200, description: 'true/false' })
+  @Get('/:examId/isPublished')
+  async isPublished(
+    @getExam() exam: Exam,
+    @Response() res
+  ){
+    try{
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      return res.status(HttpStatus.OK).json({results: exam.isPublished});
+    } catch (e) {
+      this.logger.error(`ERROR in GET /exams/isPublished --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -83,7 +100,7 @@ export class ExamController {
       const exams : Exam[] = await this.examService.getPublishedExams(filterExamDto);
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/published --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -100,7 +117,7 @@ export class ExamController {
       const total : number = await this.examService.getPublishedExamsCount();
       return res.status(HttpStatus.OK).json({results: total});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/published/total --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -116,7 +133,7 @@ export class ExamController {
       const exams : Partial<Exam>[] = await this.examService.getPublishedExamIndexes();
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/published/indexes --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -133,7 +150,7 @@ export class ExamController {
       const exams : Exam[] = await this.examService.getLatestExams();
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERORR in GET /exams/published/latest --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -150,7 +167,7 @@ export class ExamController {
       const exams : Exam[] = await this.examService.getRelatedExams(examId);
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/published/related/:examId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -166,7 +183,7 @@ export class ExamController {
       const subjects : any = await this.examService.getSubjects();
       return res.status(HttpStatus.OK).json({results: subjects});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/subjects --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -182,7 +199,7 @@ export class ExamController {
       const questionTypes : string[] = await this.examService.getQuestionTypes();
       return res.status(HttpStatus.OK).json({results: questionTypes});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/questionTypes --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -199,7 +216,7 @@ export class ExamController {
       const exam : Exam = await this.examService.getPublishedExam(examId);
       return res.status(HttpStatus.OK).json({results: exam});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/published/:examId/examDetails --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -220,7 +237,7 @@ export class ExamController {
       } = await this.examService.getExamForTestTaker(examId);
       return res.status(HttpStatus.OK).json({results: result});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/published/:examId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -244,7 +261,7 @@ export class ExamController {
       .status(HttpStatus.OK)
       .json({message: "Your rating has been saved successfully"})
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /exams/published/:examId/updateRating --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -263,7 +280,7 @@ export class ExamController {
       const exams : Exam[] =  await this.examService.getRestrictedExams(user, filterExamDto);
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/restricted --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -282,7 +299,7 @@ export class ExamController {
       const total : number = await this.examService.getRestrictedExamsCount(user);
       return res.status(HttpStatus.OK).json({results: total});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/restricted/total --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -298,7 +315,7 @@ export class ExamController {
       const exams : Partial<Exam>[] = await this.examService.getRestrictedExamIndexes();
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/restricted/indexes --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -317,7 +334,7 @@ export class ExamController {
       const exam : Exam = await this.examService.getRestrictedExam(user, examId);
       return res.status(HttpStatus.OK).json({results: exam});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/restricted/:examId/examDetails --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -339,7 +356,7 @@ export class ExamController {
       } = await this.examService.getRestrictedExamForTestTaker(user, examId);
       return res.status(HttpStatus.OK).json({results: result});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/restricted/:examId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -351,7 +368,6 @@ export class ExamController {
   @UseGuards(AuthGuard())
   async updateRestrictedExamRating(
     @Param('examId', ParseIntPipe) examId: number,
-    @getUser() user: User,
     @Body(new ValidationPipe()) updateRatingDto: UpdateRatingDto,
     @Response() res
   ){
@@ -362,7 +378,7 @@ export class ExamController {
       );
       return res.status(HttpStatus.OK).json({message: "Your rating has been submitted successfully"});
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /exams/restricted/:examId/updateRating --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -386,7 +402,7 @@ export class ExamController {
       const exams : Exam[] = await this.examService.getExams(user);
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -409,7 +425,7 @@ export class ExamController {
       const exams : Exam[] = await this.examService.createExam(createExamDto, user);
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /exams --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -427,12 +443,13 @@ export class ExamController {
     @Response() res
   ){
     try {
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const examResult : Exam = await this.examService.getExam(examId, user);
       return res.status(HttpStatus.OK).json({results: examResult});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/:examId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -452,13 +469,13 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const exams : Exam[] = await this.examService.updateExam(updateExamDto, examId, user);
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in PUT /exams/:examId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -476,13 +493,13 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const exams : Exam[] = await this.examService.togglePublishExam(examId, user);
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in PUT /exams/:examId/published --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -501,7 +518,7 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const exams : Exam[] = await this.examService.postRestrictedAccessList(
@@ -511,7 +528,7 @@ export class ExamController {
         );
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in PUT /exams/:examId/restrictedList --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -529,13 +546,13 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const exams : Exam[] = await this.examService.removeExam(examId, user);
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in DELETE /exams/:examId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -556,13 +573,13 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const sections : Section[] = await this.examService.getSections(examId, user);
       return res.status(HttpStatus.OK).json({results: sections});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/:examId/sections --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -584,13 +601,13 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const section : Section = await this.examService.createSection(createSectionDto, examId, user);
       return res.status(HttpStatus.OK).json({results: section});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /exams/:examId/sections --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -611,7 +628,7 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const section : Section = await this.examService.createWritingSection(
@@ -621,7 +638,7 @@ export class ExamController {
         );
       return res.status(HttpStatus.OK).json({results: section});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /exams/:examId/writingSections --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -640,13 +657,13 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const section : Section = await this.examService.getSection(examId, sectionId, user);
       return res.status(HttpStatus.OK).json({results: section});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/:examId/sections/:sectionId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -669,7 +686,7 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const section : Section = await this.examService.updateSection(
@@ -680,7 +697,7 @@ export class ExamController {
         );
       return res.status(HttpStatus.OK).json({results: section});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in PUT /exams/:examId/sections/:sectionId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -702,7 +719,7 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const section : Section = await this.examService.updateWritingSection(
@@ -713,7 +730,7 @@ export class ExamController {
         );
       return res.status(HttpStatus.OK).json({results: section});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in PUT /exams/:examId/writingSections/:sectionId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -732,13 +749,13 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const sections : Section[] = await this.examService.removeSection(examId, sectionId, user);
       return res.status(HttpStatus.OK).json({results: sections});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in DELETE /exams/:examId/sections/:sectionId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -752,7 +769,6 @@ export class ExamController {
   @Get('/:examId/sections/:sectionId/questionGroups')
   @UseGuards(AuthGuard())
   async getQuestionGroups(
-    @Param('examId', ParseIntPipe) examId: number,
     @Param('sectionId', ParseIntPipe) sectionId: number,
     @getUser() user: User,
     @getExam() exam: Exam,
@@ -760,13 +776,13 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const questionGroups : QuestionGroup[] = await this.examService.getQuestionGroups(sectionId, user);
       return res.status(HttpStatus.OK).json({results: questionGroups});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /exams/:examId/sections/:sectionId/questionGroups --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -788,7 +804,7 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const questionGroups : QuestionGroup[] = await this.examService.createQuestionGroup(
@@ -799,7 +815,7 @@ export class ExamController {
         );
       return res.status(HttpStatus.OK).json({results: questionGroups});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /exams/:examId/sections/:sectionId/questionGroups --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -822,7 +838,7 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const questionGroups : QuestionGroup[] = await this.examService.updateQuestionGroup(
@@ -833,7 +849,7 @@ export class ExamController {
         );
       return res.status(HttpStatus.OK).json({results: questionGroups});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in PUT /exams/:examId/sections/:sectionId/questionGroups/:questionGroupId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})
@@ -853,7 +869,7 @@ export class ExamController {
     @Response() res
   ){
     try {
-      if(!exam) throw new NotFoundException("Exam Not Found");
+      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const questionGroups : QuestionGroup[] = await this.examService.removeQuestionGroup(
@@ -863,7 +879,7 @@ export class ExamController {
         );
       return res.status(HttpStatus.OK).json({results: questionGroups});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in DELETE /exams/:examId/sections/:sectionId/questionGroups/:questionGroupId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: 'Something went wrong. Please try again!'})

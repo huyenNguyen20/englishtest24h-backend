@@ -51,18 +51,19 @@ export class StudentQuestionController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @Response() res
-  ): Promise<StudentQuestion[]> {
+  ){
     try {
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      const studentQuestion : StudentQuestion[] = 
+      const studentQuestions : StudentQuestion[] = 
         await this.studentQuestionService.createQuestion(
           createQuestionDto,
           examId,
           user,
         );
-      return studentQuestion;
+      return res.status(HttpStatus.OK).json({results: studentQuestions})
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /studentQuestion/student/:examId --- 
+                        ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -81,7 +82,7 @@ export class StudentQuestionController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @Response() res
-  ): Promise<StudentQuestion[]> {
+  ){
     try {
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       const studentQuestions : StudentQuestion[] = 
@@ -89,9 +90,10 @@ export class StudentQuestionController {
           examId,
           user,
         );
-      return studentQuestions;
+      return res.status(HttpStatus.OK).json({results: studentQuestions})
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /studentQuestion/student/:examId --- 
+                        ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -110,7 +112,7 @@ export class StudentQuestionController {
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
     @Response() res
-  ): Promise<StudentQuestion[]> {
+  ){
     try {
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
@@ -120,9 +122,10 @@ export class StudentQuestionController {
           examId,
           user,
         );
-      return studentQuestions;
+      return res.status(HttpStatus.OK).json({results: studentQuestions})
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /studentQuestion/teacher/:examId --- 
+                        ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -143,17 +146,20 @@ export class StudentQuestionController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @Response() res
-  ): Promise<StudentQuestion[]> {
+  ){
     try {
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      return await this.studentQuestionService.updateQuestion(
-        updateQuestionDto,
-        examId,
-        questionId,
-        user,
-      );
+      const studentQuestions : StudentQuestion[] = 
+          await this.studentQuestionService.updateQuestion(
+            updateQuestionDto,
+            examId,
+            questionId,
+            user,
+          );
+      return res.status(HttpStatus.OK).json({results: studentQuestions})
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in PUT /studentQuestion/student/:examId/:questionId --- 
+                        ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -174,7 +180,7 @@ export class StudentQuestionController {
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
     @Response() res
-  ): Promise<StudentQuestion[]> {
+  ){
     try {
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
@@ -186,9 +192,10 @@ export class StudentQuestionController {
           questionId,
           user,
         );
-      return studentQuestions;
+      return res.status(HttpStatus.OK).json({results: studentQuestions})
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in PUT /studentQuestion/teacher/:examId/:questionId --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -208,7 +215,7 @@ export class StudentQuestionController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @Response() res
-  ): Promise<StudentQuestion[]> {
+  ){
     try {
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       const studentQuestions : StudentQuestion[] = 
@@ -217,9 +224,10 @@ export class StudentQuestionController {
           examId,
           user,
         );
-      return studentQuestions;
+      return res.status(HttpStatus.OK).json({results: studentQuestions})
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in DELETE /studentQuestion/student/:examId/:questionId --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})
@@ -239,7 +247,7 @@ export class StudentQuestionController {
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
     @Response() res
-  ): Promise<StudentQuestion[]> {
+  ){
     try {
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
@@ -251,9 +259,10 @@ export class StudentQuestionController {
           examId,
           user,
         );
-      return studentQuestions;
+      return res.status(HttpStatus.OK).json({results: studentQuestions})
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in DELETE /studentQuestion/teacher/:examId --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"})

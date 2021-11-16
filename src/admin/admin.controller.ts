@@ -42,12 +42,15 @@ export class AdminController {
   @CheckPolicies(new AdminPolicyHandler())
   async getEducators(
     @Response() res
-  ): Promise<User[]> {
+  ){
     try {
       const users: User[] = await this.adminService.getEducators();
-      return users;
+      return res
+      .status(HttpStatus.OK)
+      .json({results: users});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /admin/educators --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -60,12 +63,15 @@ export class AdminController {
   @CheckPolicies(new AdminPolicyHandler())
   async getStudents(
     @Response() res
-  ): Promise<User[]> {
+  ){
     try {
       const users: User[] = await this.adminService.getStudents();
-      return users;
+      return res
+      .status(HttpStatus.OK)
+      .json({results: users});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /admin/students --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -79,12 +85,15 @@ export class AdminController {
   async deleteEducator(
     @Param('educatorId', ParseIntPipe) educatorId: number,
     @Response() res
-  ): Promise<User[]> {
+  ){
     try {
       const users: User[] = await this.adminService.deleteEducator(educatorId);
-      return users;
+      return res
+      .status(HttpStatus.OK)
+      .json({results: users});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in DELETE /admin/educators/:educatorId --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -98,12 +107,15 @@ export class AdminController {
   async deleteStudent(
     @Param('studentId', ParseIntPipe) studentId: number,
     @Response() res
-  ): Promise<User[]> {
+  ){
     try {
       const users: User[] = await this.adminService.deleteStudent(studentId);
-      return users;
+      return res
+      .status(HttpStatus.OK)
+      .json({results: users});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in DELETE /admin/students/:studentId --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -119,12 +131,15 @@ export class AdminController {
   async getExamsByEducator(
     @Param('educatorId', ParseIntPipe) educatorId: number,
     @Response() res
-  ): Promise<Exam[]> {
+  ){
     try {
       const exams: Exam[] = await this.adminService.getExamsByEducator(educatorId);
-      return exams;
+      return res
+      .status(HttpStatus.OK)
+      .json({results: exams});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /admin/educators/:educatorId/exams --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -138,16 +153,19 @@ export class AdminController {
   async getExam(
     @Param('examId', ParseIntPipe) examId: number,
     @Response() res
-    ): Promise<Exam> {
+  ){
     try {
       const exam: Exam =  await this.adminService.getExam(examId);
       if(!exam) 
         return res
         .status(HttpStatus.NOT_FOUND)
         .json({message: "Exam Not Found"});
-      return exam;
+      return res
+      .status(HttpStatus.OK)
+      .json({results: exam});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /admin/exams/:examId --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -161,12 +179,15 @@ export class AdminController {
   async deleteExam(
     @Param('examId', ParseIntPipe) examId: number,
     @Response() res
-  ): Promise<Exam[]> {
+  ){
     try {
       const exams: Exam[] =  await this.adminService.deleteExam(examId);
-      return exams;
+      return res
+      .status(HttpStatus.OK)
+      .json({results: exams});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in DELETE /admin/exams/:examId --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -183,12 +204,15 @@ export class AdminController {
   async getEnrollmentsByUser(
     @Param('studentId', ParseIntPipe) studentId: number,
     @Response() res
-  ): Promise<TestEnrollment[]> {
+  ){
     try {
       const testEnrollments : TestEnrollment[] =  await this.adminService.getEnrollmentsByUser(studentId);
-      return testEnrollments;
+      return res
+      .status(HttpStatus.OK)
+      .json({results: testEnrollments});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /admin/students/:studentId/enrollments --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -211,7 +235,8 @@ export class AdminController {
         .status(HttpStatus.OK)
         .json({message: "Test Enrollment has been deleted successfully"});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in DELETE /admin/exams/:examId/enrollments/:enrollmentId --- 
+                       ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});

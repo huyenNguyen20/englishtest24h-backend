@@ -49,13 +49,13 @@ export class TestEnrollmentController {
   @Get('/')
   async getAllEnrollmentIndexes(
     @Response() res
-  ): Promise<Partial<TestEnrollment>[]> {
+  ){
     try {
       const testEnrollments: Partial<TestEnrollment>[] = 
         await this.testEnrollmentService.getAllEnrollmentIndexes();
-      return testEnrollments;
+      return res.status(HttpStatus.OK).json({results:testEnrollments});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /testEnrollment --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -71,18 +71,13 @@ export class TestEnrollmentController {
   async getMyTests(
     @getUser() user: User,
     @Query(new FilterValidationPipe()) filter: FilterDto,
-    @getExam() exam: Exam,
     @Response() res
-  ): Promise<TestEnrollment[]> {
+  ){
     try {
-      if(!exam) 
-        return res
-          .status(HttpStatus.NOT_FOUND)
-          .json({message: "Exam Not Found"});
       const testEnrollments: TestEnrollment[] =  await this.testEnrollmentService.getMyTests(user, filter);
-      return testEnrollments;
+      return res.status(HttpStatus.OK).json({results: testEnrollments});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /testEnrollment/myTests --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -98,16 +93,12 @@ export class TestEnrollmentController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @Response() res
-    ): Promise<number> {
+    ){
     try {
-      if(!exam) 
-        return res
-          .status(HttpStatus.NOT_FOUND)
-          .json({message: "Exam Not Found"});
       const total: number = await this.testEnrollmentService.getMyTestsCount(user);
-      return total;
+      return res.status(HttpStatus.OK).json({results: total});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /testEnrollment/myTests/count --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -122,16 +113,16 @@ export class TestEnrollmentController {
     @Param('examId', ParseIntPipe) examId: number,
     @getExam() exam: Exam,
     @Response() res
-  ): Promise<any[]> {
+  ){
     try {
       if(!exam) 
         return res
           .status(HttpStatus.NOT_FOUND)
           .json({message: "Exam Not Found"});
       const scores: any[] = await this.testEnrollmentService.getTestTakersScores(examId);
-      return scores;
+      return res.status(HttpStatus.OK).json({results: scores});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /testEnrollment/testTakers/:examId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -148,16 +139,16 @@ export class TestEnrollmentController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @Response() res
-  ): Promise<TestEnrollment> {
+  ){
     try {
       if(!exam) 
         return res
           .status(HttpStatus.NOT_FOUND)
           .json({message: "Exam Not Found"});
       const enrollment : TestEnrollment = await this.testEnrollmentService.getScore(examId, user);
-      return enrollment;
+      return res.status(HttpStatus.OK).json({results: enrollment});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /testEnrollment/:examId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -174,7 +165,7 @@ export class TestEnrollmentController {
     @getExam() exam: Exam,
     @isTeacher() isTeacher: Boolean,
     @Response() res,
-  ): Promise<EnrollmentDataToTeacher[]> {
+  ){
     try {
       if(!exam) 
         return res
@@ -186,9 +177,9 @@ export class TestEnrollmentController {
           .json({message: "You are forbidden!"});
       const enrollmentData: EnrollmentDataToTeacher[] = 
         await this.testEnrollmentService.getAllScores(exam);
-      return enrollmentData;
+      return res.status(HttpStatus.OK).json({results: enrollmentData});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /testEnrollment/:examId/enrollments--- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -203,11 +194,7 @@ export class TestEnrollmentController {
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
     @getExam() exam: Exam,
     @Response() res
-  ): Promise<{
-    enrollment: TestEnrollment;
-    teacherId: number;
-    isPublished: boolean;
-  }> {
+  ){
     try {
       if(!exam) 
         return res
@@ -218,9 +205,9 @@ export class TestEnrollmentController {
         teacherId: number;
         isPublished: boolean;
       } =  await this.testEnrollmentService.getExamResult(exam, enrollmentId);
-      return examResult;
+      return res.status(HttpStatus.OK).json({results: examResult});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /testEnrollment/:examId/enrollment/:enrollmentId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -239,7 +226,7 @@ export class TestEnrollmentController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @Response() res
-  ): Promise<TestEnrollment> {
+  ){
     try {
       if(!exam) 
         return res
@@ -251,9 +238,9 @@ export class TestEnrollmentController {
         exam,
         user,
       );
-      return testEnrollment;
+      return res.status(HttpStatus.OK).json({results: testEnrollment});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /testEnrollment/:examId --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});
@@ -273,7 +260,7 @@ export class TestEnrollmentController {
     @getExam() exam: Exam,
     @isTeacher() isTeacher: Boolean,
     @Response() res
-  ): Promise<TestEnrollment> {
+  ){
       try {
         if(!exam) 
           return res
@@ -293,9 +280,10 @@ export class TestEnrollmentController {
             parseInt(body.score),
             enrollmentId,
         );
-        return testEnrollment;
+        return res.status(HttpStatus.OK).json({results: testEnrollment});
       } catch (e){
-        this.logger.error(JSON.stringify(e));
+        this.logger.error(`ERROR in PUT /testEnrollment/:examId/enrollments/:enrollmentId/updateScore 
+                          --- ${JSON.stringify(e)}`);
         return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -315,7 +303,7 @@ export class TestEnrollmentController {
     @getExam() exam: Exam,
     @isTeacher() isTeacher: Boolean,
     @Response() res
-  ): Promise<TestEnrollment> {
+  ){
     try {
       if(!exam) 
         return res
@@ -330,9 +318,10 @@ export class TestEnrollmentController {
         body.teacherGrading,
         enrollmentId,
       );
-      return testEnrollment;
+      return res.status(HttpStatus.OK).json({results: testEnrollment});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in PUT /testEnrollment/:examId/enrollments/:enrollmentId/teacherGrading
+                        --- ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -371,7 +360,8 @@ export class TestEnrollmentController {
       .status(HttpStatus.OK)
       .json({message: "Test Enrollment has been removed successfully"});
     } catch (e){
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in DELETE /testEnrollment/:examId/enrollments
+                        --- ${JSON.stringify(e)}`);
       return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({message: "Something went wrong. Please try again!"});

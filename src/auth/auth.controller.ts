@@ -55,7 +55,8 @@ export class AuthController {
       if(result) return res.status(HttpStatus.OK).json({message: "Signed Up Successfully"});
       throw new Error("Something went wrong with signing up user.");
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /auth/signup --- 
+                       ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -74,7 +75,8 @@ export class AuthController {
       const result: {token: string} = await this.authService.signIn(signInUserDto);
       return result;
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /auth/signin --- 
+                       ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -107,7 +109,8 @@ export class AuthController {
           )}`,
         );
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /auth/google/callback --- 
+                       ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -156,7 +159,8 @@ export class AuthController {
         });
       else throw new Error('Something went wrong. Please try again!');
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /auth/lostPassword --- 
+                       ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -175,7 +179,8 @@ export class AuthController {
       if(result) return res.status(HttpStatus.OK).json({ message: true });
       throw new Error();
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /auth/lostPassword/reset --- 
+                       ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -201,7 +206,8 @@ export class AuthController {
         lastName: user.lastName,
       });
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /auth/profile --- 
+                       ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -219,7 +225,8 @@ export class AuthController {
       const users : User[] = await this.authService.getUserIndexes();
       return res.status(200).json(users);
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in GET /auth/users --- 
+                       ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -246,7 +253,8 @@ export class AuthController {
       );
       return res.status(200).json(updatedUser);
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /auth/profile --- 
+                       ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -265,7 +273,8 @@ export class AuthController {
       const updatedUser = await this.authService.toggleIsEducator(user);
       return res.status(200).json(updatedUser);
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in PUT /auth/toggleIsEducator --- 
+                       ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
@@ -304,7 +313,8 @@ export class AuthController {
         });
       else throw new Error('Something went wrong. Please try again!');
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.logger.error(`ERROR in POST /auth/contactus --- 
+                       ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({message: "Something went wrong. Please try again!"});
