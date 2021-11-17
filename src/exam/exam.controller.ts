@@ -250,9 +250,13 @@ export class ExamController {
   async updateExamRating(
     @Param('examId', ParseIntPipe) examId: number,
     @Body(new ValidationPipe()) updateRatingDto: UpdateRatingDto,
+    @getExam() exam: Exam,
     @Response() res
   ){
     try{
+      if(!exam) return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({message: "Exam Not Found"});
       await this.examService.updateExamRating(
         updateRatingDto.rating,
         examId,
@@ -633,7 +637,7 @@ export class ExamController {
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const section : Section = await this.examService.createWritingSection(
           createWritingSectionDto,
-          examId,
+          exam,
           user,
         );
       return res.status(HttpStatus.OK).json({results: section});
@@ -688,7 +692,8 @@ export class ExamController {
     try {
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
       if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'});
+      // console.log("sectionDto ---", updateSectionDto);
       const section : Section = await this.examService.updateSection(
           updateSectionDto,
           examId,
@@ -724,7 +729,7 @@ export class ExamController {
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
       const section : Section = await this.examService.updateWritingSection(
           updateWritingSectionDto,
-          examId,
+          exam,
           sectionId,
           user,
         );

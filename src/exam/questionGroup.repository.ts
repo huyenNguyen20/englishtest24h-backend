@@ -29,7 +29,7 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
     const { type, title, htmlContent, imageUrl, matchingOptions } =
       createQuestionGroupDto;
     const q = new QuestionGroup();
-    q.title = title;
+    q.title = title || "";
     if (htmlContent) q.htmlContent = htmlContent;
     if (matchingOptions) q.matchingOptions = matchingOptions;
     if (imageUrl) q.imageUrl = imageUrl;

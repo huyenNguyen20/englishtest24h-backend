@@ -57,7 +57,7 @@ export class SectionRepository extends Repository<Section> {
     examId: number,
     sectionId: number,
     user: User,
-  ): Promise<Section> {
+  ){
     const {
       title,
       imageUrl,

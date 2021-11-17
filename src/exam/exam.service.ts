@@ -177,9 +177,7 @@ export class ExamService {
 
   async updateExamRating(rating: number, examId: number): Promise<void> {
     try {
-      const exam : Exam = await this.examRepository.findOne({
-        where: { id: examId, isPublished: true },
-      });
+      const exam : Exam = await this.examRepository.findOne(examId);
       if (!exam) throw new NotFoundException('Exam Not Found');
       // Update Exam Rating
       exam.totalRating += rating;
@@ -282,15 +280,10 @@ export class ExamService {
 
   async createWritingSection(
     createWritingSectionDto: any,
-    examId: number,
+    exam: Exam,
     user: User,
   ): Promise<Section> {
     try {
-      /***Check the User's Permission***/
-      const exam = await this.examRepository.findOne({
-        where: { id: examId, ownerId: user.id },
-      });
-      if (!exam) throw new NotFoundException('Exam Not Found');
       /********************************/
       // 1. Create Section
       const sectionDto: CreateSectionDto = {
@@ -396,7 +389,7 @@ export class ExamService {
 
   async updateWritingSection(
     updateWritingSectionDto: UpdateWritingSectionDto,
-    examId: number,
+    exam: Exam,
     sectionId: number,
     user: User,
   ): Promise<Section> {
@@ -404,7 +397,7 @@ export class ExamService {
       //1. Remove Existing Audio and Image Files of Writing Section
       const { imageUrl } = updateWritingSectionDto;
       const section : Section = await this.sectionRepository.getSection(
-        examId,
+        exam.id,
         sectionId,
         user,
       );
@@ -444,7 +437,7 @@ export class ExamService {
       // 3. Update Section
       const updatedSection : Section = await this.sectionRepository.updateSection(
         sectionDto,
-        examId,
+        exam.id,
         sectionId,
         user,
       );
@@ -518,12 +511,6 @@ export class ExamService {
     user: User,
   ): Promise<QuestionGroup[]> {
     try {
-      /***Check the User's Permission***/
-      const exam : Exam = await this.examRepository.findOne({
-        where: { id: examId, ownerId: user.id },
-      });
-      if (!exam) throw new NotFoundException('Exam Not Found');
-      /***************************** */
       const section = await this.getSection(examId, sectionId, user);
       // 1. Create question group
       const questionGroup =
@@ -593,47 +580,49 @@ export class ExamService {
           questionGroupId,
           user,
         );
+      if(questionGroup.questions){    
+        const questionIds = questionGroup.questions.map(
+          (question) => question.id,
+        );
 
-      const questionIds = questionGroup.questions.map(
-        (question) => question.id,
-      );
-
-      //3. Delete image file of corresponding questions
-      for (const question of questionGroup.questions) {
-        if (Boolean(question.imageUrl)) {
-          const filename = question.imageUrl.substring(
-            question.imageUrl.lastIndexOf('/') + 1,
-          );
-          const url = `${config.get('deleteImage').url}/${filename}`;
-          await axios.delete(url);
+        //3. Delete image file of corresponding questions
+        for (const question of questionGroup.questions) {
+          if (Boolean(question.imageUrl)) {
+            const filename = question.imageUrl.substring(
+              question.imageUrl.lastIndexOf('/') + 1,
+            );
+            const url = `${config.get('deleteImage').url}/${filename}`;
+            await axios.delete(url);
+          }
+        }
+        if (questionIds.length > 0) {
+          //4. Delete corresponding answers
+          await getConnection()
+            .createQueryBuilder()
+            .delete()
+            .from(Answer)
+            .where('questionId IN (:...questionIds)', {
+              questionIds: [...questionIds],
+            })
+            .execute();
+          //5. Delete corresponding questions
+          await getConnection()
+            .createQueryBuilder()
+            .delete()
+            .from(Question)
+            .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
+            .execute();
         }
       }
 
-      if (questionIds.length > 0) {
-        //4. Delete corresponding answers
-        await getConnection()
-          .createQueryBuilder()
-          .delete()
-          .from(Answer)
-          .where('questionId IN (:...questionIds)', {
-            questionIds: [...questionIds],
-          })
-          .execute();
-        //5. Delete corresponding questions
-        await getConnection()
-          .createQueryBuilder()
-          .delete()
-          .from(Question)
-          .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
-          .execute();
-      }
       //6. Create questions and answers
       const newQuestions : Question[] = [];
-      for (const q of questions) {
-        const question : Question = await this.createQuestion(q, questionGroup.id, user);
-        newQuestions.push(question);
+      if(questions){
+        for (const q of questions) {
+          const question : Question = await this.createQuestion(q, questionGroup.id, user);
+          newQuestions.push(question);
+        }
       }
-
       let questionGroups : QuestionGroup[] = await this.getQuestionGroups(sectionId, user);
       //7. Return new question group array
       questionGroups = questionGroups.map((q) => {
@@ -710,9 +699,11 @@ export class ExamService {
     // 3. Create answers
     const { answers } = createQuestionDto;
     const answersArr = [];
-    for (const a of answers) {
+    if(answers){
+      for (const a of answers) {
       const answer : Answer = await this.createAnswer(a, question.id, user);
       answersArr.push(answer);
+      }
     }
     question.answers = answersArr;
     return question;
