@@ -36,6 +36,7 @@ import * as config from 'config';
 import { CreateSectionDto } from './dto/create-section.dto';
 import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
 import { UpdateWritingSectionDto } from './dto/update-writing-section.dto';
+import { UploadService } from 'src/upload/upload.service';
 
 @Injectable()
 export class ExamService {
@@ -57,6 +58,8 @@ export class ExamService {
 
     @InjectRepository(AnswerRepository)
     private answerRepository: AnswerRepository,
+
+    private readonly uploadService: UploadService
   ) {}
 
   /************************************* */
@@ -216,8 +219,7 @@ export class ExamService {
       const filename = exam.imageUrl.substring(
         exam.imageUrl.lastIndexOf('/') + 1,
       );
-      const url = `${config.get('deleteImage').url}/${filename}`;
-      await axios.delete(url);
+      await this.uploadService.deleteImage(filename);
     }
     //2. Update Exam
     return await this.examRepository.updateExam(updatedExamDto, examId, user);
@@ -361,8 +363,7 @@ export class ExamService {
         const filename = section.imageUrl.substring(
           section.imageUrl.lastIndexOf('/') + 1,
         );
-        const url = `${config.get('deleteImage').url}/${filename}`;
-        await axios.delete(url);
+        await this.uploadService.deleteImage(filename);
       }
       if (
         section &&
@@ -372,8 +373,7 @@ export class ExamService {
         const filename = section.audioUrl.substring(
           section.audioUrl.lastIndexOf('/') + 1,
         );
-        const url = `${config.get('deleteAudio').url}/${filename}`;
-        await axios.delete(url);
+        await this.uploadService.deleteAudio(filename);
       }
       //2. Update the section
       return await this.sectionRepository.updateSection(
@@ -410,8 +410,7 @@ export class ExamService {
         const filename = section.imageUrl.substring(
           section.imageUrl.lastIndexOf('/') + 1,
         );
-        const url = `${config.get('deleteImage').url}/${filename}`;
-        await axios.delete(url);
+        await this.uploadService.deleteImage(filename);
       }
       //2. Create questionDto, sectionDto, and questionGroupDto
       const sectionDto: UpdateSectionDto = {
@@ -472,15 +471,13 @@ export class ExamService {
         const filename = section.imageUrl.substring(
           section.imageUrl.lastIndexOf('/') + 1,
         );
-        const url = `${config.get('deleteImage').url}/${filename}`;
-        await axios.delete(url);
+        await this.uploadService.deleteImage(filename);
       }
       if (section && Boolean(section.audioUrl)) {
         const filename = section.audioUrl.substring(
           section.audioUrl.lastIndexOf('/') + 1,
         );
-        const url = `${config.get('deleteAudio').url}/${filename}`;
-        await axios.delete(url);
+        await this.uploadService.deleteAudio(filename);
       }
       //2. Remove the section
       await this.sectionRepository.removeSection(examId, sectionId, user);
@@ -570,8 +567,7 @@ export class ExamService {
         const filename = oldQuestionGroup.imageUrl.substring(
           oldQuestionGroup.imageUrl.lastIndexOf('/') + 1,
         );
-        const url = `${config.get('deleteImage').url}/${filename}`;
-        await axios.delete(url);
+        await this.uploadService.deleteImage(filename);
       }
       // 2. Update and get updated question group
       const questionGroup : QuestionGroup =
@@ -586,15 +582,15 @@ export class ExamService {
         );
 
         //3. Delete image file of corresponding questions
-        for (const question of questionGroup.questions) {
-          if (Boolean(question.imageUrl)) {
-            const filename = question.imageUrl.substring(
-              question.imageUrl.lastIndexOf('/') + 1,
-            );
-            const url = `${config.get('deleteImage').url}/${filename}`;
-            await axios.delete(url);
+        const fileNameArr : string [] = [];
+        questionGroup.questions.forEach((question) => {
+          if(question.imageUrl){
+            const fileName = question.imageUrl.substring(question.imageUrl.lastIndexOf('/') + 1);
+            if(fileName) fileNameArr.push(fileName);
           }
-        }
+        })
+        if(fileNameArr.length > 0) await this.uploadService.batchDeleteImage(fileNameArr);
+
         if (questionIds.length > 0) {
           //4. Delete corresponding answers
           await getConnection()
@@ -650,19 +646,19 @@ export class ExamService {
         const filename = questionGroup.imageUrl.substring(
           questionGroup.imageUrl.lastIndexOf('/') + 1,
         );
-        const url = `${config.get('deleteImage').url}/${filename}`;
-        await axios.delete(url);
+        await this.uploadService.deleteImage(filename);
       }
 
-      //2. Delete image file of corresponding questions
-      for (const question of questionGroup.questions) {
-        if (Boolean(question.imageUrl)) {
-          const filename = question.imageUrl.substring(
-            question.imageUrl.lastIndexOf('/') + 1,
-          );
-          const url = `${config.get('deleteImage').url}/${filename}`;
-          await axios.delete(url);
-        }
+      if(questionGroup.questions) {
+          //2. Delete image file of corresponding questions
+          const fileNameArr : string [] = [];
+          questionGroup.questions.forEach((question) => {
+            if(question.imageUrl){
+              const fileName = question.imageUrl.substring(question.imageUrl.lastIndexOf('/') + 1);
+              if(fileName) fileNameArr.push(fileName);
+            }
+          })
+          if(fileNameArr.length > 0) await this.uploadService.batchDeleteImage(fileNameArr);
       }
 
       await this.questionGroupRepository.removeQuestionGroup(

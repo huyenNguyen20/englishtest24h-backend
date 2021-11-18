@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
@@ -87,6 +87,53 @@ export class AuthService {
     });
   }
 
+  async sendEmail(
+    emailObject : {
+        senderEmail: string , 
+        recipientEmail: string , 
+        subject: string, 
+        htmlMessage: string
+    }
+  ): Promise<void> {
+      try {
+          // Require neccessary library
+          const AWS = require('aws-sdk');
+          
+          // Configure AWS Client
+          const sesv2 = new AWS.SESV2({
+              region: process.env.AWS_REGION,
+              accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+              secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          });
+
+          const { senderEmail, recipientEmail, subject, htmlMessage } = emailObject;
+          if(!senderEmail || !recipientEmail || !subject || !htmlMessage) 
+            throw new BadRequestException();
+          var params = {
+              Content: { /* required */
+                  Simple: {
+                      Body: { /* required */
+                          Html: {
+                              Data: htmlMessage, /* required */
+                          }
+                      },
+                      Subject: { /* required */
+                          Data: subject, /* required */
+                      }
+                  },
+              },
+              Destination: {
+                  ToAddresses: [
+                      recipientEmail
+                  ]
+              },
+              FromEmailAddress: senderEmail,
+          };
+          await sesv2.sendEmail(params).promise();
+      } catch(err) {
+          throw new InternalServerErrorException(err);
+      }
+  }
   /*****Admin Methods***** */
   async getEducators(): Promise<User[]> {
     return await this.authRepository.find({

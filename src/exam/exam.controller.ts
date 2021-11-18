@@ -14,6 +14,7 @@ import {
   Inject,
   Response,
   HttpStatus,
+  UploadedFiles,
 } from '@nestjs/common';
 import { ExamService } from './exam.service';
 import { CreateExamDto, UpdateExamDto, FilterExamDto } from './dto';
@@ -40,6 +41,7 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { isTeacher } from 'src/auth/decorator/isTeacher.decorator';
 import { getExam } from './decorators/getExam.decorator';
+import { UploadService } from 'src/upload/upload.service';
 
 @ApiTags('Exams Endpoints')
 @Controller('exams')
@@ -48,7 +50,8 @@ export class ExamController {
       @Inject(WINSTON_MODULE_PROVIDER) 
       private readonly logger: Logger,
 
-      private readonly examService: ExamService
+      private readonly examService: ExamService,
+      private readonly uploadService: UploadService
     ) {}
 
   /********************* */
@@ -416,16 +419,29 @@ export class ExamController {
   @ApiOperation({ summary: 'Method for EXAM OWNER to create exam' })
   @Post()
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+  ]))
   async createExam(
+    @UploadedFiles() files,
     @Body(new ExamValidationPipe()) createExamDto: CreateExamDto,
     @getUser() user: User,
     @isTeacher() isTeacher: boolean,
     @Response() res
   ){
     try {
+
+      // 1. Check User Permission
       if(!isTeacher) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      // 2. Upload Image File
+      if (files && files.image && files.image[0]) {
+        let fileName = files.image[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;    
+        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
+        if(imageUrl) createExamDto.imageUrl = imageUrl;
+      }
+      // 3. Do the operation
       const exams : Exam[] = await this.examService.createExam(createExamDto, user);
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e){
@@ -463,8 +479,11 @@ export class ExamController {
   @ApiOperation({ summary: 'Method for EXAM OWNER to update exam' })
   @Put('/:examId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+  ]))
   async updateExam(
+    @UploadedFiles() files,
     @Body(new ExamValidationPipe()) updateExamDto: UpdateExamDto,
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
@@ -473,9 +492,19 @@ export class ExamController {
     @Response() res
   ){
     try {
+      // 1. Check if exam exits
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      // 2. Check user's permission
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      // 3. Upload Image Files
+      if (files && files.image && files.image[0]) {
+        let fileName = files.image[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;    
+        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
+        if(imageUrl) updateExamDto.imageUrl = imageUrl;
+      }
+      // 4. Do Operation
       const exams : Exam[] = await this.examService.updateExam(updateExamDto, examId, user);
       return res.status(HttpStatus.OK).json({results: exams});
     } catch (e){
@@ -595,8 +624,12 @@ export class ExamController {
   })
   @Post('/:examId/sections')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+    { name: 'audio', maxCount: 1 },
+  ]))
   async createSection(
+    @UploadedFiles() files,
     @Body(new ValidationPipe()) createSectionDto: CreateSectionDto,
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
@@ -605,9 +638,25 @@ export class ExamController {
     @Response() res
   ){
     try {
+      // 1.Check if the exam exists
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      // 2. Check the user's permission
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      // 3. Upload Image & Audio File
+      if (files && files.image && files.image[0]) {
+        let fileName = files.image[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;    
+        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
+        if(imageUrl) createSectionDto.imageUrl = imageUrl;
+      }
+      if (files && files.audio && files.audio[0]) {
+        let fileName = files.audio[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;    
+        const audioUrl = await this.uploadService.uploadAudio(tempFile, fileName);
+        if(audioUrl) createSectionDto.audioUrl = audioUrl;
+      }
+      // 4. Do the operation
       const section : Section = await this.examService.createSection(createSectionDto, examId, user);
       return res.status(HttpStatus.OK).json({results: section});
     } catch (e){
@@ -621,8 +670,11 @@ export class ExamController {
   @ApiOperation({ summary: 'Method for EXAM OWNER to Create a section of an writing exam' })
   @Post('/:examId/writingSections')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+  ]))
   async createWritingSection(
+    @UploadedFiles() files,
     @Body(new CreateWritingSectionValidationPipe())
     createWritingSectionDto: CreateWritingSectionDto,
     @Param('examId', ParseIntPipe) examId: number,
@@ -632,9 +684,19 @@ export class ExamController {
     @Response() res
   ){
     try {
+      // 1. Check if the exam exists
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      // 2. Check the user's permission
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      // 3. Upload Image File
+      if (files && files.image && files.image[0]) {
+        let fileName = files.image[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;    
+        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
+        if(imageUrl) createWritingSectionDto.imageUrl = imageUrl;
+      }
+      // 4. Do the operation
       const section : Section = await this.examService.createWritingSection(
           createWritingSectionDto,
           exam,
@@ -679,8 +741,12 @@ export class ExamController {
   })
   @Put('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+    { name: 'audio', maxCount: 1 },
+  ]))
   async updateSection(
+    @UploadedFiles() files,
     @Body(new ValidationPipe()) updateSectionDto: UpdateSectionDto,
     @Param('examId', ParseIntPipe) examId: number,
     @Param('sectionId', ParseIntPipe) sectionId: number,
@@ -690,10 +756,25 @@ export class ExamController {
     @Response() res
   ){
     try {
+      // 1. Check if the exam exists
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      // 2. Check the user's permission
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'});
-      // console.log("sectionDto ---", updateSectionDto);
+      // 3. Upload Image & Audio File
+      if (files && files.image && files.image[0]) {
+        let fileName = files.image[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;    
+        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
+        if(imageUrl) updateSectionDto.imageUrl = imageUrl;
+      }
+      if (files && files.audio && files.audio[0]) {
+        let fileName = files.audio[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;    
+        const audioUrl = await this.uploadService.uploadAudio(tempFile, fileName);
+        if(audioUrl) updateSectionDto.audioUrl = audioUrl;
+      }
+      // 4. Do the operation
       const section : Section = await this.examService.updateSection(
           updateSectionDto,
           examId,
@@ -712,8 +793,11 @@ export class ExamController {
   @ApiOperation({ summary: 'Method for EXAM OWNER to Update a section of an writing exam' })
   @Put('/:examId/writingSections/:sectionId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+  ]))
   async updateWritingSection(
+    @UploadedFiles() files,
     @Body(new CreateWritingSectionValidationPipe())
     updateWritingSectionDto: UpdateWritingSectionDto,
     @Param('examId', ParseIntPipe) examId: number,
@@ -724,15 +808,26 @@ export class ExamController {
     @Response() res
   ){
     try {
+      // 1. Check if the exam exists
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      // 2. Check the user's permission
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      // 3. Upload Image File
+      if (files && files.image && files.image[0]) {
+        let fileName = files.image[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;    
+        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
+        if(imageUrl) updateWritingSectionDto.imageUrl = imageUrl;
+      }
+      // 4. Do the operation
       const section : Section = await this.examService.updateWritingSection(
           updateWritingSectionDto,
           exam,
           sectionId,
           user,
         );
+      
       return res.status(HttpStatus.OK).json({results: section});
     } catch (e){
       this.logger.error(`ERROR in PUT /exams/:examId/writingSections/:sectionId --- ${JSON.stringify(e)}`);
@@ -797,8 +892,11 @@ export class ExamController {
   @ApiOperation({ summary: 'Method for EXAM OWNER to create question groups of a section of an exam' })
   @Post('/:examId/sections/:sectionId/questionGroups')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+  ]))
   async createQuestionGroups(
+    @UploadedFiles() files,
     @Body(new CreateQuestionGroupValidationPipe())
     createQuestionGroupDto: CreateQuestionGroupDto,
     @Param('examId', ParseIntPipe) examId: number,
@@ -809,9 +907,19 @@ export class ExamController {
     @Response() res
   ){
     try {
+      // 1. Check if the exam exists
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      // 2. Check the user's permission
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      // 3. Upload Image File
+      if (files && files.image && files.image[0]) {
+        let fileName = files.image[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;    
+        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
+        if(imageUrl) createQuestionGroupDto.imageUrl = imageUrl;
+      }
+      // 4. Do the operation
       const questionGroups : QuestionGroup[] = await this.examService.createQuestionGroup(
           createQuestionGroupDto,
           examId,
@@ -830,8 +938,11 @@ export class ExamController {
   @ApiOperation({ summary: 'Method for EXAM OWNER to update  question groups of a section of an exam' })
   @Put('/:examId/sections/:sectionId/questionGroups/:questionGroupId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+  ]))
   async updateQuestionGroup(
+    @UploadedFiles() files,
     @Body(new CreateQuestionGroupValidationPipe())
     updateQuestionGroupDto: UpdateQuestionGroupDto,
     @Param('examId', ParseIntPipe) examId: number,
@@ -843,9 +954,19 @@ export class ExamController {
     @Response() res
   ){
     try {
+      // 1. Check if the exam exists
       if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      // 2. Check the user's permission
       if(!isTeacher || exam.ownerId !== user.id) 
         return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      // 3. Upload Image File
+      if (files && files.image && files.image[0]) {
+        let fileName = files.image[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;    
+        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
+        if(imageUrl) updateQuestionGroupDto.imageUrl = imageUrl;
+      }
+      // 4. Do the operation
       const questionGroups : QuestionGroup[] = await this.examService.updateQuestionGroup(
           updateQuestionGroupDto,
           sectionId,

@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   Put,
   Inject,
+  UploadedFiles,
 } from '@nestjs/common';
 import { Logger } from "winston";
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -31,6 +32,7 @@ import { ContactUsFormDto } from './dto/contactUsForm.dto';
 import * as config from 'config';
 import axios from 'axios';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { UploadService } from 'src/upload/upload.service';
 
 @ApiTags('Authentication and User Endpoints')
 @Controller('auth')
@@ -40,7 +42,7 @@ export class AuthController {
     private readonly logger: Logger,
 
     private readonly authService: AuthService,
-    private readonly jwtService: JwtService,
+    private readonly jwtService: JwtService
   ) {}
 
   @ApiOperation({ summary: 'Sign Up' })
@@ -151,13 +153,11 @@ export class AuthController {
               `,
       };
 
-      const resp = await axios.post(config.get('sendEmail').url, body);
-      if (resp.status === 200)
-        return res.send({
-          message:
-            'Reset password link was sent to your email. Please check your email!',
-        });
-      else throw new Error('Something went wrong. Please try again!');
+      await this.authService.sendEmail(body);
+      return res.send({
+        message:
+          'Reset password link was sent to your email. Please check your email!',
+      })
     } catch (e) {
       this.logger.error(`ERROR in POST /auth/lostPassword --- 
                        ${JSON.stringify(e)}`);
@@ -247,6 +247,7 @@ export class AuthController {
     @Response() res,
   ) {
     try {
+      // Do the operation
       const updatedUser : ProfileDto = await this.authService.updateProfile(
         user,
         updateProfile,
@@ -306,12 +307,10 @@ export class AuthController {
             `,
     };
     try {
-      const resp = await axios.post(config.get('sendEmail').url, body);
-      if (resp.status === 200)
-        return res.send({
-          message: 'Your message has been sent successfully!',
-        });
-      else throw new Error('Something went wrong. Please try again!');
+      await this.authService.sendEmail(body);
+      return res.send({
+        message: 'Your message has been sent successfully!',
+      });
     } catch (e) {
       this.logger.error(`ERROR in POST /auth/contactus --- 
                        ${JSON.stringify(e)}`);

@@ -21,6 +21,7 @@ import { Answer } from './entities/answer.entity';
 
 @EntityRepository(Exam)
 export class ExamRepository extends Repository<Exam> {
+
   /****Exams Methods for Public Users*** */
   async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.createQueryBuilder('exam')
@@ -285,22 +286,20 @@ export class ExamRepository extends Repository<Exam> {
       if (sections.length > 0) {
         const sectionIds = sections.map((section) => section.id);
         // 2. Delete Images and Audios of Corresponding Sections
-        for (const section of sections) {
-          if (Boolean(section.imageUrl)) {
-            const filename = section.imageUrl.substring(
-              section.imageUrl.lastIndexOf('/') + 1,
-            );
-            const url = `${config.get('deleteImage').url}/${filename}`;
-            await axios.delete(url);
+        const sectionImgArr : string [] = [];
+        const sectionAudioArr : string [] = [];
+        sections.forEach((section) => {
+          if(section.imageUrl){
+            let fileName = section.imageUrl.substring(section.imageUrl.lastIndexOf('/') + 1);
+            if(fileName) sectionImgArr.push(fileName);
           }
-          if (Boolean(section.audioUrl)) {
-            const filename = section.audioUrl.substring(
-              section.audioUrl.lastIndexOf('/') + 1,
-            );
-            const url = `${config.get('deleteAudio').url}/${filename}`;
-            await axios.delete(url);
+          if(section.audioUrl){
+            let fileName = section.audioUrl.substring(section.audioUrl.lastIndexOf('/') + 1);
+            if(fileName) sectionAudioArr.push(fileName);
           }
-        }
+        })
+        if(sectionImgArr.length > 0) await this.batchDeleteImage(sectionImgArr);
+        if(sectionAudioArr.length > 0) await this.batchDeleteAudio(sectionAudioArr);
 
         const questionGroups : QuestionGroup[] = await getConnection()
           .createQueryBuilder()
@@ -315,15 +314,14 @@ export class ExamRepository extends Repository<Exam> {
             (questionGroup) => questionGroup.id,
           );
           // 3. Delete Images of Corresponding Question Groups
-          for (const questionGroup of questionGroups) {
-            if (Boolean(questionGroup.imageUrl)) {
-              const filename = questionGroup.imageUrl.substring(
-                questionGroup.imageUrl.lastIndexOf('/') + 1,
-              );
-              const url = `${config.get('deleteImage').url}/${filename}`;
-              await axios.delete(url);
+          const questionGrpImgArr : string [] = [];
+          questionGroups.forEach((qG) => {
+            if(qG.imageUrl){
+              let fileName = qG.imageUrl.substring(qG.imageUrl.lastIndexOf('/') + 1);
+              if(fileName) questionGrpImgArr.push(fileName);
             }
-          }
+          })
+          if(questionGrpImgArr.length > 0) await this.batchDeleteImage(questionGrpImgArr);
 
           const questions : Question[] = await getConnection()
             .createQueryBuilder()
@@ -336,15 +334,15 @@ export class ExamRepository extends Repository<Exam> {
           if (questions.length > 0) {
             const questionIds = questions.map((question) => question.id);
             // 4. Delete Images of Corresponding Exam Questions
-            for (const question of questions) {
-              if (Boolean(question.imageUrl)) {
-                const filename = question.imageUrl.substring(
-                  question.imageUrl.lastIndexOf('/') + 1,
-                );
-                const url = `${config.get('deleteImage').url}/${filename}`;
-                await axios.delete(url);
+            const questionImgArr : string [] = [];
+            questions.forEach((q) => {
+              if(q.imageUrl){
+                let fileName = q.imageUrl.substring(q.imageUrl.lastIndexOf('/') + 1);
+                if(fileName) questionImgArr.push(fileName);
               }
-            }
+            })
+            if(questionImgArr.length > 0) await this.batchDeleteImage(questionImgArr);
+            
             //5. Delete Answers of Corresponding Questions
             await getConnection()
               .createQueryBuilder()
@@ -406,6 +404,12 @@ export class ExamRepository extends Repository<Exam> {
               const audioPath = `${config.get('deleteAudio').url}/${filename}`;
               await axios.delete(audioPath);
             }
+            const answerAudioArr : string [] = [];
+            urlArr.forEach((url) => {
+              const filename = url.substring(url.lastIndexOf('/') + 1);
+              if(filename) answerAudioArr.push(filename)
+            })
+            if(answerAudioArr.length > 0) await this.batchDeleteAudio(answerAudioArr);
           }
         }
       }
@@ -475,5 +479,54 @@ export class ExamRepository extends Repository<Exam> {
     if (offset) query.offset(offset);
     if (limit) query.limit(limit);
     return query;
+  }
+  async batchDeleteImage(fileNameArr: string[])
+  : Promise<void> {
+      try{
+          // Require neccessary library
+          const AWS = require('aws-sdk');
+          
+          // Configure AWS Client
+          const s3 = new AWS.S3({
+              region: process.env.AWS_REGION,
+              accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+              secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          });
+          const deleteImages = fileNameArr.map(async (fileName) => {
+              var params = {
+                  Bucket: process.env.IMAGE_S3_BUCKET, 
+                  Key: fileName
+                };
+              return await s3.deleteObject(params).promise();
+          })
+          await Promise.all(deleteImages)
+      } catch (e) {
+          throw new InternalServerErrorException(e)
+      }
+  }
+
+  async batchDeleteAudio(fileNameArr: string[])
+  : Promise<void> {
+      try{
+          // Require neccessary library
+          const AWS = require('aws-sdk');
+          
+          // Configure AWS Client
+          const s3 = new AWS.S3({
+              region: process.env.AWS_REGION,
+              accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+              secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          });
+          const deleteAudios = fileNameArr.map(async(fileName) => {
+              var params = {
+                  Bucket: process.env.AUDIO_S3_BUCKET, 
+                  Key: fileName
+                };
+              return await s3.deleteObject(params).promise();
+          })
+          await Promise.all(deleteAudios);
+      } catch (e) {
+          throw new InternalServerErrorException(e)
+      }
   }
 }

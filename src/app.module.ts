@@ -14,7 +14,7 @@ import { ExamController } from './exam/exam.controller';
 import { AdminController } from './admin/admin.controller';
 import { StudentQuestionController } from './studentQuestion/question.controller';
 import { TestEnrollmentController } from './exam/test-enrollment.controller';
-
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -53,6 +53,7 @@ import { TestEnrollmentController } from './exam/test-enrollment.controller';
     AdminModule,
     StudentQuestionModule,
     CaslModule,
+    UploadModule,
   ],
   controllers: [],
   providers: [],

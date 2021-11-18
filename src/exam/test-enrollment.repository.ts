@@ -123,7 +123,6 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
   ): Promise<TestEnrollment> {
     const { score, totalScore, answerObj, sectionsObj } =
       createTestEnrollmentDto;
-    console.log('createTestEnrollmentDto', createTestEnrollmentDto.score)
     const enrollment : TestEnrollment = await this.findOne({
       where: { examId: exam.id, studentId: user.id },
     });

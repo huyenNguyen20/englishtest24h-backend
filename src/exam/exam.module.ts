@@ -12,9 +12,11 @@ import { TestEnrollmentController } from './test-enrollment.controller';
 import { SectionRepository } from './section.respository';
 import { QuestionGroupRepository } from './questionGroup.repository';
 import { AnswerRepository } from './answer.repository';
+import { UploadModule } from 'src/upload/upload.module';
 
 @Module({
   imports: [
+    UploadModule,
     AuthModule,
     TypeOrmModule.forFeature([
       ExamRepository,
