@@ -1,8 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import axios from 'axios';
-import * as config from 'config';
 import { AuthRepository } from './auth.repository';
 import { CreateUserDto } from './dto/createUser.dto';
 import { CreateUserOAuthDto } from './dto/createUserOAuth.dto';
@@ -74,8 +72,10 @@ export class AuthService {
       const filename = user.avatarUrl.substring(
         user.avatarUrl.lastIndexOf('/') + 1,
       );
-      const url = `${config.get('deleteImage').url}/${filename}`;
-      await axios.delete(url);
+      if(filename) {
+        const { deleteImage } = require('../shared/helpers');
+        await deleteImage(filename);
+      }
     }
     return await this.authRepository.updateProfile(user, updates);
   }

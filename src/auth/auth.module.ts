@@ -21,9 +21,9 @@ import * as config from 'config';
     }),
     TypeOrmModule.forFeature([AuthRepository]),
     MulterModule.register({
-      dest: 'public/usersFile/images',
+      dest: 'public/examsFiles',
       fileFilter: (req, file, cb) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|gif|png)$/)) {
+        if (!file.originalname.match(/\.(jpeg|jpg|png)$/)) {
           // You can always pass an error if something goes wrong:
           cb(new Error('You can only upload image files'), null);
         }

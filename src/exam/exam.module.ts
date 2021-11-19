@@ -32,7 +32,7 @@ import { UploadModule } from 'src/upload/upload.module';
         if (
           !file.originalname
             .toLowerCase()
-            .match(/\.(jpg|jpeg|gif|png|wav|mp3)$/)
+            .match(/\.(jpg|jpeg|png|wav|mp3)$/)
         ) {
           // You can always pass an error if something goes wrong:l);
           cb(new Error('You can only upload image / audio files'), null);

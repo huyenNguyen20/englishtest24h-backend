@@ -21,15 +21,23 @@ export class UploadService {
             });
 
             // Convert Callback functions to Async/Await functions
-            const compressImage = promisify(Jimp.read)
             const readFileAsync = promisify(fs.readFile);
             const unlinkAsync = promisify(fs.unlink);
 
             // Compress Image
             const newFileName = `${fileName}-${v4()}`;
-            // let tempFile = os.tmpdir() + '/' + newFileName;
-            const image = await compressImage(tempFile);
-            image.resize(600, 500).quality(60).write(tempFile);
+            Jimp.read(tempFile)
+            .then(result => {
+                return result
+                .resize(600, 500) // resize
+                .quality(60) // set JPEG quality
+                .greyscale() // set greyscale
+                .write(tempFile); // save
+            })
+            .catch(err => {
+                throw new Error(err)
+            });
+
             // Read new file
             const compressedImage = await readFileAsync(tempFile);
 
@@ -92,101 +100,4 @@ export class UploadService {
            throw new InternalServerErrorException(e)
        }
     }
-
-    async deleteImage(fileName: string)
-    : Promise<void> {
-        try{
-            // Require neccessary library
-            const AWS = require('aws-sdk');
-            
-            // Configure AWS Client
-            const s3 = new AWS.S3({
-                region: process.env.AWS_REGION,
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            });
-
-            var params = {
-                Bucket: process.env.IMAGE_S3_BUCKET, 
-                Key: fileName
-              };
-            await s3.deleteObject(params).promise();
-       } catch (e) {
-           throw new InternalServerErrorException(e)
-       }
-    }
-
-    async batchDeleteImage(fileNameArr: string[])
-    : Promise<void> {
-        try{
-            // Require neccessary library
-            const AWS = require('aws-sdk');
-            
-            // Configure AWS Client
-            const s3 = new AWS.S3({
-                region: process.env.AWS_REGION,
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            });
-            const deleteImages = fileNameArr.map(async (fileName) => {
-                var params = {
-                    Bucket: process.env.IMAGE_S3_BUCKET, 
-                    Key: fileName
-                  };
-                return await s3.deleteObject(params).promise();
-            })
-            await Promise.all(deleteImages)
-       } catch (e) {
-           throw new InternalServerErrorException(e)
-       }
-    }
-
-    async deleteAudio(fileName: string)
-    : Promise<void> {
-        try{
-            // Require neccessary library
-            const AWS = require('aws-sdk');
-            
-            // Configure AWS Client
-            const s3 = new AWS.S3({
-                region: process.env.AWS_REGION,
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            });
-
-            var params = {
-                Bucket: process.env.AUDIO_S3_BUCKET, 
-                Key: fileName
-              };
-            await s3.deleteObject(params).promise();
-       } catch (e) {
-           throw new InternalServerErrorException(e)
-       }
-    }
-
-    async batchDeleteAudio(fileNameArr: string[])
-    : Promise<void> {
-        try{
-            // Require neccessary library
-            const AWS = require('aws-sdk');
-            
-            // Configure AWS Client
-            const s3 = new AWS.S3({
-                region: process.env.AWS_REGION,
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            });
-            const deleteAudios = fileNameArr.map(async(fileName) => {
-                var params = {
-                    Bucket: process.env.AUDIO_S3_BUCKET, 
-                    Key: fileName
-                  };
-                return await s3.deleteObject(params).promise();
-            })
-            await Promise.all(deleteAudios);
-       } catch (e) {
-           throw new InternalServerErrorException(e)
-       }
-    }
-
 }

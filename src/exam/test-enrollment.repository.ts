@@ -1,11 +1,9 @@
-import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
 import { Exam } from './entities/exam.entity';
 import { TestEnrollment } from './entities/test-enrollment.entity';
-import * as config from 'config';
-import axios from 'axios';
 import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
 import { FilterDto } from './dto/filter.dto';
 
@@ -150,7 +148,8 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
         .execute();
     } else {
       const subject = exam.subject;
-      // Student's speaking answer will container recording audio url, so old audio urls must be removed
+      // Student's speaking answer will container recording audio url, 
+      // so old audio urls must be removed
       if (subject === 3) {
         const urlArr = [];
         const answers = JSON.parse(enrollment.answerObj);
@@ -158,11 +157,15 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
           if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
             urlArr.push(answers[a].userAnswer[0]);
         }
+        const filenameArr : string[] = [];
         for (const url of urlArr) {
           const filename = url.substring(url.lastIndexOf('/') + 1);
-          const audioPath = `${config.get('deleteAudio').url}/${filename}`;
-          await axios.delete(audioPath);
+          if(filename) filenameArr.push(filename);
         }
+        if(filenameArr.length > 0) {
+          const {batchDeleteAudio} = require('../shared/helpers');
+          await batchDeleteAudio(filenameArr);
+        } 
       }
       enrollment.timeTaken++;
       if (score || score === 0) enrollment.score = score;
@@ -208,11 +211,15 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
               if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
                 urlArr.push(answers[a].userAnswer[0]);
             }
+            const filenameArr : string[] = [];
             for (const url of urlArr) {
               const filename = url.substring(url.lastIndexOf('/') + 1);
-              const audioPath = `${config.get('deleteAudio').url}/${filename}`;
-              await axios.delete(audioPath);
+              if(filename) filenameArr.push(filename);
             }
+            if(filenameArr.length > 0) {
+              const {batchDeleteAudio} = require('../shared/helpers');
+              await batchDeleteAudio(filenameArr);
+            } 
           }
         }
       }

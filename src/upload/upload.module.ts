@@ -13,7 +13,7 @@ import { UploadService } from './upload.service';
             if (
               !file.originalname
                 .toLowerCase()
-                .match(/\.(jpg|jpeg|gif|png|wav|mp3|ogg)$/)
+                .match(/\.(jpg|jpeg|png|wav|mp3)$/)
             ) {
               // You can always pass an error if something goes wrong:l);
               cb(new Error('You can only upload image / audio files'), null);

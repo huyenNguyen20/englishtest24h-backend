@@ -1,8 +1,7 @@
-import axios from 'axios';
-import * as config from 'config';
 import { NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
+import { CreateSectionDto } from './dto/create-section.dto';
 import { UpdateSectionDto } from './dto/update-section.dto';
 import { Answer } from './entities/answer.entity';
 import { Exam } from './entities/exam.entity';
@@ -17,11 +16,11 @@ export class SectionRepository extends Repository<Section> {
   }
 
   async createSection(
-    createSectionDto: any,
+    createSectionDto: CreateSectionDto,
     exam: Exam,
     user: User,
   ): Promise<Section> {
-    const { title, audioUrl, imageUrl, htmlContent, directions, transcript } =
+    const { title, audioUrl, imageUrl, htmlContent, directions, transcription } =
       createSectionDto;
     const s = new Section();
     s.title = title;
@@ -32,7 +31,7 @@ export class SectionRepository extends Repository<Section> {
 
     if (htmlContent) s.htmlContent = htmlContent;
     if (directions) s.directions = directions;
-    if (transcript) s.transcript = transcript;
+    if (transcription) s.transcript = transcription;
     s.ownerId = user.id;
     s.exam = exam;
     s.examId = exam.id;
@@ -84,6 +83,11 @@ export class SectionRepository extends Repository<Section> {
   async removeSection(examId: number, sectionId: number, user: User) {
     const s : Section = await this.getSection(examId, sectionId, user);
     if(!s) throw new NotFoundException("Section Not Found");
+    // Get necessary helpers
+    const {  
+      batchDeleteImage
+    } = require('../shared/helpers');
+
     const questionGroups : QuestionGroup[] = 
       await getConnection()
         .createQueryBuilder()
@@ -91,21 +95,21 @@ export class SectionRepository extends Repository<Section> {
         .from(QuestionGroup, 'questionGroup')
         .where('questionGroup.sectionId = :sectionId', { sectionId })
         .execute();
+
     if (questionGroups.length > 0) {
       const questionGroupIds = questionGroups.map(
         (questionGroup) => questionGroup.id,
       );
 
       // 1. Delete Images of Corresponding Question Groups
-      for (const questionGroup of questionGroups) {
-        if (Boolean(questionGroup.imageUrl)) {
-          const filename = questionGroup.imageUrl.substring(
-            questionGroup.imageUrl.lastIndexOf('/') + 1,
-          );
-          const url = `${config.get('deleteImage').url}/${filename}`;
-          await axios.delete(url);
+      const questionGrpImgArr : string [] = [];
+      questionGroups.forEach((qG) => {
+        if(qG.imageUrl){
+          let fileName = qG.imageUrl.substring(qG.imageUrl.lastIndexOf('/') + 1);
+          if(fileName) questionGrpImgArr.push(fileName);
         }
-      }
+      })
+      if(questionGrpImgArr.length > 0) await batchDeleteImage(questionGrpImgArr);
 
       const questions : Question[] = await getConnection()
         .createQueryBuilder()
@@ -120,15 +124,15 @@ export class SectionRepository extends Repository<Section> {
         const questionIds = questions.map((question) => question.id);
 
         // 2. Delete Images of Corresponding Questions
-        for (const question of questions) {
-          if (Boolean(question.imageUrl)) {
-            const filename = question.imageUrl.substring(
-              question.imageUrl.lastIndexOf('/') + 1,
-            );
-            const url = `${config.get('deleteImage').url}/${filename}`;
-            await axios.delete(url);
+        const questionImgArr : string [] = [];
+        questions.forEach((q) => {
+          if(q.imageUrl){
+            let fileName = q.imageUrl.substring(q.imageUrl.lastIndexOf('/') + 1);
+            if(fileName) questionImgArr.push(fileName);
           }
-        }
+        })
+        if(questionImgArr.length > 0) await batchDeleteImage(questionImgArr);
+
         // 3. Delete Answers
         await getConnection()
           .createQueryBuilder()

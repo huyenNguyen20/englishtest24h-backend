@@ -27,12 +27,9 @@ import { SignInUserDto } from './dto/signinUser.dto';
 import { User } from './entities/user.entity';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtPayload } from './jwtPayload.interface';
-import { Express } from 'express';
 import { ContactUsFormDto } from './dto/contactUsForm.dto';
 import * as config from 'config';
-import axios from 'axios';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { UploadService } from 'src/upload/upload.service';
 
 @ApiTags('Authentication and User Endpoints')
 @Controller('auth')
@@ -240,14 +237,26 @@ export class AuthController {
   })
   @Post('/profile')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([]))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+  ]))
   async editProfile(
+    @UploadedFiles() files,
     @getUser() user: User,
     @Body(new ValidationPipe()) updateProfile: ProfileDto,
     @Response() res,
   ) {
     try {
-      // Do the operation
+      // 2. Check if the file is in the right format
+      if (files && files.image && files.image[0]) {     
+        // 3. Upload file
+        let fileName = files.image[0].filename;
+        let tempFile = `public/examsFiles/${fileName}`;
+        const { compressAndUploadImage } = require('../shared/helpers');
+        const imageUrl = await compressAndUploadImage(tempFile, fileName);
+        if(imageUrl) updateProfile.avatarUrl = imageUrl;
+      }
+      // 4. Do the operation
       const updatedUser : ProfileDto = await this.authService.updateProfile(
         user,
         updateProfile,

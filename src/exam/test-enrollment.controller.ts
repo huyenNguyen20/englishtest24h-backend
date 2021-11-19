@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -13,7 +12,6 @@ import {
   ValidationPipe,
   Response,
   Inject,
-  InternalServerErrorException,
   HttpStatus
 } from '@nestjs/common';
 import { Logger } from "winston";

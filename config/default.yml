@@ -7,13 +7,5 @@ db:
 jwt:
   expiresIn:  86400
 
-deleteImage:
-  url: 'https://9lj53k6lv9.execute-api.ap-southeast-1.amazonaws.com/prod/images/delete'
-
-deleteAudio:
-  url: 'https://9lj53k6lv9.execute-api.ap-southeast-1.amazonaws.com/prod/audios/delete'
-
-sendEmail:
-  url: 'https://9lj53k6lv9.execute-api.ap-southeast-1.amazonaws.com/prod/sendEmail'
 
   

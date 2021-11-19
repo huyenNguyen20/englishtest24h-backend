@@ -30,16 +30,20 @@ export class UploadController {
         @Response() res,
     ){
         try{
-            this.logger.info(files.image[0]);
+            // 1. Check if the file exists
             if(!files || !files.image || !files.image[0]) 
                 return res.status(HttpStatus.BAD_REQUEST).json({message: 'File must not be empty'});
+            
+            // 2. Check if the file is in the right format
             if (files.image[0] && 
-                !files.image[0].originalname.toLowerCase().match(/\.(jpg|jpeg|gif|png)/)
-            ) return res.status(HttpStatus.BAD_REQUEST).json({message: 'Must be An JPG/JPEG/GIF/PNG file'});
+                !files.image[0].originalname.toLowerCase().match(/\.(jpg|jpeg|png)/)
+            ) return res.status(HttpStatus.BAD_REQUEST).json({message: 'Must be An JPG/JPEG/PNG file'});
+            
+            // 3. Upload file
             let fileName = files.image[0].filename;
             let tempFile = `public/examsFiles/${fileName}`;
             const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
-            return res.status(HttpStatus.OK).json({imageUrl});
+            return res.status(HttpStatus.OK).json({results: imageUrl});
         } catch (e) {
             this.logger.error(`ERROR in POST /upload/image ${JSON.stringify(e)}`);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
@@ -55,16 +59,20 @@ export class UploadController {
         @Response() res,
     ){
         try{
-            this.logger.info(files.audio[0]);
+            // 1. Check if the file exists
             if(!files || !files.audio || !files.audio[0]) 
                 return res.status(HttpStatus.BAD_REQUEST).json({message: 'File must be empty'});
+            
+            // 2. Check if the file is in the right format            
             if (files.audio[0] && 
-                !files.audio[0].originalname.toLowerCase().match(/\.(wav|mp3|ogg)/)
+                !files.audio[0].originalname.toLowerCase().match(/\.(wav|mp3)/)
             ) return res.status(HttpStatus.BAD_REQUEST).json({message: 'Must be An MP3/WAV file'});
+            
+            // 3. Upload file
             let fileName = files.audio[0].filename;
             let tempFile = `public/examsFiles/${fileName}`;
             const audioUrl = await this.uploadService.uploadAudio(tempFile, fileName);
-            return res.status(HttpStatus.OK).json({audioUrl});
+            return res.status(HttpStatus.OK).json({results: audioUrl});
         } catch (e) {
             this.logger.error(`ERROR in POST /upload/audio ${JSON.stringify(e)}`);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({

@@ -81,6 +81,12 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
       where: { id: questionGroupId, ownerId: user.id },
     });
     if(!questionGroup) throw new NotFoundException("Question Group Not Found");
+    
+    // Get neccessary helper functions
+    const {
+      batchDeleteImage
+    } = require('../shared/helpers');
+
     const questions : Question[] = await getConnection()
       .createQueryBuilder()
       .select('id')
@@ -89,7 +95,18 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
       .execute();
     if (questions.length > 0) {
       const questionIds = questions.map((question) => question.id);
-      // 1. Delete corresponding answers
+      
+      // 1. Delete Images of Corresponding Questions
+      const questionImgArr : string [] = [];
+      questions.forEach((q) => {
+        if(q.imageUrl){
+          let fileName = q.imageUrl.substring(q.imageUrl.lastIndexOf('/') + 1);
+          if(fileName) questionImgArr.push(fileName);
+        }
+      })
+      if(questionImgArr.length > 0) await batchDeleteImage(questionImgArr);
+
+      // 2. Delete corresponding answers
       await getConnection()
         .createQueryBuilder()
         .delete()
@@ -98,7 +115,7 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
           questionIds: [...questionIds],
         })
         .execute();
-      // 2. Delete corresponding questions
+      // 3. Delete corresponding questions
       await getConnection()
         .createQueryBuilder()
         .delete()

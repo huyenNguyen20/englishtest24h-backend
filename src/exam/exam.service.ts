@@ -1,6 +1,4 @@
 import {
-  BadRequestException,
-  ForbiddenException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -31,12 +29,10 @@ import { UpdateQuestionGroupDto } from './dto/update-questionGroup.dto';
 import { Answer } from './entities/answer.entity';
 import { UpdateAnswerDto } from './dto/update-answer.dto';
 import { getConnection } from 'typeorm';
-import axios from 'axios';
-import * as config from 'config';
 import { CreateSectionDto } from './dto/create-section.dto';
 import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
 import { UpdateWritingSectionDto } from './dto/update-writing-section.dto';
-import { UploadService } from 'src/upload/upload.service';
+import { CreateWritingSectionDto } from './dto/create-writing-section.dto';
 
 @Injectable()
 export class ExamService {
@@ -57,9 +53,7 @@ export class ExamService {
     private questionRepository: QuestionRepository,
 
     @InjectRepository(AnswerRepository)
-    private answerRepository: AnswerRepository,
-
-    private readonly uploadService: UploadService
+    private answerRepository: AnswerRepository
   ) {}
 
   /************************************* */
@@ -219,7 +213,10 @@ export class ExamService {
       const filename = exam.imageUrl.substring(
         exam.imageUrl.lastIndexOf('/') + 1,
       );
-      await this.uploadService.deleteImage(filename);
+      if(filename) {
+        const {deleteImage} = require('../shared/helpers');
+        await deleteImage(filename);
+      }
     }
     //2. Update Exam
     return await this.examRepository.updateExam(updatedExamDto, examId, user);
@@ -258,7 +255,7 @@ export class ExamService {
   }
 
   async createSection(
-    createSectionDto: any,
+    createSectionDto: CreateSectionDto,
     examId: number,
     user: User,
   ): Promise<Section> {
@@ -281,7 +278,7 @@ export class ExamService {
   }
 
   async createWritingSection(
-    createWritingSectionDto: any,
+    createWritingSectionDto: CreateWritingSectionDto,
     exam: Exam,
     user: User,
   ): Promise<Section> {
@@ -363,7 +360,10 @@ export class ExamService {
         const filename = section.imageUrl.substring(
           section.imageUrl.lastIndexOf('/') + 1,
         );
-        await this.uploadService.deleteImage(filename);
+        if(filename) {
+          const {deleteImage} = require('../shared/helpers');
+          await deleteImage(filename);
+        }
       }
       if (
         section &&
@@ -373,7 +373,10 @@ export class ExamService {
         const filename = section.audioUrl.substring(
           section.audioUrl.lastIndexOf('/') + 1,
         );
-        await this.uploadService.deleteAudio(filename);
+        if(filename) {
+          const {deleteAudio} = require('../shared/helpers');
+          await deleteAudio(filename);
+        }
       }
       //2. Update the section
       return await this.sectionRepository.updateSection(
@@ -410,7 +413,10 @@ export class ExamService {
         const filename = section.imageUrl.substring(
           section.imageUrl.lastIndexOf('/') + 1,
         );
-        await this.uploadService.deleteImage(filename);
+        if(filename) {
+          const {deleteImage} = require('../shared/helpers');
+          await deleteImage(filename);
+        }
       }
       //2. Create questionDto, sectionDto, and questionGroupDto
       const sectionDto: UpdateSectionDto = {
@@ -471,13 +477,19 @@ export class ExamService {
         const filename = section.imageUrl.substring(
           section.imageUrl.lastIndexOf('/') + 1,
         );
-        await this.uploadService.deleteImage(filename);
+        if(filename) {
+          const {deleteImage} = require('../shared/helpers');
+          await deleteImage(filename);
+        }
       }
       if (section && Boolean(section.audioUrl)) {
         const filename = section.audioUrl.substring(
           section.audioUrl.lastIndexOf('/') + 1,
         );
-        await this.uploadService.deleteAudio(filename);
+        if(filename) {
+          const {deleteAudio} = require('../shared/helpers');
+          await deleteAudio(filename);
+        }
       }
       //2. Remove the section
       await this.sectionRepository.removeSection(examId, sectionId, user);
@@ -567,7 +579,10 @@ export class ExamService {
         const filename = oldQuestionGroup.imageUrl.substring(
           oldQuestionGroup.imageUrl.lastIndexOf('/') + 1,
         );
-        await this.uploadService.deleteImage(filename);
+        if(filename) {
+          const {deleteImage} = require('../shared/helpers');
+          await deleteImage(filename);
+        }
       }
       // 2. Update and get updated question group
       const questionGroup : QuestionGroup =
@@ -589,7 +604,10 @@ export class ExamService {
             if(fileName) fileNameArr.push(fileName);
           }
         })
-        if(fileNameArr.length > 0) await this.uploadService.batchDeleteImage(fileNameArr);
+        if(fileNameArr.length > 0) {
+          const { batchDeleteImage } = require('../shared/helpers');
+          await batchDeleteImage(fileNameArr);
+        }
 
         if (questionIds.length > 0) {
           //4. Delete corresponding answers
@@ -646,7 +664,10 @@ export class ExamService {
         const filename = questionGroup.imageUrl.substring(
           questionGroup.imageUrl.lastIndexOf('/') + 1,
         );
-        await this.uploadService.deleteImage(filename);
+        if(filename) {
+          const {deleteImage} = require('../shared/helpers');
+          await deleteImage(filename);
+        }
       }
 
       if(questionGroup.questions) {
@@ -658,7 +679,10 @@ export class ExamService {
               if(fileName) fileNameArr.push(fileName);
             }
           })
-          if(fileNameArr.length > 0) await this.uploadService.batchDeleteImage(fileNameArr);
+          if(fileNameArr.length > 0) {
+            const { batchDeleteImage } = require('../shared/helpers');
+            await batchDeleteImage(fileNameArr);
+          }
       }
 
       await this.questionGroupRepository.removeQuestionGroup(
@@ -733,7 +757,16 @@ export class ExamService {
     //1. Check the user's permission
     const q : Question = await this.getQuestion(questionId, user);
     if (!q) throw new NotFoundException('Question Not Found!');
-    //2. Remove corresponding images of the question
+    //2. Remove corresponding image of the question
+    if (Boolean(q.imageUrl)) {
+      const filename = q.imageUrl.substring(
+        q.imageUrl.lastIndexOf('/') + 1,
+      );
+      if(filename) {
+        const {deleteImage} = require('../shared/helpers');
+        await deleteImage(filename);
+      }
+    }
     //3. Remove question
     await this.questionRepository.removeQuestion(questionId);
     return await this.getQuestions(questionGroupId, user);
