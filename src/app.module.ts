@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { join } from 'path';
@@ -24,10 +24,10 @@ import { UploadModule } from './upload/upload.module';
         winston.format.timestamp(),
         winston.format.json(),
       ),
-      transports: [   
+      transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          dirname: join(__dirname, './../log/debug/'), //path to where save loggin result 
+          dirname: join(__dirname, './../log/debug/'), //path to where save loggin result
           filename: 'debug.log', //name of file where will be saved logging result
           level: 'debug',
         }),
@@ -62,6 +62,11 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(ExtractExamMiddleware)
-      .forRoutes(ExamController, AdminController, StudentQuestionController, TestEnrollmentController);
+      .forRoutes(
+        ExamController,
+        AdminController,
+        StudentQuestionController,
+        TestEnrollmentController,
+      );
   }
 }

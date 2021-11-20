@@ -12,9 +12,9 @@ import {
   ValidationPipe,
   Response,
   Inject,
-  HttpStatus
+  HttpStatus,
 } from '@nestjs/common';
-import { Logger } from "winston";
+import { Logger } from 'winston';
 import { AuthGuard } from '@nestjs/passport';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { getUser } from 'src/auth/decorator/getUser.decorator';
@@ -37,98 +37,109 @@ export class TestEnrollmentController {
   constructor(
     private readonly testEnrollmentService: TestEnrollmentService,
 
-    @Inject(WINSTON_MODULE_PROVIDER) 
-      private readonly logger: Logger,
-    ) {}
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger,
+  ) {}
   /****GET methods*** */
-  @ApiOperation({ 
-    summary: 'Get Test Enrollment Indexes for Populating FrontEnd Routes' 
+  @ApiOperation({
+    summary: 'Get Test Enrollment Indexes for Populating FrontEnd Routes',
   })
   @Get('/')
-  async getAllEnrollmentIndexes(
-    @Response() res
-  ){
+  async getAllEnrollmentIndexes(@Response() res) {
     try {
-      const testEnrollments: Partial<TestEnrollment>[] = 
+      const testEnrollments: Partial<TestEnrollment>[] =
         await this.testEnrollmentService.getAllEnrollmentIndexes();
-      return res.status(HttpStatus.OK).json({results:testEnrollments});
-    } catch (e){
-      this.logger.error(`ERROR in GET /testEnrollment --- ${JSON.stringify(e)}`);
+      return res.status(HttpStatus.OK).json({ results: testEnrollments });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in GET /testEnrollment --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"});
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
-   
   }
 
-  @ApiOperation({ 
-    summary: 'Method for STUDENT to get their exam enrollments' 
+  @ApiOperation({
+    summary: 'Method for STUDENT to get their exam enrollments',
   })
   @Get('/myTests')
   @UseGuards(AuthGuard())
   async getMyTests(
     @getUser() user: User,
     @Query(new FilterValidationPipe()) filter: FilterDto,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      const testEnrollments: TestEnrollment[] =  await this.testEnrollmentService.getMyTests(user, filter);
-      return res.status(HttpStatus.OK).json({results: testEnrollments});
-    } catch (e){
-      this.logger.error(`ERROR in GET /testEnrollment/myTests --- ${JSON.stringify(e)}`);
+      const testEnrollments: TestEnrollment[] =
+        await this.testEnrollmentService.getMyTests(user, filter);
+      return res.status(HttpStatus.OK).json({ results: testEnrollments });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in GET /testEnrollment/myTests --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"});
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ 
-    summary: 'Method for STUDENT to get the total exams' 
+  @ApiOperation({
+    summary: 'Method for STUDENT to get the total exams',
   })
   @Get('/myTests/count')
   @UseGuards(AuthGuard())
   async getMyTestsCount(
     @getUser() user: User,
     @getExam() exam: Exam,
-    @Response() res
-    ){
+    @Response() res,
+  ) {
     try {
-      const total: number = await this.testEnrollmentService.getMyTestsCount(user);
-      return res.status(HttpStatus.OK).json({results: total});
-    } catch (e){
-      this.logger.error(`ERROR in GET /testEnrollment/myTests/count --- ${JSON.stringify(e)}`);
+      const total: number = await this.testEnrollmentService.getMyTestsCount(
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: total });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in GET /testEnrollment/myTests/count --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"});
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ 
-    summary: 'Method to get all test scores of one exam' 
+  @ApiOperation({
+    summary: 'Method to get all test scores of one exam',
   })
   @Get('/testTakers/:examId')
   async getTestTakers(
     @Param('examId', ParseIntPipe) examId: number,
     @getExam() exam: Exam,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) 
+      if (!exam)
         return res
           .status(HttpStatus.NOT_FOUND)
-          .json({message: "Exam Not Found"});
-      const scores: any[] = await this.testEnrollmentService.getTestTakersScores(examId);
-      return res.status(HttpStatus.OK).json({results: scores});
-    } catch (e){
-      this.logger.error(`ERROR in GET /testEnrollment/testTakers/:examId --- ${JSON.stringify(e)}`);
+          .json({ message: 'Exam Not Found' });
+      const scores: any[] =
+        await this.testEnrollmentService.getTestTakersScores(examId);
+      return res.status(HttpStatus.OK).json({ results: scores });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in GET /testEnrollment/testTakers/:examId --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"});
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ 
-    summary: 'Method for STUDENT to get their test result for one exam' 
+  @ApiOperation({
+    summary: 'Method for STUDENT to get their test result for one exam',
   })
   @Get('/:examId')
   @UseGuards(AuthGuard())
@@ -136,85 +147,97 @@ export class TestEnrollmentController {
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
     @getExam() exam: Exam,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) 
+      if (!exam)
         return res
           .status(HttpStatus.NOT_FOUND)
-          .json({message: "Exam Not Found"});
-      const enrollment : TestEnrollment = await this.testEnrollmentService.getScore(examId, user);
-      return res.status(HttpStatus.OK).json({results: enrollment});
-    } catch (e){
-      this.logger.error(`ERROR in GET /testEnrollment/:examId --- ${JSON.stringify(e)}`);
+          .json({ message: 'Exam Not Found' });
+      const enrollment: TestEnrollment =
+        await this.testEnrollmentService.getScore(examId, user);
+      return res.status(HttpStatus.OK).json({ results: enrollment });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in GET /testEnrollment/:examId --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"});
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ 
-    summary: 'Method for TEACHER to get information about all enrollments in one exam' 
+  @ApiOperation({
+    summary:
+      'Method for TEACHER to get information about all enrollments in one exam',
   })
   @Get('/:examId/enrollments')
   @UseGuards(AuthGuard())
   async getAllScores(
     @getUser() user: User,
     @getExam() exam: Exam,
-    @isTeacher() isTeacher: Boolean,
+    @isTeacher() isTeacher: boolean,
     @Response() res,
-  ){
+  ) {
     try {
-      if(!exam) 
+      if (!exam)
         return res
           .status(HttpStatus.NOT_FOUND)
-          .json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
         return res
           .status(HttpStatus.FORBIDDEN)
-          .json({message: "You are forbidden!"});
-      const enrollmentData: EnrollmentDataToTeacher[] = 
+          .json({ message: 'You are forbidden!' });
+      const enrollmentData: EnrollmentDataToTeacher[] =
         await this.testEnrollmentService.getAllScores(exam);
-      return res.status(HttpStatus.OK).json({results: enrollmentData});
-    } catch (e){
-      this.logger.error(`ERROR in GET /testEnrollment/:examId/enrollments--- ${JSON.stringify(e)}`);
+      return res.status(HttpStatus.OK).json({ results: enrollmentData });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in GET /testEnrollment/:examId/enrollments--- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"});
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ 
-    summary: 'Method to get exam results ' 
+  @ApiOperation({
+    summary: 'Method to get exam results ',
   })
   @Get('/:examId/enrollments/:enrollmentId')
   async getExamResult(
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
     @getExam() exam: Exam,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) 
+      if (!exam)
         return res
           .status(HttpStatus.NOT_FOUND)
-          .json({message: "Exam Not Found"});
+          .json({ message: 'Exam Not Found' });
       const examResult: {
         enrollment: TestEnrollment;
         teacherId: number;
         isPublished: boolean;
-      } =  await this.testEnrollmentService.getExamResult(exam, enrollmentId);
-      return res.status(HttpStatus.OK).json({results: examResult});
-    } catch (e){
-      this.logger.error(`ERROR in GET /testEnrollment/:examId/enrollment/:enrollmentId --- ${JSON.stringify(e)}`);
+      } = await this.testEnrollmentService.getExamResult(exam, enrollmentId);
+      return res.status(HttpStatus.OK).json({ results: examResult });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in GET /testEnrollment/:examId/enrollment/:enrollmentId --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"});
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   /****POST methods*** */
-  @ApiOperation({ 
-    summary: 'Method for post student test result' 
+  @ApiOperation({
+    summary: 'Method for post student test result',
   })
   @Post('/:examId')
   @UseGuards(AuthGuard())
@@ -223,31 +246,33 @@ export class TestEnrollmentController {
     createTestEnrollmentDto: CreateTestEnrollmentDto,
     @getUser() user: User,
     @getExam() exam: Exam,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) 
+      if (!exam)
         return res
           .status(HttpStatus.NOT_FOUND)
-          .json({message: "Exam Not Found"});
-      const testEnrollment : TestEnrollment = 
+          .json({ message: 'Exam Not Found' });
+      const testEnrollment: TestEnrollment =
         await this.testEnrollmentService.postTestScore(
-        createTestEnrollmentDto,
-        exam,
-        user,
+          createTestEnrollmentDto,
+          exam,
+          user,
+        );
+      return res.status(HttpStatus.OK).json({ results: testEnrollment });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in POST /testEnrollment/:examId --- ${JSON.stringify(e)}`,
       );
-      return res.status(HttpStatus.OK).json({results: testEnrollment});
-    } catch (e){
-      this.logger.error(`ERROR in POST /testEnrollment/:examId --- ${JSON.stringify(e)}`);
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"});
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   /****PUT methods*** */
-  @ApiOperation({ 
-    summary: 'Teacher update student test score' 
+  @ApiOperation({
+    summary: 'Teacher update student test score',
   })
   @Put('/:examId/enrollments/:enrollmentId/updateScore')
   @UseGuards(AuthGuard())
@@ -256,40 +281,41 @@ export class TestEnrollmentController {
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
     @getUser() user: User,
     @getExam() exam: Exam,
-    @isTeacher() isTeacher: Boolean,
-    @Response() res
-  ){
-      try {
-        if(!exam) 
-          return res
-            .status(HttpStatus.NOT_FOUND)
-            .json({message: "Exam Not Found"});
-        if(!isTeacher || exam.ownerId !== user.id) 
-          return res
-            .status(HttpStatus.FORBIDDEN)
-            .json({message: "You are forbidden!"});
-        const score = parseInt(body.score, 10);
-        if (isNaN(score)) 
-          return res
-          .status(HttpStatus.BAD_REQUEST)
-          .json({message: "Score must be a number"});
-        const testEnrollment : TestEnrollment = 
-           await this.testEnrollmentService.updateScore(
-            parseInt(body.score),
-            enrollmentId,
-        );
-        return res.status(HttpStatus.OK).json({results: testEnrollment});
-      } catch (e){
-        this.logger.error(`ERROR in PUT /testEnrollment/:examId/enrollments/:enrollmentId/updateScore 
-                          --- ${JSON.stringify(e)}`);
+    @isTeacher() isTeacher: boolean,
+    @Response() res,
+  ) {
+    try {
+      if (!exam)
         return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden!' });
+      const score = parseInt(body.score, 10);
+      if (isNaN(score))
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .json({ message: 'Score must be a number' });
+      const testEnrollment: TestEnrollment =
+        await this.testEnrollmentService.updateScore(
+          parseInt(body.score),
+          enrollmentId,
+        );
+      return res.status(HttpStatus.OK).json({ results: testEnrollment });
+    } catch (e) {
+      this.logger
+        .error(`ERROR in PUT /testEnrollment/:examId/enrollments/:enrollmentId/updateScore 
+                          --- ${JSON.stringify(e)}`);
+      return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
-      }
+        .json({ message: 'Something went wrong. Please try again!' });
+    }
   }
 
-  @ApiOperation({ 
-    summary: 'Teacher update teacher grading' 
+  @ApiOperation({
+    summary: 'Teacher update teacher grading',
   })
   @Put('/:examId/enrollments/:enrollmentId/teacherGrading')
   @UseGuards(AuthGuard())
@@ -299,36 +325,37 @@ export class TestEnrollmentController {
     @Param('enrollmentId', ParseIntPipe) enrollmentId: number,
     @getUser() user: User,
     @getExam() exam: Exam,
-    @isTeacher() isTeacher: Boolean,
-    @Response() res
-  ){
+    @isTeacher() isTeacher: boolean,
+    @Response() res,
+  ) {
     try {
-      if(!exam) 
+      if (!exam)
         return res
           .status(HttpStatus.NOT_FOUND)
-          .json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
         return res
           .status(HttpStatus.FORBIDDEN)
-          .json({message: "You are forbidden!"});
-      const testEnrollment : TestEnrollment = 
+          .json({ message: 'You are forbidden!' });
+      const testEnrollment: TestEnrollment =
         await this.testEnrollmentService.updateTeacherGrading(
-        body.teacherGrading,
-        enrollmentId,
-      );
-      return res.status(HttpStatus.OK).json({results: testEnrollment});
-    } catch (e){
-      this.logger.error(`ERROR in PUT /testEnrollment/:examId/enrollments/:enrollmentId/teacherGrading
+          body.teacherGrading,
+          enrollmentId,
+        );
+      return res.status(HttpStatus.OK).json({ results: testEnrollment });
+    } catch (e) {
+      this.logger
+        .error(`ERROR in PUT /testEnrollment/:examId/enrollments/:enrollmentId/teacherGrading
                         --- ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   /****DELETE methods*** */
-  @ApiOperation({ 
-    summary: 'Teacher delete test enrollment' 
+  @ApiOperation({
+    summary: 'Teacher delete test enrollment',
   })
   @Delete('/:examId/enrollments')
   @UseGuards(AuthGuard())
@@ -336,33 +363,30 @@ export class TestEnrollmentController {
     @Param('examId', ParseIntPipe) examId: number,
     @Query('idList') idList: string,
     @getUser() user: User,
-    @isTeacher() isTeacher: Boolean,
+    @isTeacher() isTeacher: boolean,
     @getExam() exam: Exam,
-    @Response() res
+    @Response() res,
   ) {
     try {
-      if(!exam) 
+      if (!exam)
         return res
           .status(HttpStatus.NOT_FOUND)
-          .json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
         return res
           .status(HttpStatus.FORBIDDEN)
-          .json({message: "You are forbidden!"});
+          .json({ message: 'You are forbidden!' });
       const list = idList.split('+');
-      await this.testEnrollmentService.removeTestEnrollments(
-        exam,
-        list,
-      );
+      await this.testEnrollmentService.removeTestEnrollments(exam, list);
       return res
-      .status(HttpStatus.OK)
-      .json({message: "Test Enrollment has been removed successfully"});
-    } catch (e){
+        .status(HttpStatus.OK)
+        .json({ message: 'Test Enrollment has been removed successfully' });
+    } catch (e) {
       this.logger.error(`ERROR in DELETE /testEnrollment/:examId/enrollments
                         --- ${JSON.stringify(e)}`);
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"});
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 }

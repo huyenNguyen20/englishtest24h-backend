@@ -8,7 +8,10 @@ import {
 } from 'class-validator';
 
 export class CreateExamDto {
-  @ApiProperty({ example: 'http://example.com/myImage', description: 'Exam Image URL' })
+  @ApiProperty({
+    example: 'http://example.com/myImage',
+    description: 'Exam Image URL',
+  })
   @IsOptional()
   @IsString()
   imageUrl: string;
@@ -18,7 +21,10 @@ export class CreateExamDto {
   @IsString()
   title: string;
 
-  @ApiProperty({ example: 'This is reading test 1', description: 'Exam Description' })
+  @ApiProperty({
+    example: 'This is reading test 1',
+    description: 'Exam Description',
+  })
   @IsNotEmpty()
   @IsString()
   description: string;

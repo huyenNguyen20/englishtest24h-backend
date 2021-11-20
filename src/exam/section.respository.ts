@@ -20,8 +20,14 @@ export class SectionRepository extends Repository<Section> {
     exam: Exam,
     user: User,
   ): Promise<Section> {
-    const { title, audioUrl, imageUrl, htmlContent, directions, transcription } =
-      createSectionDto;
+    const {
+      title,
+      audioUrl,
+      imageUrl,
+      htmlContent,
+      directions,
+      transcription,
+    } = createSectionDto;
     const s = new Section();
     s.title = title;
     if (audioUrl) s.audioUrl = audioUrl;
@@ -56,7 +62,7 @@ export class SectionRepository extends Repository<Section> {
     examId: number,
     sectionId: number,
     user: User,
-  ){
+  ) {
     const {
       title,
       imageUrl,
@@ -65,7 +71,7 @@ export class SectionRepository extends Repository<Section> {
       directions,
       transcription,
     } = updateQuestionDto;
-    const s : Section = await this.getSection(examId, sectionId, user);
+    const s: Section = await this.getSection(examId, sectionId, user);
     if (title) s.title = title;
     if (audioUrl) s.audioUrl = audioUrl;
     else s.audioUrl = null;
@@ -81,20 +87,17 @@ export class SectionRepository extends Repository<Section> {
   }
 
   async removeSection(examId: number, sectionId: number, user: User) {
-    const s : Section = await this.getSection(examId, sectionId, user);
-    if(!s) throw new NotFoundException("Section Not Found");
+    const s: Section = await this.getSection(examId, sectionId, user);
+    if (!s) throw new NotFoundException('Section Not Found');
     // Get necessary helpers
-    const {  
-      batchDeleteImage
-    } = require('../shared/helpers');
+    const { batchDeleteImage } = require('../shared/helpers');
 
-    const questionGroups : QuestionGroup[] = 
-      await getConnection()
-        .createQueryBuilder()
-        .select('id')
-        .from(QuestionGroup, 'questionGroup')
-        .where('questionGroup.sectionId = :sectionId', { sectionId })
-        .execute();
+    const questionGroups: QuestionGroup[] = await getConnection()
+      .createQueryBuilder()
+      .select('id')
+      .from(QuestionGroup, 'questionGroup')
+      .where('questionGroup.sectionId = :sectionId', { sectionId })
+      .execute();
 
     if (questionGroups.length > 0) {
       const questionGroupIds = questionGroups.map(
@@ -102,16 +105,19 @@ export class SectionRepository extends Repository<Section> {
       );
 
       // 1. Delete Images of Corresponding Question Groups
-      const questionGrpImgArr : string [] = [];
+      const questionGrpImgArr: string[] = [];
       questionGroups.forEach((qG) => {
-        if(qG.imageUrl){
-          let fileName = qG.imageUrl.substring(qG.imageUrl.lastIndexOf('/') + 1);
-          if(fileName) questionGrpImgArr.push(fileName);
+        if (qG.imageUrl) {
+          const fileName = qG.imageUrl.substring(
+            qG.imageUrl.lastIndexOf('/') + 1,
+          );
+          if (fileName) questionGrpImgArr.push(fileName);
         }
-      })
-      if(questionGrpImgArr.length > 0) await batchDeleteImage(questionGrpImgArr);
+      });
+      if (questionGrpImgArr.length > 0)
+        await batchDeleteImage(questionGrpImgArr);
 
-      const questions : Question[] = await getConnection()
+      const questions: Question[] = await getConnection()
         .createQueryBuilder()
         .select('id')
         .from(Question, 'question')
@@ -124,14 +130,16 @@ export class SectionRepository extends Repository<Section> {
         const questionIds = questions.map((question) => question.id);
 
         // 2. Delete Images of Corresponding Questions
-        const questionImgArr : string [] = [];
+        const questionImgArr: string[] = [];
         questions.forEach((q) => {
-          if(q.imageUrl){
-            let fileName = q.imageUrl.substring(q.imageUrl.lastIndexOf('/') + 1);
-            if(fileName) questionImgArr.push(fileName);
+          if (q.imageUrl) {
+            const fileName = q.imageUrl.substring(
+              q.imageUrl.lastIndexOf('/') + 1,
+            );
+            if (fileName) questionImgArr.push(fileName);
           }
-        })
-        if(questionImgArr.length > 0) await batchDeleteImage(questionImgArr);
+        });
+        if (questionImgArr.length > 0) await batchDeleteImage(questionImgArr);
 
         // 3. Delete Answers
         await getConnection()

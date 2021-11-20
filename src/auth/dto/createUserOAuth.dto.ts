@@ -21,7 +21,10 @@ export class CreateUserOAuthDto {
   @IsNotEmpty()
   OAuthId: string;
 
-  @ApiProperty({ example: 'http://example.com/myImage', description: 'User Photo URL' })
+  @ApiProperty({
+    example: 'http://example.com/myImage',
+    description: 'User Photo URL',
+  })
   @IsString()
   @IsNotEmpty()
   avartarUrl: string;

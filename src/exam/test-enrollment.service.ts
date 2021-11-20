@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/entities/user.entity';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
@@ -16,7 +13,6 @@ export class TestEnrollmentService {
   constructor(
     @InjectRepository(TestEnrollmentRepository)
     private testEnrollmentRepository: TestEnrollmentRepository,
-
   ) {}
   /************************************* */
   /****Students and Educators Methods*** */
@@ -38,9 +34,7 @@ export class TestEnrollmentService {
     return await this.testEnrollmentRepository.getMyTestCount(user);
   }
   // Get all enrollment records for TEACHERS
-  async getAllScores(
-    exam: Exam
-  ): Promise<EnrollmentDataToTeacher[]> {
+  async getAllScores(exam: Exam): Promise<EnrollmentDataToTeacher[]> {
     try {
       return await this.testEnrollmentRepository.getAllScores(exam.id);
     } catch (e) {
@@ -62,9 +56,8 @@ export class TestEnrollmentService {
     isPublished: boolean;
   }> {
     try {
-      const enrollment : TestEnrollment = await this.testEnrollmentRepository.getExamResult(
-        enrollmentId,
-      );
+      const enrollment: TestEnrollment =
+        await this.testEnrollmentRepository.getExamResult(enrollmentId);
       return {
         enrollment,
         teacherId: exam.ownerId,

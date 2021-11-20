@@ -29,7 +29,7 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
     const { type, title, htmlContent, imageUrl, matchingOptions } =
       createQuestionGroupDto;
     const q = new QuestionGroup();
-    q.title = title || "";
+    q.title = title || '';
     if (htmlContent) q.htmlContent = htmlContent;
     if (matchingOptions) q.matchingOptions = matchingOptions;
     if (imageUrl) q.imageUrl = imageUrl;
@@ -47,13 +47,12 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
     questionGroupId: number,
     user: User,
   ): Promise<QuestionGroup> {
-    const questionGroup : QuestionGroup = 
-      await this.findOne({
-        where: {
-          id: questionGroupId,
-          ownerId: user.id,
-        },
-      });
+    const questionGroup: QuestionGroup = await this.findOne({
+      where: {
+        id: questionGroupId,
+        ownerId: user.id,
+      },
+    });
     if (!questionGroup) throw new NotFoundException('Section Not Found');
     return questionGroup;
   }
@@ -65,7 +64,7 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
   ): Promise<QuestionGroup> {
     const { title, htmlContent, imageUrl, matchingOptions } =
       updateQuestionGroupDto;
-    const q : QuestionGroup = await this.findOne(questionGroupId);
+    const q: QuestionGroup = await this.findOne(questionGroupId);
     if (title) q.title = title;
     if (htmlContent) q.htmlContent = htmlContent;
     if (Boolean(matchingOptions)) q.matchingOptions = matchingOptions;
@@ -77,17 +76,15 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
   }
 
   async removeQuestionGroup(questionGroupId: number, user: User) {
-    const questionGroup : QuestionGroup = await this.findOne({
+    const questionGroup: QuestionGroup = await this.findOne({
       where: { id: questionGroupId, ownerId: user.id },
     });
-    if(!questionGroup) throw new NotFoundException("Question Group Not Found");
-    
-    // Get neccessary helper functions
-    const {
-      batchDeleteImage
-    } = require('../shared/helpers');
+    if (!questionGroup) throw new NotFoundException('Question Group Not Found');
 
-    const questions : Question[] = await getConnection()
+    // Get neccessary helper functions
+    const { batchDeleteImage } = require('../shared/helpers');
+
+    const questions: Question[] = await getConnection()
       .createQueryBuilder()
       .select('id')
       .from(Question, 'question')
@@ -95,16 +92,18 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
       .execute();
     if (questions.length > 0) {
       const questionIds = questions.map((question) => question.id);
-      
+
       // 1. Delete Images of Corresponding Questions
-      const questionImgArr : string [] = [];
+      const questionImgArr: string[] = [];
       questions.forEach((q) => {
-        if(q.imageUrl){
-          let fileName = q.imageUrl.substring(q.imageUrl.lastIndexOf('/') + 1);
-          if(fileName) questionImgArr.push(fileName);
+        if (q.imageUrl) {
+          const fileName = q.imageUrl.substring(
+            q.imageUrl.lastIndexOf('/') + 1,
+          );
+          if (fileName) questionImgArr.push(fileName);
         }
-      })
-      if(questionImgArr.length > 0) await batchDeleteImage(questionImgArr);
+      });
+      if (questionImgArr.length > 0) await batchDeleteImage(questionImgArr);
 
       // 2. Delete corresponding answers
       await getConnection()

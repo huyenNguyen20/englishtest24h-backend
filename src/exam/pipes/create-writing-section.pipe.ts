@@ -1,4 +1,4 @@
-import { PipeTransform, BadRequestException } from '@nestjs/common';
+import { PipeTransform } from '@nestjs/common';
 
 export class CreateWritingSectionValidationPipe implements PipeTransform {
   transform(value: any) {

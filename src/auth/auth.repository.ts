@@ -6,7 +6,6 @@ import { BadRequestException } from '@nestjs/common';
 import { SignInUserDto } from './dto/signinUser.dto';
 import { CreateUserOAuthDto } from './dto/createUserOAuth.dto';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
-import { ProfileDto } from './dto/profile.dto';
 
 @EntityRepository(User)
 export class AuthRepository extends Repository<User> {

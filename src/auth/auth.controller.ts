@@ -12,7 +12,7 @@ import {
   Inject,
   UploadedFiles,
 } from '@nestjs/common';
-import { Logger } from "winston";
+import { Logger } from 'winston';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
@@ -35,11 +35,11 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 @Controller('auth')
 export class AuthController {
   constructor(
-    @Inject(WINSTON_MODULE_PROVIDER) 
+    @Inject(WINSTON_MODULE_PROVIDER)
     private readonly logger: Logger,
 
     private readonly authService: AuthService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
   ) {}
 
   @ApiOperation({ summary: 'Sign Up' })
@@ -47,20 +47,22 @@ export class AuthController {
   @Post('signup')
   async signUp(
     @Body(new ValidationPipe()) createUserDto: CreateUserDto,
-    @Response() res
-    ): Promise<void> {
+    @Response() res,
+  ): Promise<void> {
     try {
       const result: boolean = await this.authService.signUp(createUserDto);
-      if(result) return res.status(HttpStatus.OK).json({message: "Signed Up Successfully"});
-      throw new Error("Something went wrong with signing up user.");
+      if (result)
+        return res
+          .status(HttpStatus.OK)
+          .json({ message: 'Signed Up Successfully' });
+      throw new Error('Something went wrong with signing up user.');
     } catch (e) {
       this.logger.error(`ERROR in POST /auth/signup --- 
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
-
   }
 
   @ApiOperation({ summary: 'Sign In' })
@@ -68,17 +70,19 @@ export class AuthController {
   @Post('signin')
   async signIn(
     @Body(new ValidationPipe()) signInUserDto: SignInUserDto,
-    @Response() res
-    ):Promise<{token: string}> {
+    @Response() res,
+  ): Promise<{ token: string }> {
     try {
-      const result: {token: string} = await this.authService.signIn(signInUserDto);
+      const result: { token: string } = await this.authService.signIn(
+        signInUserDto,
+      );
       return result;
     } catch (e) {
       this.logger.error(`ERROR in POST /auth/signin --- 
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -112,7 +116,7 @@ export class AuthController {
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -128,7 +132,7 @@ export class AuthController {
   ) {
     try {
       const { email } = emailForResetPassword;
-      const user : User = await this.authService.getUser(emailForResetPassword);
+      const user: User = await this.authService.getUser(emailForResetPassword);
       if (!user) {
         return res.send({
           message: "Account associated to the email doesn't exist.",
@@ -154,13 +158,13 @@ export class AuthController {
       return res.send({
         message:
           'Reset password link was sent to your email. Please check your email!',
-      })
+      });
     } catch (e) {
       this.logger.error(`ERROR in POST /auth/lostPassword --- 
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -171,16 +175,18 @@ export class AuthController {
     @Body(new ValidationPipe()) resetPassword: ResetPasswordDto,
     @Response() res,
   ) {
-    try{
-      const result : boolean = await this.authService.resetPassword(resetPassword);
-      if(result) return res.status(HttpStatus.OK).json({ message: true });
+    try {
+      const result: boolean = await this.authService.resetPassword(
+        resetPassword,
+      );
+      if (result) return res.status(HttpStatus.OK).json({ message: true });
       throw new Error();
     } catch (e) {
       this.logger.error(`ERROR in POST /auth/lostPassword/reset --- 
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -191,10 +197,7 @@ export class AuthController {
   })
   @Get('/profile')
   @UseGuards(AuthGuard())
-  async getProfile(
-    @getUser() user: User, 
-    @Response() res) 
-    {
+  async getProfile(@getUser() user: User, @Response() res) {
     try {
       return res.status(HttpStatus.OK).json({
         avatarUrl: user.avatarUrl,
@@ -207,7 +210,7 @@ export class AuthController {
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -219,14 +222,14 @@ export class AuthController {
   @Get('/users')
   async getUserIndexes(@Response() res) {
     try {
-      const users : User[] = await this.authService.getUserIndexes();
+      const users: User[] = await this.authService.getUserIndexes();
       return res.status(200).json(users);
     } catch (e) {
       this.logger.error(`ERROR in GET /auth/users --- 
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -237,9 +240,7 @@ export class AuthController {
   })
   @Post('/profile')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'image', maxCount: 1 },
-  ]))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
   async editProfile(
     @UploadedFiles() files,
     @getUser() user: User,
@@ -248,16 +249,16 @@ export class AuthController {
   ) {
     try {
       // 2. Check if the file is in the right format
-      if (files && files.image && files.image[0]) {     
+      if (files && files.image && files.image[0]) {
         // 3. Upload file
-        let fileName = files.image[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
         const { compressAndUploadImage } = require('../shared/helpers');
         const imageUrl = await compressAndUploadImage(tempFile, fileName);
-        if(imageUrl) updateProfile.avatarUrl = imageUrl;
+        if (imageUrl) updateProfile.avatarUrl = imageUrl;
       }
       // 4. Do the operation
-      const updatedUser : ProfileDto = await this.authService.updateProfile(
+      const updatedUser: ProfileDto = await this.authService.updateProfile(
         user,
         updateProfile,
       );
@@ -267,7 +268,7 @@ export class AuthController {
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -279,7 +280,7 @@ export class AuthController {
   @Put('/toggleIsEducator')
   @UseGuards(AuthGuard())
   async toggleIsEducator(@getUser() user: User, @Response() res) {
-    try{
+    try {
       const updatedUser = await this.authService.toggleIsEducator(user);
       return res.status(200).json(updatedUser);
     } catch (e) {
@@ -287,7 +288,7 @@ export class AuthController {
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -325,7 +326,7 @@ export class AuthController {
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({message: "Something went wrong. Please try again!"});
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 }

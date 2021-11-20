@@ -47,12 +47,12 @@ import { UploadService } from 'src/upload/upload.service';
 @Controller('exams')
 export class ExamController {
   constructor(
-      @Inject(WINSTON_MODULE_PROVIDER) 
-      private readonly logger: Logger,
+    @Inject(WINSTON_MODULE_PROVIDER)
+    private readonly logger: Logger,
 
-      private readonly examService: ExamService,
-      private readonly uploadService: UploadService
-    ) {}
+    private readonly examService: ExamService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   /********************* */
   /***Exam Routes for Public Users***/
@@ -60,35 +60,35 @@ export class ExamController {
   @ApiOperation({ summary: 'Get Exam Indexes for Populating FrontEnd Routes' })
   @ApiResponse({ status: 200, description: 'Exam Object Array' })
   @Get('/indexes')
-  async getExamIndexes(
-    @Response() res
-  ){
-    try{
-      const exams : Partial<Exam>[] = await this.examService.getExamIndexes();
-      return res.status(HttpStatus.OK).json({results: exams});
+  async getExamIndexes(@Response() res) {
+    try {
+      const exams: Partial<Exam>[] = await this.examService.getExamIndexes();
+      return res.status(HttpStatus.OK).json({ results: exams });
     } catch (e) {
       this.logger.error(`ERROR in GET /exams/indexes --- ${JSON.stringify(e)}`);
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   @ApiOperation({ summary: 'Get Published Exams with / without filters' })
   @ApiResponse({ status: 200, description: 'true/false' })
   @Get('/:examId/isPublished')
-  async isPublished(
-    @getExam() exam: Exam,
-    @Response() res
-  ){
-    try{
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      return res.status(HttpStatus.OK).json({results: exam.isPublished});
+  async isPublished(@getExam() exam: Exam, @Response() res) {
+    try {
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      return res.status(HttpStatus.OK).json({ results: exam.isPublished });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/isPublished --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/isPublished --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -97,66 +97,72 @@ export class ExamController {
   @Get('/published')
   async getPublishedExams(
     @Query(new ExamFilterValidationPipe()) filterExamDto: FilterExamDto,
-    @Response() res
-  ){
-    try{
-      const exams : Exam[] = await this.examService.getPublishedExams(filterExamDto);
-      return res.status(HttpStatus.OK).json({results: exams});
+    @Response() res,
+  ) {
+    try {
+      const exams: Exam[] = await this.examService.getPublishedExams(
+        filterExamDto,
+      );
+      return res.status(HttpStatus.OK).json({ results: exams });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/published --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/published --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   @ApiOperation({ summary: 'Get Total Published Exams' })
   @ApiResponse({ status: 200, description: 'Number' })
   @Get('/published/total')
-  async getPublishedExamsCount(
-    @Response() res
-  ){
-    try{
-      const total : number = await this.examService.getPublishedExamsCount();
-      return res.status(HttpStatus.OK).json({results: total});
+  async getPublishedExamsCount(@Response() res) {
+    try {
+      const total: number = await this.examService.getPublishedExamsCount();
+      return res.status(HttpStatus.OK).json({ results: total });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/published/total --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/published/total --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ summary: 'Get Published Exam Indexes for Populating FrontEnd Routes' })
+  @ApiOperation({
+    summary: 'Get Published Exam Indexes for Populating FrontEnd Routes',
+  })
   @Get('/published/indexes')
-  async getPublishedExamIndexes(
-    @Response() res
-  ){
-    try{
-      const exams : Partial<Exam>[] = await this.examService.getPublishedExamIndexes();
-      return res.status(HttpStatus.OK).json({results: exams});
+  async getPublishedExamIndexes(@Response() res) {
+    try {
+      const exams: Partial<Exam>[] =
+        await this.examService.getPublishedExamIndexes();
+      return res.status(HttpStatus.OK).json({ results: exams });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/published/indexes --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/published/indexes --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
-    
   }
 
   @ApiOperation({ summary: 'Get Latest Restricted Exams' })
   @Get('/published/latest')
-  async getLatestExams(
-    @Response() res
-  ){
-    try{
-      const exams : Exam[] = await this.examService.getLatestExams();
-      return res.status(HttpStatus.OK).json({results: exams});
+  async getLatestExams(@Response() res) {
+    try {
+      const exams: Exam[] = await this.examService.getLatestExams();
+      return res.status(HttpStatus.OK).json({ results: exams });
     } catch (e) {
-      this.logger.error(`ERORR in GET /exams/published/latest --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERORR in GET /exams/published/latest --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -164,48 +170,52 @@ export class ExamController {
   @Get('/published/related/:examId')
   async getRelatedExams(
     @Param('examId', ParseIntPipe) examId: number,
-    @Response() res
-  ){
-    try{
-      const exams : Exam[] = await this.examService.getRelatedExams(examId);
-      return res.status(HttpStatus.OK).json({results: exams});
+    @Response() res,
+  ) {
+    try {
+      const exams: Exam[] = await this.examService.getRelatedExams(examId);
+      return res.status(HttpStatus.OK).json({ results: exams });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/published/related/:examId --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/published/related/:examId --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   @ApiOperation({ summary: 'Get Subjects' })
   @Get('/subjects')
-  async getSubject(
-    @Response() res
-  ){
-    try{
-      const subjects : any = await this.examService.getSubjects();
-      return res.status(HttpStatus.OK).json({results: subjects});
+  async getSubject(@Response() res) {
+    try {
+      const subjects: any = await this.examService.getSubjects();
+      return res.status(HttpStatus.OK).json({ results: subjects });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/subjects --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/subjects --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   @ApiOperation({ summary: 'Get Question Types' })
   @Get('/questionTypes')
-  async getQuestionTypes(
-    @Response() res
-  ){
-    try{
-      const questionTypes : string[] = await this.examService.getQuestionTypes();
-      return res.status(HttpStatus.OK).json({results: questionTypes});
+  async getQuestionTypes(@Response() res) {
+    try {
+      const questionTypes: string[] = await this.examService.getQuestionTypes();
+      return res.status(HttpStatus.OK).json({ results: questionTypes });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/questionTypes --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/questionTypes --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -213,16 +223,20 @@ export class ExamController {
   @Get('/published/:examId/examDetails')
   async getExamDetails(
     @Param('examId', ParseIntPipe) examId: number,
-    @Response() res
-  ){
-    try{
-      const exam : Exam = await this.examService.getPublishedExam(examId);
-      return res.status(HttpStatus.OK).json({results: exam});
+    @Response() res,
+  ) {
+    try {
+      const exam: Exam = await this.examService.getPublishedExam(examId);
+      return res.status(HttpStatus.OK).json({ results: exam });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/published/:examId/examDetails --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/published/:examId/examDetails --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -231,19 +245,21 @@ export class ExamController {
   @UseGuards(AuthGuard())
   async getExamForTestTaker(
     @Param('examId', ParseIntPipe) examId: number,
-    @Response() res
-  ){
-    try{
-      const result : { 
-        exam: Exam; 
-        sections: Section[] 
+    @Response() res,
+  ) {
+    try {
+      const result: {
+        exam: Exam;
+        sections: Section[];
       } = await this.examService.getExamForTestTaker(examId);
-      return res.status(HttpStatus.OK).json({results: result});
+      return res.status(HttpStatus.OK).json({ results: result });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/published/:examId --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/published/:examId --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -254,24 +270,26 @@ export class ExamController {
     @Param('examId', ParseIntPipe) examId: number,
     @Body(new ValidationPipe()) updateRatingDto: UpdateRatingDto,
     @getExam() exam: Exam,
-    @Response() res
-  ){
-    try{
-      if(!exam) return res
+    @Response() res,
+  ) {
+    try {
+      if (!exam)
+        return res
           .status(HttpStatus.NOT_FOUND)
-          .json({message: "Exam Not Found"});
-      await this.examService.updateExamRating(
-        updateRatingDto.rating,
-        examId,
+          .json({ message: 'Exam Not Found' });
+      await this.examService.updateExamRating(updateRatingDto.rating, examId);
+      return res
+        .status(HttpStatus.OK)
+        .json({ message: 'Your rating has been saved successfully' });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in POST /exams/published/:examId/updateRating --- ${JSON.stringify(
+          e,
+        )}`,
       );
       return res
-      .status(HttpStatus.OK)
-      .json({message: "Your rating has been saved successfully"})
-    } catch (e) {
-      this.logger.error(`ERROR in POST /exams/published/:examId/updateRating --- ${JSON.stringify(e)}`);
-      return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
   /*****************Methods for Restricted Access*************** */
@@ -281,16 +299,21 @@ export class ExamController {
   async getRestrictedExams(
     @getUser() user: User,
     @Query(new ExamFilterValidationPipe()) filterExamDto: FilterExamDto,
-    @Response() res
-  ){
-    try{
-      const exams : Exam[] =  await this.examService.getRestrictedExams(user, filterExamDto);
-      return res.status(HttpStatus.OK).json({results: exams});
+    @Response() res,
+  ) {
+    try {
+      const exams: Exam[] = await this.examService.getRestrictedExams(
+        user,
+        filterExamDto,
+      );
+      return res.status(HttpStatus.OK).json({ results: exams });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/restricted --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/restricted --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -298,34 +321,36 @@ export class ExamController {
   @ApiResponse({ status: 200, description: 'Number' })
   @Get('/restricted/total')
   @UseGuards(AuthGuard())
-  async getRestrictedExamsCount(
-    @getUser() user: User,
-    @Response() res
-    ){
-    try{
-      const total : number = await this.examService.getRestrictedExamsCount(user);
-      return res.status(HttpStatus.OK).json({results: total});
+  async getRestrictedExamsCount(@getUser() user: User, @Response() res) {
+    try {
+      const total: number = await this.examService.getRestrictedExamsCount(
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: total });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/restricted/total --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/restricted/total --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   @ApiOperation({ summary: 'Get Indexes of Restricted Exams' })
   @Get('/restricted/indexes')
-  async getRestrictedExamIndexes(
-    @Response() res
-  ){
-    try{
-      const exams : Partial<Exam>[] = await this.examService.getRestrictedExamIndexes();
-      return res.status(HttpStatus.OK).json({results: exams});
+  async getRestrictedExamIndexes(@Response() res) {
+    try {
+      const exams: Partial<Exam>[] =
+        await this.examService.getRestrictedExamIndexes();
+      return res.status(HttpStatus.OK).json({ results: exams });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/restricted/indexes --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/restricted/indexes --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -335,16 +360,20 @@ export class ExamController {
   async getRestrictedExamDetails(
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
-    @Response() res
-  ){
-    try{
-      const exam : Exam = await this.examService.getRestrictedExam(user, examId);
-      return res.status(HttpStatus.OK).json({results: exam});
+    @Response() res,
+  ) {
+    try {
+      const exam: Exam = await this.examService.getRestrictedExam(user, examId);
+      return res.status(HttpStatus.OK).json({ results: exam });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/restricted/:examId/examDetails --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/restricted/:examId/examDetails --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -354,19 +383,21 @@ export class ExamController {
   async getRestrictedExamForTestTaker(
     @Param('examId', ParseIntPipe) examId: number,
     @getUser() user: User,
-    @Response() res
-  ){
-    try{
-      const result : { 
-        exam: Exam; 
-        sections: Section[] 
+    @Response() res,
+  ) {
+    try {
+      const result: {
+        exam: Exam;
+        sections: Section[];
       } = await this.examService.getRestrictedExamForTestTaker(user, examId);
-      return res.status(HttpStatus.OK).json({results: result});
+      return res.status(HttpStatus.OK).json({ results: result });
     } catch (e) {
-      this.logger.error(`ERROR in GET /exams/restricted/:examId --- ${JSON.stringify(e)}`);
+      this.logger.error(
+        `ERROR in GET /exams/restricted/:examId --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -376,19 +407,22 @@ export class ExamController {
   async updateRestrictedExamRating(
     @Param('examId', ParseIntPipe) examId: number,
     @Body(new ValidationPipe()) updateRatingDto: UpdateRatingDto,
-    @Response() res
-  ){
-    try{
-      await this.examService.updateExamRating(
-        updateRatingDto.rating,
-        examId,
-      );
-      return res.status(HttpStatus.OK).json({message: "Your rating has been submitted successfully"});
-    } catch (e) {
-      this.logger.error(`ERROR in POST /exams/restricted/:examId/updateRating --- ${JSON.stringify(e)}`);
+    @Response() res,
+  ) {
+    try {
+      await this.examService.updateExamRating(updateRatingDto.rating, examId);
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: "Something went wrong. Please try again!"})
+        .status(HttpStatus.OK)
+        .json({ message: 'Your rating has been submitted successfully' });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in POST /exams/restricted/:examId/updateRating --- ${JSON.stringify(
+          e,
+        )}`,
+      );
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -401,54 +435,61 @@ export class ExamController {
   async getExams(
     @getUser() user: User,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-    ){
+    @Response() res,
+  ) {
     try {
-      if(!isTeacher) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'});
-      const exams : Exam[] = await this.examService.getExams(user);
-      return res.status(HttpStatus.OK).json({results: exams});
-    } catch (e){
+      if (!isTeacher)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const exams: Exam[] = await this.examService.getExams(user);
+      return res.status(HttpStatus.OK).json({ results: exams });
+    } catch (e) {
       this.logger.error(`ERROR in GET /exams --- ${JSON.stringify(e)}`);
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   @ApiOperation({ summary: 'Method for EXAM OWNER to create exam' })
   @Post()
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'image', maxCount: 1 },
-  ]))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
   async createExam(
     @UploadedFiles() files,
     @Body(new ExamValidationPipe()) createExamDto: CreateExamDto,
     @getUser() user: User,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-
       // 1. Check User Permission
-      if(!isTeacher) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      if (!isTeacher)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
       // 2. Upload Image File
       if (files && files.image && files.image[0]) {
-        let fileName = files.image[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;    
-        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
-        if(imageUrl) createExamDto.imageUrl = imageUrl;
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
+        const imageUrl = await this.uploadService.compressAndUploadImage(
+          tempFile,
+          fileName,
+        );
+        if (imageUrl) createExamDto.imageUrl = imageUrl;
       }
       // 3. Do the operation
-      const exams : Exam[] = await this.examService.createExam(createExamDto, user);
-      return res.status(HttpStatus.OK).json({results: exams});
-    } catch (e){
+      const exams: Exam[] = await this.examService.createExam(
+        createExamDto,
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: exams });
+    } catch (e) {
       this.logger.error(`ERROR in POST /exams --- ${JSON.stringify(e)}`);
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -460,28 +501,31 @@ export class ExamController {
     @getUser() user: User,
     @isTeacher() isTeacher: boolean,
     @getExam() exam: Exam,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
-      const examResult : Exam = await this.examService.getExam(examId, user);
-      return res.status(HttpStatus.OK).json({results: examResult});
-    } catch (e){
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const examResult: Exam = await this.examService.getExam(examId, user);
+      return res.status(HttpStatus.OK).json({ results: examResult });
+    } catch (e) {
       this.logger.error(`ERROR in GET /exams/:examId --- ${JSON.stringify(e)}`);
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   @ApiOperation({ summary: 'Method for EXAM OWNER to update exam' })
   @Put('/:examId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'image', maxCount: 1 },
-  ]))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
   async updateExam(
     @UploadedFiles() files,
     @Body(new ExamValidationPipe()) updateExamDto: UpdateExamDto,
@@ -489,33 +533,48 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
       // 1. Check if exam exits
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
       // 2. Check user's permission
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
       // 3. Upload Image Files
       if (files && files.image && files.image[0]) {
-        let fileName = files.image[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;    
-        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
-        if(imageUrl) updateExamDto.imageUrl = imageUrl;
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
+        const imageUrl = await this.uploadService.compressAndUploadImage(
+          tempFile,
+          fileName,
+        );
+        if (imageUrl) updateExamDto.imageUrl = imageUrl;
       }
       // 4. Do Operation
-      const exams : Exam[] = await this.examService.updateExam(updateExamDto, examId, user);
-      return res.status(HttpStatus.OK).json({results: exams});
-    } catch (e){
+      const exams: Exam[] = await this.examService.updateExam(
+        updateExamDto,
+        examId,
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: exams });
+    } catch (e) {
       this.logger.error(`ERROR in PUT /exams/:examId --- ${JSON.stringify(e)}`);
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ summary: 'Method for EXAM OWNER to update `isPublished` attribute of an exam' })
+  @ApiOperation({
+    summary:
+      'Method for EXAM OWNER to update `isPublished` attribute of an exam',
+  })
   @Put('/:examId/published')
   @UseGuards(AuthGuard())
   async togglePublishExam(
@@ -523,23 +582,36 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
-      const exams : Exam[] = await this.examService.togglePublishExam(examId, user);
-      return res.status(HttpStatus.OK).json({results: exams});
-    } catch (e){
-      this.logger.error(`ERROR in PUT /exams/:examId/published --- ${JSON.stringify(e)}`);
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const exams: Exam[] = await this.examService.togglePublishExam(
+        examId,
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: exams });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in PUT /exams/:examId/published --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ summary: 'Method for EXAM OWNER to update `restrictedAccessList` of an exam' })
+  @ApiOperation({
+    summary:
+      'Method for EXAM OWNER to update `restrictedAccessList` of an exam',
+  })
   @Put('/:examId/restrictedList')
   @UseGuards(AuthGuard())
   async postRestrictedAccessList(
@@ -548,23 +620,30 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
-      const exams : Exam[] = await this.examService.postRestrictedAccessList(
-          body.restrictedList,
-          examId,
-          user,
-        );
-      return res.status(HttpStatus.OK).json({results: exams});
-    } catch (e){
-      this.logger.error(`ERROR in PUT /exams/:examId/restrictedList --- ${JSON.stringify(e)}`);
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const exams: Exam[] = await this.examService.postRestrictedAccessList(
+        body.restrictedList,
+        examId,
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: exams });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in PUT /exams/:examId/restrictedList --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
@@ -576,26 +655,35 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
-      const exams : Exam[] = await this.examService.removeExam(examId, user);
-      return res.status(HttpStatus.OK).json({results: exams});
-    } catch (e){
-      this.logger.error(`ERROR in DELETE /exams/:examId --- ${JSON.stringify(e)}`);
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const exams: Exam[] = await this.examService.removeExam(examId, user);
+      return res.status(HttpStatus.OK).json({ results: exams });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in DELETE /exams/:examId --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   /********************* */
   /***Sections***/
   /********************* */
-  @ApiOperation({ summary: 'Method for EXAM OWNER to get all sections of an exam' })
+  @ApiOperation({
+    summary: 'Method for EXAM OWNER to get all sections of an exam',
+  })
   @Get('/:examId/sections')
   @UseGuards(AuthGuard())
   async getSections(
@@ -603,31 +691,44 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
-      const sections : Section[] = await this.examService.getSections(examId, user);
-      return res.status(HttpStatus.OK).json({results: sections});
-    } catch (e){
-      this.logger.error(`ERROR in GET /exams/:examId/sections --- ${JSON.stringify(e)}`);
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const sections: Section[] = await this.examService.getSections(
+        examId,
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: sections });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in GET /exams/:examId/sections --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   @ApiOperation({
-    summary: 'Method for EXAM OWNER to Create a section of an reading/listening/speaking exam',
+    summary:
+      'Method for EXAM OWNER to Create a section of an reading/listening/speaking exam',
   })
   @Post('/:examId/sections')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'image', maxCount: 1 },
-    { name: 'audio', maxCount: 1 },
-  ]))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 1 },
+      { name: 'audio', maxCount: 1 },
+    ]),
+  )
   async createSection(
     @UploadedFiles() files,
     @Body(new ValidationPipe()) createSectionDto: CreateSectionDto,
@@ -635,44 +736,61 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
       // 1.Check if the exam exists
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
       // 2. Check the user's permission
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
       // 3. Upload Image & Audio File
       if (files && files.image && files.image[0]) {
-        let fileName = files.image[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;    
-        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
-        if(imageUrl) createSectionDto.imageUrl = imageUrl;
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
+        const imageUrl = await this.uploadService.compressAndUploadImage(
+          tempFile,
+          fileName,
+        );
+        if (imageUrl) createSectionDto.imageUrl = imageUrl;
       }
       if (files && files.audio && files.audio[0]) {
-        let fileName = files.audio[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;    
-        const audioUrl = await this.uploadService.uploadAudio(tempFile, fileName);
-        if(audioUrl) createSectionDto.audioUrl = audioUrl;
+        const fileName = files.audio[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
+        const audioUrl = await this.uploadService.uploadAudio(
+          tempFile,
+          fileName,
+        );
+        if (audioUrl) createSectionDto.audioUrl = audioUrl;
       }
       // 4. Do the operation
-      const section : Section = await this.examService.createSection(createSectionDto, examId, user);
-      return res.status(HttpStatus.OK).json({results: section});
-    } catch (e){
-      this.logger.error(`ERROR in POST /exams/:examId/sections --- ${JSON.stringify(e)}`);
+      const section: Section = await this.examService.createSection(
+        createSectionDto,
+        examId,
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: section });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in POST /exams/:examId/sections --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ summary: 'Method for EXAM OWNER to Create a section of an writing exam' })
+  @ApiOperation({
+    summary: 'Method for EXAM OWNER to Create a section of an writing exam',
+  })
   @Post('/:examId/writingSections')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'image', maxCount: 1 },
-  ]))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
   async createWritingSection(
     @UploadedFiles() files,
     @Body(new CreateWritingSectionValidationPipe())
@@ -681,37 +799,49 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
       // 1. Check if the exam exists
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
       // 2. Check the user's permission
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
       // 3. Upload Image File
       if (files && files.image && files.image[0]) {
-        let fileName = files.image[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;    
-        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
-        if(imageUrl) createWritingSectionDto.imageUrl = imageUrl;
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
+        const imageUrl = await this.uploadService.compressAndUploadImage(
+          tempFile,
+          fileName,
+        );
+        if (imageUrl) createWritingSectionDto.imageUrl = imageUrl;
       }
       // 4. Do the operation
-      const section : Section = await this.examService.createWritingSection(
-          createWritingSectionDto,
-          exam,
-          user,
-        );
-      return res.status(HttpStatus.OK).json({results: section});
-    } catch (e){
-      this.logger.error(`ERROR in POST /exams/:examId/writingSections --- ${JSON.stringify(e)}`);
+      const section: Section = await this.examService.createWritingSection(
+        createWritingSectionDto,
+        exam,
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: section });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in POST /exams/:examId/writingSections --- ${JSON.stringify(e)}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ summary: 'Method for EXAM OWNER to Get an section with a specific id' })
+  @ApiOperation({
+    summary: 'Method for EXAM OWNER to Get an section with a specific id',
+  })
   @Get('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
   async getSection(
@@ -720,31 +850,47 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
-      const section : Section = await this.examService.getSection(examId, sectionId, user);
-      return res.status(HttpStatus.OK).json({results: section});
-    } catch (e){
-      this.logger.error(`ERROR in GET /exams/:examId/sections/:sectionId --- ${JSON.stringify(e)}`);
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const section: Section = await this.examService.getSection(
+        examId,
+        sectionId,
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: section });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in GET /exams/:examId/sections/:sectionId --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   @ApiOperation({
-    summary: ' Method for EXAM OWNER to Update a section of an reading/listening/speaking exam',
+    summary:
+      ' Method for EXAM OWNER to Update a section of an reading/listening/speaking exam',
   })
   @Put('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'image', maxCount: 1 },
-    { name: 'audio', maxCount: 1 },
-  ]))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 1 },
+      { name: 'audio', maxCount: 1 },
+    ]),
+  )
   async updateSection(
     @UploadedFiles() files,
     @Body(new ValidationPipe()) updateSectionDto: UpdateSectionDto,
@@ -753,49 +899,64 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
       // 1. Check if the exam exists
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
       // 2. Check the user's permission
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'});
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
       // 3. Upload Image & Audio File
       if (files && files.image && files.image[0]) {
-        let fileName = files.image[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;    
-        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
-        if(imageUrl) updateSectionDto.imageUrl = imageUrl;
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
+        const imageUrl = await this.uploadService.compressAndUploadImage(
+          tempFile,
+          fileName,
+        );
+        if (imageUrl) updateSectionDto.imageUrl = imageUrl;
       }
       if (files && files.audio && files.audio[0]) {
-        let fileName = files.audio[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;    
-        const audioUrl = await this.uploadService.uploadAudio(tempFile, fileName);
-        if(audioUrl) updateSectionDto.audioUrl = audioUrl;
+        const fileName = files.audio[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
+        const audioUrl = await this.uploadService.uploadAudio(
+          tempFile,
+          fileName,
+        );
+        if (audioUrl) updateSectionDto.audioUrl = audioUrl;
       }
       // 4. Do the operation
-      const section : Section = await this.examService.updateSection(
-          updateSectionDto,
-          examId,
-          sectionId,
-          user,
-        );
-      return res.status(HttpStatus.OK).json({results: section});
-    } catch (e){
-      this.logger.error(`ERROR in PUT /exams/:examId/sections/:sectionId --- ${JSON.stringify(e)}`);
+      const section: Section = await this.examService.updateSection(
+        updateSectionDto,
+        examId,
+        sectionId,
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: section });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in PUT /exams/:examId/sections/:sectionId --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ summary: 'Method for EXAM OWNER to Update a section of an writing exam' })
+  @ApiOperation({
+    summary: 'Method for EXAM OWNER to Update a section of an writing exam',
+  })
   @Put('/:examId/writingSections/:sectionId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'image', maxCount: 1 },
-  ]))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
   async updateWritingSection(
     @UploadedFiles() files,
     @Body(new CreateWritingSectionValidationPipe())
@@ -805,39 +966,53 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
       // 1. Check if the exam exists
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
       // 2. Check the user's permission
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
       // 3. Upload Image File
       if (files && files.image && files.image[0]) {
-        let fileName = files.image[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;    
-        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
-        if(imageUrl) updateWritingSectionDto.imageUrl = imageUrl;
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
+        const imageUrl = await this.uploadService.compressAndUploadImage(
+          tempFile,
+          fileName,
+        );
+        if (imageUrl) updateWritingSectionDto.imageUrl = imageUrl;
       }
       // 4. Do the operation
-      const section : Section = await this.examService.updateWritingSection(
-          updateWritingSectionDto,
-          exam,
-          sectionId,
-          user,
-        );
-      
-      return res.status(HttpStatus.OK).json({results: section});
-    } catch (e){
-      this.logger.error(`ERROR in PUT /exams/:examId/writingSections/:sectionId --- ${JSON.stringify(e)}`);
+      const section: Section = await this.examService.updateWritingSection(
+        updateWritingSectionDto,
+        exam,
+        sectionId,
+        user,
+      );
+
+      return res.status(HttpStatus.OK).json({ results: section });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in PUT /exams/:examId/writingSections/:sectionId --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ summary: 'Method for EXAM OWNER to Delete a section of an exam' })
+  @ApiOperation({
+    summary: 'Method for EXAM OWNER to Delete a section of an exam',
+  })
   @Delete('/:examId/sections/:sectionId')
   @UseGuards(AuthGuard())
   async removeSection(
@@ -846,26 +1021,42 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
-      const sections : Section[] = await this.examService.removeSection(examId, sectionId, user);
-      return res.status(HttpStatus.OK).json({results: sections});
-    } catch (e){
-      this.logger.error(`ERROR in DELETE /exams/:examId/sections/:sectionId --- ${JSON.stringify(e)}`);
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const sections: Section[] = await this.examService.removeSection(
+        examId,
+        sectionId,
+        user,
+      );
+      return res.status(HttpStatus.OK).json({ results: sections });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in DELETE /exams/:examId/sections/:sectionId --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
   /********************* */
   /***Question Groups***/
   /********************* */
-  @ApiOperation({ summary: 'Method for EXAM OWNER to get all question groups of a section of an exam' })
+  @ApiOperation({
+    summary:
+      'Method for EXAM OWNER to get all question groups of a section of an exam',
+  })
   @Get('/:examId/sections/:sectionId/questionGroups')
   @UseGuards(AuthGuard())
   async getQuestionGroups(
@@ -873,28 +1064,39 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
-      const questionGroups : QuestionGroup[] = await this.examService.getQuestionGroups(sectionId, user);
-      return res.status(HttpStatus.OK).json({results: questionGroups});
-    } catch (e){
-      this.logger.error(`ERROR in GET /exams/:examId/sections/:sectionId/questionGroups --- ${JSON.stringify(e)}`);
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const questionGroups: QuestionGroup[] =
+        await this.examService.getQuestionGroups(sectionId, user);
+      return res.status(HttpStatus.OK).json({ results: questionGroups });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in GET /exams/:examId/sections/:sectionId/questionGroups --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ summary: 'Method for EXAM OWNER to create question groups of a section of an exam' })
+  @ApiOperation({
+    summary:
+      'Method for EXAM OWNER to create question groups of a section of an exam',
+  })
   @Post('/:examId/sections/:sectionId/questionGroups')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'image', maxCount: 1 },
-  ]))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
   async createQuestionGroups(
     @UploadedFiles() files,
     @Body(new CreateQuestionGroupValidationPipe())
@@ -904,43 +1106,57 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
       // 1. Check if the exam exists
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
       // 2. Check the user's permission
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
       // 3. Upload Image File
       if (files && files.image && files.image[0]) {
-        let fileName = files.image[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;    
-        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
-        if(imageUrl) createQuestionGroupDto.imageUrl = imageUrl;
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
+        const imageUrl = await this.uploadService.compressAndUploadImage(
+          tempFile,
+          fileName,
+        );
+        if (imageUrl) createQuestionGroupDto.imageUrl = imageUrl;
       }
       // 4. Do the operation
-      const questionGroups : QuestionGroup[] = await this.examService.createQuestionGroup(
+      const questionGroups: QuestionGroup[] =
+        await this.examService.createQuestionGroup(
           createQuestionGroupDto,
           examId,
           sectionId,
           user,
         );
-      return res.status(HttpStatus.OK).json({results: questionGroups});
-    } catch (e){
-      this.logger.error(`ERROR in POST /exams/:examId/sections/:sectionId/questionGroups --- ${JSON.stringify(e)}`);
+      return res.status(HttpStatus.OK).json({ results: questionGroups });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in POST /exams/:examId/sections/:sectionId/questionGroups --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ summary: 'Method for EXAM OWNER to update  question groups of a section of an exam' })
+  @ApiOperation({
+    summary:
+      'Method for EXAM OWNER to update  question groups of a section of an exam',
+  })
   @Put('/:examId/sections/:sectionId/questionGroups/:questionGroupId')
   @UseGuards(AuthGuard())
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'image', maxCount: 1 },
-  ]))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
   async updateQuestionGroup(
     @UploadedFiles() files,
     @Body(new CreateQuestionGroupValidationPipe())
@@ -951,38 +1167,54 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
       // 1. Check if the exam exists
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
       // 2. Check the user's permission
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
       // 3. Upload Image File
       if (files && files.image && files.image[0]) {
-        let fileName = files.image[0].filename;
-        let tempFile = `public/examsFiles/${fileName}`;    
-        const imageUrl = await this.uploadService.compressAndUploadImage(tempFile, fileName);
-        if(imageUrl) updateQuestionGroupDto.imageUrl = imageUrl;
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
+        const imageUrl = await this.uploadService.compressAndUploadImage(
+          tempFile,
+          fileName,
+        );
+        if (imageUrl) updateQuestionGroupDto.imageUrl = imageUrl;
       }
       // 4. Do the operation
-      const questionGroups : QuestionGroup[] = await this.examService.updateQuestionGroup(
+      const questionGroups: QuestionGroup[] =
+        await this.examService.updateQuestionGroup(
           updateQuestionGroupDto,
           sectionId,
           questionGroupId,
           user,
         );
-      return res.status(HttpStatus.OK).json({results: questionGroups});
-    } catch (e){
-      this.logger.error(`ERROR in PUT /exams/:examId/sections/:sectionId/questionGroups/:questionGroupId --- ${JSON.stringify(e)}`);
+      return res.status(HttpStatus.OK).json({ results: questionGroups });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in PUT /exams/:examId/sections/:sectionId/questionGroups/:questionGroupId --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 
-  @ApiOperation({ summary: 'Method for EXAM OWNER to delete a question group of a section of an exam' })
+  @ApiOperation({
+    summary:
+      'Method for EXAM OWNER to delete a question group of a section of an exam',
+  })
   @Delete('/:examId/sections/:sectionId/questionGroups/:questionGroupId')
   @UseGuards(AuthGuard())
   async removeQuestionGroup(
@@ -992,23 +1224,33 @@ export class ExamController {
     @getUser() user: User,
     @getExam() exam: Exam,
     @isTeacher() isTeacher: boolean,
-    @Response() res
-  ){
+    @Response() res,
+  ) {
     try {
-      if(!exam) return res.status(HttpStatus.NOT_FOUND).json({message: "Exam Not Found"});
-      if(!isTeacher || exam.ownerId !== user.id) 
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'You are forbidden'})
-      const questionGroups : QuestionGroup[] = await this.examService.removeQuestionGroup(
+      if (!exam)
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ message: 'Exam Not Found' });
+      if (!isTeacher || exam.ownerId !== user.id)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const questionGroups: QuestionGroup[] =
+        await this.examService.removeQuestionGroup(
           sectionId,
           questionGroupId,
           user,
         );
-      return res.status(HttpStatus.OK).json({results: questionGroups});
-    } catch (e){
-      this.logger.error(`ERROR in DELETE /exams/:examId/sections/:sectionId/questionGroups/:questionGroupId --- ${JSON.stringify(e)}`);
+      return res.status(HttpStatus.OK).json({ results: questionGroups });
+    } catch (e) {
+      this.logger.error(
+        `ERROR in DELETE /exams/:examId/sections/:sectionId/questionGroups/:questionGroupId --- ${JSON.stringify(
+          e,
+        )}`,
+      );
       return res
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({message: 'Something went wrong. Please try again!'})
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Something went wrong. Please try again!' });
     }
   }
 }

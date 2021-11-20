@@ -1,13 +1,11 @@
 import { Exam, Subjects } from './entities/exam.entity';
-import {
-  EntityRepository,
-  getConnection,
-  Like,
-  Repository,
-} from 'typeorm';
+import { EntityRepository, getConnection, Like, Repository } from 'typeorm';
 import { CreateExamDto, FilterExamDto, UpdateExamDto } from './dto';
 import { User } from 'src/auth/entities/user.entity';
-import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Question } from './entities/question.entity';
 import { StudentQuestion } from '../studentQuestion/entities/question.entity';
 import { TestEnrollment } from './entities/test-enrollment.entity';
@@ -17,7 +15,6 @@ import { Answer } from './entities/answer.entity';
 
 @EntityRepository(Exam)
 export class ExamRepository extends Repository<Exam> {
-
   /****Exams Methods for Public Users*** */
   async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.createQueryBuilder('exam')
@@ -29,13 +26,13 @@ export class ExamRepository extends Repository<Exam> {
   }
 
   async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {
-      const query = this.createQuery(true, null, filterExamDto);
-      return await query.getMany();
+    const query = this.createQuery(true, null, filterExamDto);
+    return await query.getMany();
   }
 
   async getPublishedExamsCount(): Promise<number> {
     try {
-      const total : Exam[] = await this.find({ where: { isPublished: true } });
+      const total: Exam[] = await this.find({ where: { isPublished: true } });
       return total.length;
     } catch (e) {
       throw new InternalServerErrorException(e);
@@ -44,7 +41,7 @@ export class ExamRepository extends Repository<Exam> {
 
   async getPublishedExam(examId: number): Promise<Exam> {
     try {
-      const exam : Exam = await this.findOne({
+      const exam: Exam = await this.findOne({
         where: { id: examId, isPublished: true },
       });
       delete exam.sections;
@@ -57,8 +54,7 @@ export class ExamRepository extends Repository<Exam> {
 
   async getLatestExams(): Promise<Exam[]> {
     try {
-      const exams : Exam[] = 
-        await this.createQueryBuilder('exam')
+      const exams: Exam[] = await this.createQueryBuilder('exam')
         .select('exam.id')
         .addSelect('exam.isPublished')
         .addSelect('exam.imageUrl')
@@ -87,8 +83,7 @@ export class ExamRepository extends Repository<Exam> {
       const exam = await this.findOne(examId);
       if (!exam) throw new NotFoundException();
       else {
-        const exams : Exam[] = 
-         await this.createQueryBuilder('exam')
+        const exams: Exam[] = await this.createQueryBuilder('exam')
           .select('exam.id')
           .addSelect('exam.isPublished')
           .addSelect('exam.imageUrl')
@@ -141,7 +136,7 @@ export class ExamRepository extends Repository<Exam> {
 
   async getRestrictedExamsCount(user: User): Promise<number> {
     try {
-      const total : Exam [] = await this.find({
+      const total: Exam[] = await this.find({
         where: { restrictedAccessList: Like(`%${user.email}%`) },
       });
       return total.length;
@@ -186,7 +181,7 @@ export class ExamRepository extends Repository<Exam> {
   }
 
   async getExam(examId: number, user: User): Promise<Exam> {
-    const exam : Exam = await this.createQueryBuilder('exam')
+    const exam: Exam = await this.createQueryBuilder('exam')
       .leftJoinAndSelect('exam.sections', 'section')
       .where('exam.id = :examId', { examId })
       .andWhere('exam.ownerId = :ownerId', { ownerId: user.id })
@@ -201,7 +196,7 @@ export class ExamRepository extends Repository<Exam> {
     user: User,
   ): Promise<Exam[]> {
     try {
-      const exam : Exam= await this.findOne({
+      const exam: Exam = await this.findOne({
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
@@ -214,7 +209,7 @@ export class ExamRepository extends Repository<Exam> {
       await exam.save();
       const exams: Exam[] = await this.getExams(user.id);
       return exams.map((e) => {
-        if(e.id === exam.id) return exam;
+        if (e.id === exam.id) return exam;
         else return e;
       });
     } catch (e) {
@@ -224,7 +219,7 @@ export class ExamRepository extends Repository<Exam> {
 
   async togglePublishExam(examId: number, user: User): Promise<Exam[]> {
     try {
-      const exam : Exam = await this.findOne({
+      const exam: Exam = await this.findOne({
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
@@ -244,14 +239,14 @@ export class ExamRepository extends Repository<Exam> {
     user: User,
   ): Promise<Exam[]> {
     try {
-      const exam : Exam = await this.findOne({
+      const exam: Exam = await this.findOne({
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
       else {
         exam.restrictedAccessList = restrictedList;
         await exam.save();
-        const exams : Exam [] = await this.getExams(user.id);
+        const exams: Exam[] = await this.getExams(user.id);
         return exams.map((e) => {
           if (e.id === exam.id && e.restrictedAccessList !== restrictedList) {
             e.restrictedAccessList = restrictedList;
@@ -266,15 +261,15 @@ export class ExamRepository extends Repository<Exam> {
 
   async removeExam(examId: number, userId: number): Promise<Exam[]> {
     try {
-      const exam : Exam = await this.findOne({
+      const exam: Exam = await this.findOne({
         where: { id: examId },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
       // Get neccessary helper functions
-      const { 
-        deleteImage, 
-        batchDeleteAudio, 
-        batchDeleteImage
+      const {
+        deleteImage,
+        batchDeleteAudio,
+        batchDeleteImage,
       } = require('../shared/helpers');
 
       // 1. Remove all corresponding images of Exam
@@ -282,10 +277,10 @@ export class ExamRepository extends Repository<Exam> {
         const filename = exam.imageUrl.substring(
           exam.imageUrl.lastIndexOf('/') + 1,
         );
-        if(filename) await deleteImage(filename);
+        if (filename) await deleteImage(filename);
       }
 
-      const sections : Section[] = await getConnection()
+      const sections: Section[] = await getConnection()
         .createQueryBuilder()
         .select('section.id')
         .from(Section, 'section')
@@ -295,22 +290,26 @@ export class ExamRepository extends Repository<Exam> {
       if (sections.length > 0) {
         const sectionIds = sections.map((section) => section.id);
         // 2. Delete Images and Audios of Corresponding Sections
-        const sectionImgArr : string [] = [];
-        const sectionAudioArr : string [] = [];
+        const sectionImgArr: string[] = [];
+        const sectionAudioArr: string[] = [];
         sections.forEach((section) => {
-          if(section.imageUrl){
-            let fileName = section.imageUrl.substring(section.imageUrl.lastIndexOf('/') + 1);
-            if(fileName) sectionImgArr.push(fileName);
+          if (section.imageUrl) {
+            const fileName = section.imageUrl.substring(
+              section.imageUrl.lastIndexOf('/') + 1,
+            );
+            if (fileName) sectionImgArr.push(fileName);
           }
-          if(section.audioUrl){
-            let fileName = section.audioUrl.substring(section.audioUrl.lastIndexOf('/') + 1);
-            if(fileName) sectionAudioArr.push(fileName);
+          if (section.audioUrl) {
+            const fileName = section.audioUrl.substring(
+              section.audioUrl.lastIndexOf('/') + 1,
+            );
+            if (fileName) sectionAudioArr.push(fileName);
           }
-        })
-        if(sectionImgArr.length > 0) await batchDeleteImage(sectionImgArr);
-        if(sectionAudioArr.length > 0) await batchDeleteAudio(sectionAudioArr);
+        });
+        if (sectionImgArr.length > 0) await batchDeleteImage(sectionImgArr);
+        if (sectionAudioArr.length > 0) await batchDeleteAudio(sectionAudioArr);
 
-        const questionGroups : QuestionGroup[] = await getConnection()
+        const questionGroups: QuestionGroup[] = await getConnection()
           .createQueryBuilder()
           .select('id')
           .from(QuestionGroup, 'questionGroup')
@@ -325,16 +324,19 @@ export class ExamRepository extends Repository<Exam> {
           );
 
           // 3. Delete Images of Corresponding Question Groups
-          const questionGrpImgArr : string [] = [];
+          const questionGrpImgArr: string[] = [];
           questionGroups.forEach((qG) => {
-            if(qG.imageUrl){
-              let fileName = qG.imageUrl.substring(qG.imageUrl.lastIndexOf('/') + 1);
-              if(fileName) questionGrpImgArr.push(fileName);
+            if (qG.imageUrl) {
+              const fileName = qG.imageUrl.substring(
+                qG.imageUrl.lastIndexOf('/') + 1,
+              );
+              if (fileName) questionGrpImgArr.push(fileName);
             }
-          })
-          if(questionGrpImgArr.length > 0) await batchDeleteImage(questionGrpImgArr);
+          });
+          if (questionGrpImgArr.length > 0)
+            await batchDeleteImage(questionGrpImgArr);
 
-          const questions : Question[] = await getConnection()
+          const questions: Question[] = await getConnection()
             .createQueryBuilder()
             .select('id')
             .from(Question, 'question')
@@ -346,15 +348,18 @@ export class ExamRepository extends Repository<Exam> {
           if (questions.length > 0) {
             const questionIds = questions.map((question) => question.id);
             // 4. Delete Images of Corresponding Exam Questions
-            const questionImgArr : string [] = [];
+            const questionImgArr: string[] = [];
             questions.forEach((q) => {
-              if(q.imageUrl){
-                let fileName = q.imageUrl.substring(q.imageUrl.lastIndexOf('/') + 1);
-                if(fileName) questionImgArr.push(fileName);
+              if (q.imageUrl) {
+                const fileName = q.imageUrl.substring(
+                  q.imageUrl.lastIndexOf('/') + 1,
+                );
+                if (fileName) questionImgArr.push(fileName);
               }
-            })
-            if(questionImgArr.length > 0) await batchDeleteImage(questionImgArr);
-            
+            });
+            if (questionImgArr.length > 0)
+              await batchDeleteImage(questionImgArr);
+
             //5. Delete Answers of Corresponding Questions
             await getConnection()
               .createQueryBuilder()
@@ -398,13 +403,12 @@ export class ExamRepository extends Repository<Exam> {
       // 9.1. If this is Enrollment Record for speaking test,
       // the recording audio urls need to be removed
       if (exam.subject === 3) {
-        const testEnrollments : TestEnrollment[] = 
-          await getConnection()
-            .createQueryBuilder()
-            .select('id')
-            .from(TestEnrollment, 'e')
-            .where('e.examId = :examId', { examId })
-            .execute();
+        const testEnrollments: TestEnrollment[] = await getConnection()
+          .createQueryBuilder()
+          .select('id')
+          .from(TestEnrollment, 'e')
+          .where('e.examId = :examId', { examId })
+          .execute();
 
         if (testEnrollments.length > 0) {
           for (const e of testEnrollments) {
@@ -416,13 +420,14 @@ export class ExamRepository extends Repository<Exam> {
                 urlArr.push(answers[a].userAnswer[0]);
             }
 
-            const answerAudioArr : string [] = [];
+            const answerAudioArr: string[] = [];
             urlArr.forEach((url) => {
               const filename = url.substring(url.lastIndexOf('/') + 1);
-              if(filename) answerAudioArr.push(filename)
-            })
-            
-            if(answerAudioArr.length > 0) await batchDeleteAudio(answerAudioArr);
+              if (filename) answerAudioArr.push(filename);
+            });
+
+            if (answerAudioArr.length > 0)
+              await batchDeleteAudio(answerAudioArr);
           }
         }
       }
@@ -446,7 +451,7 @@ export class ExamRepository extends Repository<Exam> {
       await this.delete(examId);
       return await this.getExams(userId);
     } catch (e) {
-      throw new InternalServerErrorException(e)
+      throw new InternalServerErrorException(e);
     }
   }
   /******Helper Methods***** */
@@ -493,5 +498,4 @@ export class ExamRepository extends Repository<Exam> {
     if (limit) query.limit(limit);
     return query;
   }
-  
 }

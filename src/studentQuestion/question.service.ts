@@ -1,8 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/entities/user.entity';
-import { ExamService } from 'src/exam/exam.service';
 import { CreateTeacherAnswerDto } from './dto/create-answer.dto';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
@@ -14,7 +12,6 @@ export class StudentQuestionService {
   constructor(
     @InjectRepository(StudentQuestionRepository)
     private questionRepository: StudentQuestionRepository,
-
   ) {}
   /*****CREATE****** */
   async createQuestion(
@@ -38,7 +35,6 @@ export class StudentQuestionService {
       user.id,
     );
   }
-
 
   async getQuestionsForTeacher(
     examId: number,

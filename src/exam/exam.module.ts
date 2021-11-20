@@ -30,9 +30,7 @@ import { UploadModule } from 'src/upload/upload.module';
       dest: 'public/examsFiles',
       fileFilter: (req, file, cb) => {
         if (
-          !file.originalname
-            .toLowerCase()
-            .match(/\.(jpg|jpeg|png|wav|mp3)$/)
+          !file.originalname.toLowerCase().match(/\.(jpg|jpeg|png|wav|mp3)$/)
         ) {
           // You can always pass an error if something goes wrong:l);
           cb(new Error('You can only upload image / audio files'), null);

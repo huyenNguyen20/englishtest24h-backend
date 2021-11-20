@@ -1,4 +1,7 @@
-import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
@@ -19,7 +22,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
   }
   async getTestTakersScores(examId: number) {
     try {
-      const enrollments : TestEnrollment[] = await this.createQueryBuilder('e')
+      const enrollments: TestEnrollment[] = await this.createQueryBuilder('e')
         .innerJoinAndSelect('e.student', 'user', 'user.id = e.studentId')
         .where('e.examId = :examId', { examId })
         .getMany();
@@ -39,7 +42,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
   async getMyTest(user: User, filter: FilterDto) {
     try {
       const { limit, offset } = filter;
-      const enrollments : TestEnrollment[] = await this.createQueryBuilder('e')
+      const enrollments: TestEnrollment[] = await this.createQueryBuilder('e')
         .innerJoinAndSelect('e.exam', 'exam', 'exam.id = e.examId')
         .where('e.studentId = :studentId', { studentId: user.id })
         .offset(offset)
@@ -53,7 +56,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
 
   async getMyTestCount(user: User): Promise<number> {
     try {
-      const enrollments : TestEnrollment[] = await this.find({
+      const enrollments: TestEnrollment[] = await this.find({
         where: { studentId: user.id },
       });
       return enrollments.length;
@@ -64,7 +67,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
 
   async getScore(examId: number, user: User): Promise<TestEnrollment> {
     try {
-      const enrollment : TestEnrollment = await this.findOne({
+      const enrollment: TestEnrollment = await this.findOne({
         where: { examId, studentId: user.id },
       });
       if (!enrollment)
@@ -81,7 +84,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
 
   async getAllScores(examId: number): Promise<EnrollmentDataToTeacher[]> {
     try {
-      const enrollments : TestEnrollment[] = await this.createQueryBuilder('e')
+      const enrollments: TestEnrollment[] = await this.createQueryBuilder('e')
         .innerJoinAndSelect('e.student', 'user', 'user.id = e.studentId')
         .where('e.examId = :examId', { examId })
         .getMany();
@@ -107,7 +110,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
 
   async getExamResult(enrollmentId: number): Promise<TestEnrollment> {
     try {
-      const enrollment : TestEnrollment = await this.findOne(enrollmentId);
+      const enrollment: TestEnrollment = await this.findOne(enrollmentId);
       return enrollment;
     } catch (e) {
       throw new InternalServerErrorException(e);
@@ -121,7 +124,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
   ): Promise<TestEnrollment> {
     const { score, totalScore, answerObj, sectionsObj } =
       createTestEnrollmentDto;
-    const enrollment : TestEnrollment = await this.findOne({
+    const enrollment: TestEnrollment = await this.findOne({
       where: { examId: exam.id, studentId: user.id },
     });
     if (!enrollment) {
@@ -148,7 +151,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
         .execute();
     } else {
       const subject = exam.subject;
-      // Student's speaking answer will container recording audio url, 
+      // Student's speaking answer will container recording audio url,
       // so old audio urls must be removed
       if (subject === 3) {
         const urlArr = [];
@@ -157,15 +160,15 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
           if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
             urlArr.push(answers[a].userAnswer[0]);
         }
-        const filenameArr : string[] = [];
+        const filenameArr: string[] = [];
         for (const url of urlArr) {
           const filename = url.substring(url.lastIndexOf('/') + 1);
-          if(filename) filenameArr.push(filename);
+          if (filename) filenameArr.push(filename);
         }
-        if(filenameArr.length > 0) {
-          const {batchDeleteAudio} = require('../shared/helpers');
+        if (filenameArr.length > 0) {
+          const { batchDeleteAudio } = require('../shared/helpers');
           await batchDeleteAudio(filenameArr);
-        } 
+        }
       }
       enrollment.timeTaken++;
       if (score || score === 0) enrollment.score = score;
@@ -203,7 +206,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       // If this is Enrollment Record for speaking test, the recording audio urls need to be removed
       if (subject === 3) {
         for (const id of list) {
-          const enrollment : TestEnrollment = await this.findOne(id);
+          const enrollment: TestEnrollment = await this.findOne(id);
           if (enrollment) {
             const urlArr = [];
             const answers = JSON.parse(enrollment.answerObj);
@@ -211,15 +214,15 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
               if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
                 urlArr.push(answers[a].userAnswer[0]);
             }
-            const filenameArr : string[] = [];
+            const filenameArr: string[] = [];
             for (const url of urlArr) {
               const filename = url.substring(url.lastIndexOf('/') + 1);
-              if(filename) filenameArr.push(filename);
+              if (filename) filenameArr.push(filename);
             }
-            if(filenameArr.length > 0) {
-              const {batchDeleteAudio} = require('../shared/helpers');
+            if (filenameArr.length > 0) {
+              const { batchDeleteAudio } = require('../shared/helpers');
               await batchDeleteAudio(filenameArr);
-            } 
+            }
           }
         }
       }
