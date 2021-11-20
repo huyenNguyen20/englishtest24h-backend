@@ -205,13 +205,18 @@ export class ExamRepository extends Repository<Exam> {
         where: { id: examId, ownerId: user.id },
       });
       if (!exam) throw new NotFoundException('Exam Not Found');
-      const { title, description, imageUrl } = updatedExamDto;
+      const { title, description, imageUrl, timeAllowed } = updatedExamDto;
       if (title) exam.title = title;
       if (description) exam.description = description;
+      if (timeAllowed) exam.timeAllowed = timeAllowed;
       if (imageUrl) exam.imageUrl = imageUrl;
       else exam.imageUrl = null;
       await exam.save();
-      return await this.getExams(user.id);
+      const exams: Exam[] = await this.getExams(user.id);
+      return exams.map((e) => {
+        if(e.id === exam.id) return exam;
+        else return e;
+      });
     } catch (e) {
       throw new InternalServerErrorException(e);
     }
