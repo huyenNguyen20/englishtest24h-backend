@@ -599,19 +599,19 @@ export class ExamService {
         );
 
         //3. Delete image file of corresponding questions
-        const fileNameArr: string[] = [];
-        questionGroup.questions.forEach((question) => {
-          if (question.imageUrl) {
-            const fileName = question.imageUrl.substring(
-              question.imageUrl.lastIndexOf('/') + 1,
-            );
-            if (fileName) fileNameArr.push(fileName);
-          }
-        });
-        if (fileNameArr.length > 0) {
-          const { batchDeleteImage } = require('../shared/helpers');
-          await batchDeleteImage(fileNameArr);
-        }
+        // const fileNameArr: string[] = [];
+        // questionGroup.questions.forEach((question) => {
+        //   if (question.imageUrl) {
+        //     const fileName = question.imageUrl.substring(
+        //       question.imageUrl.lastIndexOf('/') + 1,
+        //     );
+        //     if (fileName) fileNameArr.push(fileName);
+        //   }
+        // });
+        // if (fileNameArr.length > 0) {
+        //   const { batchDeleteImage } = require('../shared/helpers');
+        //   await batchDeleteImage(fileNameArr);
+        // }
 
         if (questionIds.length > 0) {
           //4. Delete corresponding answers

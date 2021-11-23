@@ -11,9 +11,6 @@ async function bootstrap() {
   const serverConfig = sconfig.get('server');
   const clientConfig = sconfig.get('client');
 
-  // User winston logger across the app
-  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
-
   //Bootstrap Swagger API
   const config = new DocumentBuilder()
     .setTitle('englishtest24')
@@ -31,14 +28,25 @@ async function bootstrap() {
   //Set up /public for serving static assets
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
+  // app.use((req, res, next) => {
+  //   res.header('Access-Control-Allow-Origin', '*');
+  //   res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  //   next();
+  // });
+
   // Set up CORS
+  // app.enableCors();
   if (process.env.NODE_ENV === 'development') {
     app.enableCors();
   } else {
     app.enableCors({
       origin: clientConfig.url,
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS'
     });
   }
+
+  // User winston logger across the app
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   await app.listen(serverConfig.port);
 }
