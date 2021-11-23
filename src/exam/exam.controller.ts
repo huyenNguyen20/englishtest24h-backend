@@ -749,7 +749,7 @@ export class ExamController {
         return res
           .status(HttpStatus.FORBIDDEN)
           .json({ message: 'You are forbidden' });
-      // 3. Upload Image & Audio File
+      // 3. Upload Image File
       if (files && files.image && files.image[0]) {
         const fileName = files.image[0].filename;
         const tempFile = `public/examsFiles/${fileName}`;
@@ -758,15 +758,6 @@ export class ExamController {
           fileName,
         );
         if (imageUrl) createSectionDto.imageUrl = imageUrl;
-      }
-      if (files && files.audio && files.audio[0]) {
-        const fileName = files.audio[0].filename;
-        const tempFile = `public/examsFiles/${fileName}`;
-        const audioUrl = await this.uploadService.uploadAudio(
-          tempFile,
-          fileName,
-        );
-        if (audioUrl) createSectionDto.audioUrl = audioUrl;
       }
       // 4. Do the operation
       const section: Section = await this.examService.createSection(
@@ -912,7 +903,7 @@ export class ExamController {
         return res
           .status(HttpStatus.FORBIDDEN)
           .json({ message: 'You are forbidden' });
-      // 3. Upload Image & Audio File
+      // 3. Upload Image File
       if (files && files.image && files.image[0]) {
         const fileName = files.image[0].filename;
         const tempFile = `public/examsFiles/${fileName}`;
@@ -921,15 +912,6 @@ export class ExamController {
           fileName,
         );
         if (imageUrl) updateSectionDto.imageUrl = imageUrl;
-      }
-      if (files && files.audio && files.audio[0]) {
-        const fileName = files.audio[0].filename;
-        const tempFile = `public/examsFiles/${fileName}`;
-        const audioUrl = await this.uploadService.uploadAudio(
-          tempFile,
-          fileName,
-        );
-        if (audioUrl) updateSectionDto.audioUrl = audioUrl;
       }
       // 4. Do the operation
       const section: Section = await this.examService.updateSection(
