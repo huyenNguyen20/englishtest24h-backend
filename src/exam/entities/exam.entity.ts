@@ -16,7 +16,7 @@ export const Subjects = {
   1: 'Listening',
   2: 'Writing',
   3: 'Speaking',
-  4: 'Grammar/Vocabulary'
+  4: 'Grammar/Vocabulary',
 };
 
 @Entity()
