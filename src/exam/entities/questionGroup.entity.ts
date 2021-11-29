@@ -10,15 +10,13 @@ import { Section } from './section.entity';
 import { Question } from './question.entity';
 
 export const QuestionGroupTypes = {
-  0: 'Matching',
-  1: 'Multiple Choice',
-  2: 'Multiple Choices with multiple answers',
-  3: 'Plan, map, diagram labelling',
-  4: 'Sentence, Summary Completion',
-  5: 'Form completion',
-  6: 'True, False, Not given',
-  7: 'Writing',
-  8: 'Speaking',
+  0: 'Matching Questions',
+  1: 'Multiple Choices with One Right Answer',
+  2: 'Multiple Choices with Many Right Answers',
+  3: 'Fill In The Blank Questions',
+  4: 'True, False, Not given Questions',
+  5: 'Writing',
+  6: 'Speaking',
 };
 
 @Entity()
