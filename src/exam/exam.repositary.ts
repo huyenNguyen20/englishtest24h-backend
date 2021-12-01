@@ -316,7 +316,7 @@ export class ExamRepository extends Repository<Exam> {
           .where('questionGroup.sectionId IN (:...sectionIds)', {
             sectionIds: [...sectionIds],
           })
-          .execute();
+          .getMany();
 
         if (questionGroups.length > 0) {
           const questionGroupIds = questionGroups.map(
@@ -343,7 +343,7 @@ export class ExamRepository extends Repository<Exam> {
             .where('question.questionGroupId IN (:...questionGroupIds)', {
               questionGroupIds: [...questionGroupIds],
             })
-            .execute();
+            .getMany();
 
           if (questions.length > 0) {
             const questionIds = questions.map((question) => question.id);
@@ -408,7 +408,7 @@ export class ExamRepository extends Repository<Exam> {
           .select('id')
           .from(TestEnrollment, 'e')
           .where('e.examId = :examId', { examId })
-          .execute();
+          .getMany();
 
         if (testEnrollments.length > 0) {
           for (const e of testEnrollments) {

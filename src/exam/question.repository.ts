@@ -20,7 +20,7 @@ export class QuestionRepository extends Repository<Question> {
     const { score, question, order, minWords, imageUrl, htmlExplaination } =
       createQuestionDto;
     const q = new Question();
-    if (score) q.score = score;
+    if (score) q.score = parseFloat(`${score}`);
     if (question) q.question = question;
     if (htmlExplaination) q.htmlExplaination = htmlExplaination;
 

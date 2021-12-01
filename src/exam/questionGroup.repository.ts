@@ -89,7 +89,7 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
       .select('id')
       .from(Question, 'question')
       .where('question.questionGroupId = :questionGroupId', { questionGroupId })
-      .execute();
+      .getMany();
     if (questions.length > 0) {
       const questionIds = questions.map((question) => question.id);
 

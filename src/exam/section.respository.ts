@@ -97,7 +97,7 @@ export class SectionRepository extends Repository<Section> {
       .select('id')
       .from(QuestionGroup, 'questionGroup')
       .where('questionGroup.sectionId = :sectionId', { sectionId })
-      .execute();
+      .getMany();
 
     if (questionGroups.length > 0) {
       const questionGroupIds = questionGroups.map(
@@ -124,7 +124,7 @@ export class SectionRepository extends Repository<Section> {
         .where('question.questionGroupId IN (:...questionGroupIds)', {
           questionGroupIds: [...questionGroupIds],
         })
-        .execute();
+        .getMany();
 
       if (questions.length > 0) {
         const questionIds = questions.map((question) => question.id);
