@@ -273,10 +273,8 @@ export class ExamRepository extends Repository<Exam> {
       } = require('../shared/helpers');
 
       // 1. Remove all corresponding images of Exam
-      if (exam && Boolean(exam.imageUrl)) {
-        const filename = exam.imageUrl.substring(
-          exam.imageUrl.lastIndexOf('/') + 1,
-        );
+      if (exam && Boolean(exam.imageUrl) && !exam.imageUrl.includes('/')) {
+        const filename = exam.imageUrl;
         if (filename) await deleteImage(filename);
       }
 
@@ -293,16 +291,12 @@ export class ExamRepository extends Repository<Exam> {
         const sectionImgArr: string[] = [];
         const sectionAudioArr: string[] = [];
         sections.forEach((section) => {
-          if (section.imageUrl) {
-            const fileName = section.imageUrl.substring(
-              section.imageUrl.lastIndexOf('/') + 1,
-            );
+          if (section.imageUrl && !section.imageUrl.includes('/')) {
+            const fileName = section.imageUrl;
             if (fileName) sectionImgArr.push(fileName);
           }
-          if (section.audioUrl) {
-            const fileName = section.audioUrl.substring(
-              section.audioUrl.lastIndexOf('/') + 1,
-            );
+          if (section.audioUrl && !section.audioUrl.includes('/')) {
+            const fileName = section.audioUrl;
             if (fileName) sectionAudioArr.push(fileName);
           }
         });
@@ -326,10 +320,8 @@ export class ExamRepository extends Repository<Exam> {
           // 3. Delete Images of Corresponding Question Groups
           const questionGrpImgArr: string[] = [];
           questionGroups.forEach((qG) => {
-            if (qG.imageUrl) {
-              const fileName = qG.imageUrl.substring(
-                qG.imageUrl.lastIndexOf('/') + 1,
-              );
+            if (qG.imageUrl && !qG.imageUrl.includes('/')) {
+              const fileName = qG.imageUrl;
               if (fileName) questionGrpImgArr.push(fileName);
             }
           });
@@ -350,10 +342,8 @@ export class ExamRepository extends Repository<Exam> {
             // 4. Delete Images of Corresponding Exam Questions
             const questionImgArr: string[] = [];
             questions.forEach((q) => {
-              if (q.imageUrl) {
-                const fileName = q.imageUrl.substring(
-                  q.imageUrl.lastIndexOf('/') + 1,
-                );
+              if (q.imageUrl && !q.imageUrl.includes('/')) {
+                const fileName = q.imageUrl;
                 if (fileName) questionImgArr.push(fileName);
               }
             });
@@ -422,8 +412,10 @@ export class ExamRepository extends Repository<Exam> {
 
             const answerAudioArr: string[] = [];
             urlArr.forEach((url) => {
-              const filename = url.substring(url.lastIndexOf('/') + 1);
-              if (filename) answerAudioArr.push(filename);
+              if (!url.includes('/')) {
+                const filename = url;
+                if (filename) answerAudioArr.push(filename);
+              }
             });
 
             if (answerAudioArr.length > 0)

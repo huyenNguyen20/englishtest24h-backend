@@ -107,10 +107,8 @@ export class SectionRepository extends Repository<Section> {
       // 1. Delete Images of Corresponding Question Groups
       const questionGrpImgArr: string[] = [];
       questionGroups.forEach((qG) => {
-        if (qG.imageUrl) {
-          const fileName = qG.imageUrl.substring(
-            qG.imageUrl.lastIndexOf('/') + 1,
-          );
+        if (qG.imageUrl && !qG.imageUrl.includes('/')) {
+          const fileName = qG.imageUrl;
           if (fileName) questionGrpImgArr.push(fileName);
         }
       });
@@ -132,10 +130,8 @@ export class SectionRepository extends Repository<Section> {
         // 2. Delete Images of Corresponding Questions
         const questionImgArr: string[] = [];
         questions.forEach((q) => {
-          if (q.imageUrl) {
-            const fileName = q.imageUrl.substring(
-              q.imageUrl.lastIndexOf('/') + 1,
-            );
+          if (q.imageUrl && !q.imageUrl.includes('/')) {
+            const fileName = q.imageUrl;
             if (fileName) questionImgArr.push(fileName);
           }
         });

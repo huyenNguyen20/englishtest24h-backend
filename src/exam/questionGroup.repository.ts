@@ -96,10 +96,8 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
       // 1. Delete Images of Corresponding Questions
       const questionImgArr: string[] = [];
       questions.forEach((q) => {
-        if (q.imageUrl) {
-          const fileName = q.imageUrl.substring(
-            q.imageUrl.lastIndexOf('/') + 1,
-          );
+        if (q.imageUrl && !q.imageUrl.includes('/')) {
+          const fileName = q.imageUrl;
           if (fileName) questionImgArr.push(fileName);
         }
       });

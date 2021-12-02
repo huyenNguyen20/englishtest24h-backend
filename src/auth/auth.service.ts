@@ -73,10 +73,13 @@ export class AuthService {
   async updateProfile(user: User, updates: ProfileDto): Promise<ProfileDto> {
     // If there is a new avatarUrl, delete the old one
     const { avatarUrl } = updates;
-    if (avatarUrl && Boolean(user.avatarUrl) && user.avatarUrl !== avatarUrl) {
-      const filename = user.avatarUrl.substring(
-        user.avatarUrl.lastIndexOf('/') + 1,
-      );
+    if (
+      avatarUrl &&
+      Boolean(user.avatarUrl) &&
+      user.avatarUrl !== avatarUrl &&
+      !user.avatarUrl.includes('/')
+    ) {
+      const filename = user.avatarUrl;
       if (filename) {
         const { deleteImage } = require('../shared/helpers');
         await deleteImage(filename);

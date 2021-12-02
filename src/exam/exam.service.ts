@@ -208,10 +208,13 @@ export class ExamService {
     const { imageUrl } = updatedExamDto;
     const exam: Exam = await this.getExam(examId, user);
     //1. Remove corresponding images
-    if (exam && Boolean(exam.imageUrl) && exam.imageUrl !== imageUrl) {
-      const filename = exam.imageUrl.substring(
-        exam.imageUrl.lastIndexOf('/') + 1,
-      );
+    if (
+      exam &&
+      Boolean(exam.imageUrl) &&
+      exam.imageUrl !== imageUrl &&
+      !exam.imageUrl.includes('/')
+    ) {
+      const filename = exam.imageUrl;
       if (filename) {
         const { deleteImage } = require('../shared/helpers');
         await deleteImage(filename);
@@ -354,11 +357,10 @@ export class ExamService {
       if (
         section &&
         Boolean(section.imageUrl) &&
-        section.imageUrl !== imageUrl
+        section.imageUrl !== imageUrl &&
+        !section.imageUrl.includes('/')
       ) {
-        const filename = section.imageUrl.substring(
-          section.imageUrl.lastIndexOf('/') + 1,
-        );
+        const filename = section.imageUrl;
         if (filename) {
           const { deleteImage } = require('../shared/helpers');
           await deleteImage(filename);
@@ -367,11 +369,10 @@ export class ExamService {
       if (
         section &&
         Boolean(section.audioUrl) &&
-        section.audioUrl !== audioUrl
+        section.audioUrl !== audioUrl &&
+        !section.audioUrl.includes('/')
       ) {
-        const filename = section.audioUrl.substring(
-          section.audioUrl.lastIndexOf('/') + 1,
-        );
+        const filename = section.audioUrl;
         if (filename) {
           const { deleteAudio } = require('../shared/helpers');
           await deleteAudio(filename);
@@ -407,11 +408,10 @@ export class ExamService {
       if (
         section &&
         Boolean(section.imageUrl) &&
-        section.imageUrl !== imageUrl
+        section.imageUrl !== imageUrl &&
+        !section.imageUrl.includes('/')
       ) {
-        const filename = section.imageUrl.substring(
-          section.imageUrl.lastIndexOf('/') + 1,
-        );
+        const filename = section.imageUrl;
         if (filename) {
           const { deleteImage } = require('../shared/helpers');
           await deleteImage(filename);
@@ -474,19 +474,23 @@ export class ExamService {
       );
       if (!section) throw new NotFoundException('Section Not Found');
       //1. Remove Audio and Image Files of Section
-      if (section && Boolean(section.imageUrl)) {
-        const filename = section.imageUrl.substring(
-          section.imageUrl.lastIndexOf('/') + 1,
-        );
+      if (
+        section &&
+        Boolean(section.imageUrl) &&
+        !section.imageUrl.includes('/')
+      ) {
+        const filename = section.imageUrl;
         if (filename) {
           const { deleteImage } = require('../shared/helpers');
           await deleteImage(filename);
         }
       }
-      if (section && Boolean(section.audioUrl)) {
-        const filename = section.audioUrl.substring(
-          section.audioUrl.lastIndexOf('/') + 1,
-        );
+      if (
+        section &&
+        Boolean(section.audioUrl) &&
+        !section.audioUrl.includes('/')
+      ) {
+        const filename = section.audioUrl;
         if (filename) {
           const { deleteAudio } = require('../shared/helpers');
           await deleteAudio(filename);
@@ -576,11 +580,10 @@ export class ExamService {
       // 1. Delete image of the question group
       if (
         Boolean(oldQuestionGroup.imageUrl) &&
-        oldQuestionGroup.imageUrl !== imageUrl
+        oldQuestionGroup.imageUrl !== imageUrl &&
+        !oldQuestionGroup.imageUrl.includes('/')
       ) {
-        const filename = oldQuestionGroup.imageUrl.substring(
-          oldQuestionGroup.imageUrl.lastIndexOf('/') + 1,
-        );
+        const filename = oldQuestionGroup.imageUrl;
         if (filename) {
           const { deleteImage } = require('../shared/helpers');
           await deleteImage(filename);
@@ -672,10 +675,11 @@ export class ExamService {
           user,
         );
       // 1. Delete image of the question group
-      if (Boolean(questionGroup.imageUrl)) {
-        const filename = questionGroup.imageUrl.substring(
-          questionGroup.imageUrl.lastIndexOf('/') + 1,
-        );
+      if (
+        Boolean(questionGroup.imageUrl) &&
+        !questionGroup.imageUrl.includes('/')
+      ) {
+        const filename = questionGroup.imageUrl;
         if (filename) {
           const { deleteImage } = require('../shared/helpers');
           await deleteImage(filename);
@@ -686,10 +690,8 @@ export class ExamService {
         //2. Delete image file of corresponding questions
         const fileNameArr: string[] = [];
         questionGroup.questions.forEach((question) => {
-          if (question.imageUrl) {
-            const fileName = question.imageUrl.substring(
-              question.imageUrl.lastIndexOf('/') + 1,
-            );
+          if (question.imageUrl && !question.imageUrl.includes('/')) {
+            const fileName = question.imageUrl;
             if (fileName) fileNameArr.push(fileName);
           }
         });
@@ -778,8 +780,8 @@ export class ExamService {
     const q: Question = await this.getQuestion(questionId, user);
     if (!q) throw new NotFoundException('Question Not Found!');
     //2. Remove corresponding image of the question
-    if (Boolean(q.imageUrl)) {
-      const filename = q.imageUrl.substring(q.imageUrl.lastIndexOf('/') + 1);
+    if (Boolean(q.imageUrl) && !q.imageUrl.includes('/')) {
+      const filename = q.imageUrl;
       if (filename) {
         const { deleteImage } = require('../shared/helpers');
         await deleteImage(filename);

@@ -162,8 +162,10 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
         }
         const filenameArr: string[] = [];
         for (const url of urlArr) {
-          const filename = url.substring(url.lastIndexOf('/') + 1);
-          if (filename) filenameArr.push(filename);
+          if (!url.includes('/')) {
+            const filename = url;
+            if (filename) filenameArr.push(filename);
+          }
         }
         if (filenameArr.length > 0) {
           const { batchDeleteAudio } = require('../shared/helpers');
@@ -216,8 +218,10 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
             }
             const filenameArr: string[] = [];
             for (const url of urlArr) {
-              const filename = url.substring(url.lastIndexOf('/') + 1);
-              if (filename) filenameArr.push(filename);
+              if (!url.includes('/')) {
+                const filename = url;
+                if (filename) filenameArr.push(filename);
+              }
             }
             if (filenameArr.length > 0) {
               const { batchDeleteAudio } = require('../shared/helpers');

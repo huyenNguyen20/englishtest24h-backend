@@ -149,7 +149,7 @@ export const compressAndUploadImage = async (
     //Remove new file from current directory
     await unlinkAsync(tempFile);
 
-    return process.env.IMAGES_S3_CLOUDFRONT_URL + '/' + newFileName;
+    return newFileName;
   } catch (e) {
     throw new InternalServerErrorException(e);
   }
