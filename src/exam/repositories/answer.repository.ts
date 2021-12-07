@@ -1,10 +1,10 @@
 import { NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
-import { CreateAnswerDto } from './dto/create-answer.dto';
-import { UpdateAnswerDto } from './dto/update-answer.dto';
-import { Answer } from './entities/answer.entity';
-import { Question } from './entities/question.entity';
+import { CreateAnswerDto } from '../dto/create-answer.dto';
+import { UpdateAnswerDto } from '../dto/update-answer.dto';
+import { Answer } from '../entities/answer.entity';
+import { Question } from '../entities/question.entity';
 
 @EntityRepository(Answer)
 export class AnswerRepository extends Repository<Answer> {

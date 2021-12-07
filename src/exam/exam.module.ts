@@ -1,17 +1,17 @@
 import { Module } from '@nestjs/common';
-import { ExamService } from './exam.service';
+import { ExamService } from './services/exam.service';
 import { ExamController } from './exam.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ExamRepository } from './exam.repositary';
+import { ExamRepository } from './repositories/exam.repositary';
 import { AuthModule } from 'src/auth/auth.module';
-import { QuestionRepository } from './question.repository';
+import { QuestionRepository } from './repositories/question.repository';
 import { MulterModule } from '@nestjs/platform-express';
-import { TestEnrollmentRepository } from './test-enrollment.repository';
-import { TestEnrollmentService } from './test-enrollment.service';
+import { TestEnrollmentRepository } from './repositories/test-enrollment.repository';
+import { TestEnrollmentService } from './services/test-enrollment.service';
 import { TestEnrollmentController } from './test-enrollment.controller';
-import { SectionRepository } from './section.respository';
-import { QuestionGroupRepository } from './questionGroup.repository';
-import { AnswerRepository } from './answer.repository';
+import { SectionRepository } from './repositories/section.respository';
+import { QuestionGroupRepository } from './repositories/questionGroup.repository';
+import { AnswerRepository } from './repositories/answer.repository';
 import { UploadModule } from 'src/upload/upload.module';
 
 @Module({

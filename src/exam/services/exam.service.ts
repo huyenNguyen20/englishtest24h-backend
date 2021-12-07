@@ -12,27 +12,27 @@ import {
   FilterExamDto,
   UpdateExamDto,
   UpdateQuestionDto,
-} from './dto';
+} from '../dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ExamRepository } from './exam.repositary';
+import { ExamRepository } from '../repositories/exam.repositary';
 import { User } from 'src/auth/entities/user.entity';
-import { QuestionRepository } from './question.repository';
-import { AnswerRepository } from './answer.repository';
-import { Exam } from './entities/exam.entity';
-import { Question } from './entities/question.entity';
-import { Section } from './entities/section.entity';
-import { SectionRepository } from './section.respository';
-import { UpdateSectionDto } from './dto/update-section.dto';
-import { QuestionGroup } from './entities/questionGroup.entity';
-import { QuestionGroupRepository } from './questionGroup.repository';
-import { UpdateQuestionGroupDto } from './dto/update-questionGroup.dto';
-import { Answer } from './entities/answer.entity';
-import { UpdateAnswerDto } from './dto/update-answer.dto';
+import { QuestionRepository } from '../repositories/question.repository';
+import { AnswerRepository } from '../repositories/answer.repository';
+import { Exam } from '../entities/exam.entity';
+import { Question } from '../entities/question.entity';
+import { Section } from '../entities/section.entity';
+import { SectionRepository } from '../repositories/section.respository';
+import { UpdateSectionDto } from '../dto/update-section.dto';
+import { QuestionGroup } from '../entities/questionGroup.entity';
+import { QuestionGroupRepository } from '../repositories/questionGroup.repository';
+import { UpdateQuestionGroupDto } from '../dto/update-questionGroup.dto';
+import { Answer } from '../entities/answer.entity';
+import { UpdateAnswerDto } from '../dto/update-answer.dto';
 import { getConnection } from 'typeorm';
-import { CreateSectionDto } from './dto/create-section.dto';
-import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
-import { UpdateWritingSectionDto } from './dto/update-writing-section.dto';
-import { CreateWritingSectionDto } from './dto/create-writing-section.dto';
+import { CreateSectionDto } from '../dto/create-section.dto';
+import { CreateQuestionGroupDto } from '../dto/create-questionGroup.dto';
+import { UpdateWritingSectionDto } from '../dto/update-writing-section.dto';
+import { CreateWritingSectionDto } from '../dto/create-writing-section.dto';
 
 @Injectable()
 export class ExamService {

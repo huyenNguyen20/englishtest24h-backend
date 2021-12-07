@@ -16,7 +16,7 @@ import {
   HttpStatus,
   UploadedFiles,
 } from '@nestjs/common';
-import { ExamService } from './exam.service';
+import { ExamService } from './services/exam.service';
 import { CreateExamDto, UpdateExamDto, FilterExamDto } from './dto';
 import { AuthGuard } from '@nestjs/passport';
 import { getUser } from 'src/auth/decorator/getUser.decorator';

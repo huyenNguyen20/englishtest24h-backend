@@ -1,17 +1,17 @@
-import { Exam, Subjects } from './entities/exam.entity';
+import { Exam, Subjects } from '../entities/exam.entity';
 import { EntityRepository, getConnection, Like, Repository } from 'typeorm';
-import { CreateExamDto, FilterExamDto, UpdateExamDto } from './dto';
+import { CreateExamDto, FilterExamDto, UpdateExamDto } from '../dto';
 import { User } from 'src/auth/entities/user.entity';
 import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Question } from './entities/question.entity';
-import { StudentQuestion } from '../studentQuestion/entities/question.entity';
-import { TestEnrollment } from './entities/test-enrollment.entity';
-import { Section } from './entities/section.entity';
-import { QuestionGroup } from './entities/questionGroup.entity';
-import { Answer } from './entities/answer.entity';
+import { Question } from '../entities/question.entity';
+import { StudentQuestion } from '../../studentQuestion/entities/question.entity';
+import { TestEnrollment } from '../entities/test-enrollment.entity';
+import { Section } from '../entities/section.entity';
+import { QuestionGroup } from '../entities/questionGroup.entity';
+import { Answer } from '../entities/answer.entity';
 
 @EntityRepository(Exam)
 export class ExamRepository extends Repository<Exam> {

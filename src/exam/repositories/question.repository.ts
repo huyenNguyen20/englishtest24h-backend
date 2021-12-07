@@ -1,10 +1,10 @@
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { User } from 'src/auth/entities/user.entity';
-import { Question } from './entities/question.entity';
-import { CreateQuestionDto, UpdateQuestionDto } from './dto';
+import { Question } from '../entities/question.entity';
+import { CreateQuestionDto, UpdateQuestionDto } from '../dto';
 import { NotFoundException } from '@nestjs/common';
-import { QuestionGroup } from './entities/questionGroup.entity';
-import { Answer } from './entities/answer.entity';
+import { QuestionGroup } from '../entities/questionGroup.entity';
+import { Answer } from '../entities/answer.entity';
 
 @EntityRepository(Question)
 export class QuestionRepository extends Repository<Question> {

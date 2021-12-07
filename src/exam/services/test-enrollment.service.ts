@@ -1,12 +1,12 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/auth/entities/user.entity';
-import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
-import { FilterDto } from './dto/filter.dto';
-import { Exam } from './entities/exam.entity';
-import { TestEnrollment } from './entities/test-enrollment.entity';
-import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
-import { TestEnrollmentRepository } from './test-enrollment.repository';
+import { CreateTestEnrollmentDto } from '../dto/create-test-enrollment.dto';
+import { FilterDto } from '../dto/filter.dto';
+import { Exam } from '../entities/exam.entity';
+import { TestEnrollment } from '../entities/test-enrollment.entity';
+import { EnrollmentDataToTeacher } from '../interface/enrollment-data-to-teacher.interface';
+import { TestEnrollmentRepository } from '../repositories/test-enrollment.repository';
 
 @Injectable()
 export class TestEnrollmentService {

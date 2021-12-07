@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Response, NextFunction } from 'express';
-import { ExamService } from 'src/exam/exam.service';
+import { ExamService } from 'src/exam/services/exam.service';
 
 @Injectable()
 export class ExtractExamMiddleware implements NestMiddleware {

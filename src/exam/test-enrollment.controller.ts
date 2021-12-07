@@ -25,7 +25,7 @@ import { TestEnrollment } from './entities/test-enrollment.entity';
 import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.interface';
 import { FilterValidationPipe } from './pipes/filter.pipe';
 import { TestEnrollmentValidationPipe } from './pipes/test-enrollment.pipe';
-import { TestEnrollmentService } from './test-enrollment.service';
+import { TestEnrollmentService } from './services/test-enrollment.service';
 import { isTeacher } from 'src/auth/decorator/isTeacher.decorator';
 import { getExam } from './decorators/getExam.decorator';
 import { Exam } from './entities/exam.entity';

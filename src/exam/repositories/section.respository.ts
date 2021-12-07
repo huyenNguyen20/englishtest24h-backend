@@ -1,13 +1,13 @@
 import { NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
-import { CreateSectionDto } from './dto/create-section.dto';
-import { UpdateSectionDto } from './dto/update-section.dto';
-import { Answer } from './entities/answer.entity';
-import { Exam } from './entities/exam.entity';
-import { Question } from './entities/question.entity';
-import { QuestionGroup } from './entities/questionGroup.entity';
-import { Section } from './entities/section.entity';
+import { CreateSectionDto } from '../dto/create-section.dto';
+import { UpdateSectionDto } from '../dto/update-section.dto';
+import { Answer } from '../entities/answer.entity';
+import { Exam } from '../entities/exam.entity';
+import { Question } from '../entities/question.entity';
+import { QuestionGroup } from '../entities/questionGroup.entity';
+import { Section } from '../entities/section.entity';
 
 @EntityRepository(Section)
 export class SectionRepository extends Repository<Section> {

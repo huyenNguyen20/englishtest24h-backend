@@ -1,15 +1,15 @@
 import { NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
-import { CreateQuestionGroupDto } from './dto/create-questionGroup.dto';
-import { UpdateQuestionGroupDto } from './dto/update-questionGroup.dto';
-import { Answer } from './entities/answer.entity';
-import { Question } from './entities/question.entity';
+import { CreateQuestionGroupDto } from '../dto/create-questionGroup.dto';
+import { UpdateQuestionGroupDto } from '../dto/update-questionGroup.dto';
+import { Answer } from '../entities/answer.entity';
+import { Question } from '../entities/question.entity';
 import {
   QuestionGroup,
   QuestionGroupTypes,
-} from './entities/questionGroup.entity';
-import { Section } from './entities/section.entity';
+} from '../entities/questionGroup.entity';
+import { Section } from '../entities/section.entity';
 
 @EntityRepository(QuestionGroup)
 export class QuestionGroupRepository extends Repository<QuestionGroup> {
