@@ -270,7 +270,7 @@ export class ExamRepository extends Repository<Exam> {
         deleteImage,
         batchDeleteAudio,
         batchDeleteImage,
-      } = require('../shared/helpers');
+      } = require('../../shared/helpers');
 
       // 1. Remove all corresponding images of Exam
       if (exam && Boolean(exam.imageUrl) && !exam.imageUrl.includes('/')) {
@@ -280,10 +280,10 @@ export class ExamRepository extends Repository<Exam> {
 
       const sections: Section[] = await getConnection()
         .createQueryBuilder()
-        .select('section.id')
+        .select('id')
         .from(Section, 'section')
         .where('section.examId =:examId', { examId })
-        .getMany();
+        .execute();
 
       if (sections.length > 0) {
         const sectionIds = sections.map((section) => section.id);
@@ -310,7 +310,7 @@ export class ExamRepository extends Repository<Exam> {
           .where('questionGroup.sectionId IN (:...sectionIds)', {
             sectionIds: [...sectionIds],
           })
-          .getMany();
+          .execute();
 
         if (questionGroups.length > 0) {
           const questionGroupIds = questionGroups.map(
@@ -335,7 +335,7 @@ export class ExamRepository extends Repository<Exam> {
             .where('question.questionGroupId IN (:...questionGroupIds)', {
               questionGroupIds: [...questionGroupIds],
             })
-            .getMany();
+            .execute();
 
           if (questions.length > 0) {
             const questionIds = questions.map((question) => question.id);
@@ -395,7 +395,6 @@ export class ExamRepository extends Repository<Exam> {
       if (exam.subject === 3) {
         const testEnrollments: TestEnrollment[] = await getConnection()
           .createQueryBuilder()
-          .select('id')
           .from(TestEnrollment, 'e')
           .where('e.examId = :examId', { examId })
           .getMany();

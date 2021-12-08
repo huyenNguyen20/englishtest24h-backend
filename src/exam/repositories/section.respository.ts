@@ -90,14 +90,14 @@ export class SectionRepository extends Repository<Section> {
     const s: Section = await this.getSection(examId, sectionId, user);
     if (!s) throw new NotFoundException('Section Not Found');
     // Get necessary helpers
-    const { batchDeleteImage } = require('../shared/helpers');
+    const { batchDeleteImage } = require('../../shared/helpers');
 
     const questionGroups: QuestionGroup[] = await getConnection()
       .createQueryBuilder()
       .select('id')
       .from(QuestionGroup, 'questionGroup')
       .where('questionGroup.sectionId = :sectionId', { sectionId })
-      .getMany();
+      .execute();
 
     if (questionGroups.length > 0) {
       const questionGroupIds = questionGroups.map(
@@ -122,7 +122,7 @@ export class SectionRepository extends Repository<Section> {
         .where('question.questionGroupId IN (:...questionGroupIds)', {
           questionGroupIds: [...questionGroupIds],
         })
-        .getMany();
+        .execute();
 
       if (questions.length > 0) {
         const questionIds = questions.map((question) => question.id);

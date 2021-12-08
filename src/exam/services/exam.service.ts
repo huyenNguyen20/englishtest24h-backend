@@ -216,7 +216,7 @@ export class ExamService {
     ) {
       const filename = exam.imageUrl;
       if (filename) {
-        const { deleteImage } = require('../shared/helpers');
+        const { deleteImage } = require('../../shared/helpers');
         await deleteImage(filename);
       }
     }
@@ -362,7 +362,7 @@ export class ExamService {
       ) {
         const filename = section.imageUrl;
         if (filename) {
-          const { deleteImage } = require('../shared/helpers');
+          const { deleteImage } = require('../../shared/helpers');
           await deleteImage(filename);
         }
       }
@@ -374,7 +374,7 @@ export class ExamService {
       ) {
         const filename = section.audioUrl;
         if (filename) {
-          const { deleteAudio } = require('../shared/helpers');
+          const { deleteAudio } = require('../../shared/helpers');
           await deleteAudio(filename);
         }
       }
@@ -413,7 +413,7 @@ export class ExamService {
       ) {
         const filename = section.imageUrl;
         if (filename) {
-          const { deleteImage } = require('../shared/helpers');
+          const { deleteImage } = require('../../shared/helpers');
           await deleteImage(filename);
         }
       }
@@ -481,7 +481,7 @@ export class ExamService {
       ) {
         const filename = section.imageUrl;
         if (filename) {
-          const { deleteImage } = require('../shared/helpers');
+          const { deleteImage } = require('../../shared/helpers');
           await deleteImage(filename);
         }
       }
@@ -492,7 +492,7 @@ export class ExamService {
       ) {
         const filename = section.audioUrl;
         if (filename) {
-          const { deleteAudio } = require('../shared/helpers');
+          const { deleteAudio } = require('../../shared/helpers');
           await deleteAudio(filename);
         }
       }
@@ -585,7 +585,7 @@ export class ExamService {
       ) {
         const filename = oldQuestionGroup.imageUrl;
         if (filename) {
-          const { deleteImage } = require('../shared/helpers');
+          const { deleteImage } = require('../../shared/helpers');
           await deleteImage(filename);
         }
       }
@@ -612,7 +612,7 @@ export class ExamService {
         //   }
         // });
         // if (fileNameArr.length > 0) {
-        //   const { batchDeleteImage } = require('../shared/helpers');
+        //   const { batchDeleteImage } = require('../../shared/helpers');
         //   await batchDeleteImage(fileNameArr);
         // }
 
@@ -681,7 +681,7 @@ export class ExamService {
       ) {
         const filename = questionGroup.imageUrl;
         if (filename) {
-          const { deleteImage } = require('../shared/helpers');
+          const { deleteImage } = require('../../shared/helpers');
           await deleteImage(filename);
         }
       }
@@ -696,7 +696,7 @@ export class ExamService {
           }
         });
         if (fileNameArr.length > 0) {
-          const { batchDeleteImage } = require('../shared/helpers');
+          const { batchDeleteImage } = require('../../shared/helpers');
           await batchDeleteImage(fileNameArr);
         }
       }
@@ -783,7 +783,7 @@ export class ExamService {
     if (Boolean(q.imageUrl) && !q.imageUrl.includes('/')) {
       const filename = q.imageUrl;
       if (filename) {
-        const { deleteImage } = require('../shared/helpers');
+        const { deleteImage } = require('../../shared/helpers');
         await deleteImage(filename);
       }
     }

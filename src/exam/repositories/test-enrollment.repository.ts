@@ -168,7 +168,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
           }
         }
         if (filenameArr.length > 0) {
-          const { batchDeleteAudio } = require('../shared/helpers');
+          const { batchDeleteAudio } = require('../../shared/helpers');
           await batchDeleteAudio(filenameArr);
         }
       }
@@ -224,7 +224,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
               }
             }
             if (filenameArr.length > 0) {
-              const { batchDeleteAudio } = require('../shared/helpers');
+              const { batchDeleteAudio } = require('../../shared/helpers');
               await batchDeleteAudio(filenameArr);
             }
           }
