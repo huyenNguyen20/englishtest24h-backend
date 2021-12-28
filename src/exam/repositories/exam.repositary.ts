@@ -5,6 +5,7 @@ import { User } from 'src/auth/entities/user.entity';
 import {
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Question } from '../entities/question.entity';
 import { StudentQuestion } from '../../studentQuestion/entities/question.entity';
@@ -15,7 +16,12 @@ import { Answer } from '../entities/answer.entity';
 
 @EntityRepository(Exam)
 export class ExamRepository extends Repository<Exam> {
-  /****Exams Methods for Public Users*** */
+  /****Exams Methods for User to access Published Exam*** */
+  async getExamIndexes(): Promise<Partial<Exam>[]> {
+    return await this.find({
+      select: ['id', 'ownerId'],
+    });
+  }
   async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.createQueryBuilder('exam')
       .select('exam.id')
@@ -116,7 +122,7 @@ export class ExamRepository extends Repository<Exam> {
       throw new InternalServerErrorException(e);
     }
   }
-  /******Exams Methods for Restricted Users** */
+  /******Exams Methods Users to access restricted exams** */
   async getRestrictedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.createQueryBuilder('exam')
       .select('exam.id')
@@ -144,7 +150,16 @@ export class ExamRepository extends Repository<Exam> {
       throw new InternalServerErrorException(e);
     }
   }
-
+  async updateExamRating(rating: number, examId: number): Promise<void> {
+      const exam: Exam = await this.findOne(examId);
+      if (!exam) throw new NotFoundException('Exam Not Found');
+      // Update Exam Rating
+      exam.totalRating += rating;
+      exam.ratingPeople++;
+      await exam.save();
+  }
+  /******Exams Methods for Test Takers** */
+  
   /****Exams Methods for Owner*** */
   async getExams(userId: number): Promise<Exam[]> {
     return await this.createQueryBuilder('exam')
@@ -195,41 +210,33 @@ export class ExamRepository extends Repository<Exam> {
     examId: number,
     user: User,
   ): Promise<Exam[]> {
-    try {
-      const exam: Exam = await this.findOne({
-        where: { id: examId, ownerId: user.id },
-      });
-      if (!exam) throw new NotFoundException('Exam Not Found');
-      const { title, description, imageUrl, timeAllowed } = updatedExamDto;
-      if (title) exam.title = title;
-      if (description) exam.description = description;
-      if (timeAllowed) exam.timeAllowed = timeAllowed;
-      if (imageUrl) exam.imageUrl = imageUrl;
-      else exam.imageUrl = null;
-      await exam.save();
-      const exams: Exam[] = await this.getExams(user.id);
-      return exams.map((e) => {
-        if (e.id === exam.id) return exam;
-        else return e;
-      });
-    } catch (e) {
-      throw new InternalServerErrorException(e);
-    }
+    const exam: Exam = await this.findOne({
+      where: { id: examId, ownerId: user.id },
+    });
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    const { title, description, imageUrl, timeAllowed } = updatedExamDto;
+    if (title) exam.title = title;
+    if (description) exam.description = description;
+    if (timeAllowed) exam.timeAllowed = timeAllowed;
+    if (imageUrl) exam.imageUrl = imageUrl;
+    else exam.imageUrl = null;
+    await exam.save();
+    const exams: Exam[] = await this.getExams(user.id);
+    return exams.map((e) => {
+      if (e.id === exam.id) return exam;
+      else return e;
+    });
   }
 
   async togglePublishExam(examId: number, user: User): Promise<Exam[]> {
-    try {
-      const exam: Exam = await this.findOne({
-        where: { id: examId, ownerId: user.id },
-      });
-      if (!exam) throw new NotFoundException('Exam Not Found');
-      else {
-        exam.isPublished = !exam.isPublished;
-        await exam.save();
-        return await this.getExams(user.id);
-      }
-    } catch (e) {
-      throw new InternalServerErrorException(e);
+    const exam: Exam = await this.findOne({
+      where: { id: examId, ownerId: user.id },
+    });
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    else {
+      exam.isPublished = !exam.isPublished;
+      await exam.save();
+      return await this.getExams(user.id);
     }
   }
 
@@ -238,29 +245,24 @@ export class ExamRepository extends Repository<Exam> {
     examId: number,
     user: User,
   ): Promise<Exam[]> {
-    try {
-      const exam: Exam = await this.findOne({
-        where: { id: examId, ownerId: user.id },
+    const exam: Exam = await this.findOne({
+      where: { id: examId, ownerId: user.id },
+    });
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    else {
+      exam.restrictedAccessList = restrictedList;
+      await exam.save();
+      const exams: Exam[] = await this.getExams(user.id);
+      return exams.map((e) => {
+        if (e.id === exam.id && e.restrictedAccessList !== restrictedList) {
+          e.restrictedAccessList = restrictedList;
+        }
+        return e;
       });
-      if (!exam) throw new NotFoundException('Exam Not Found');
-      else {
-        exam.restrictedAccessList = restrictedList;
-        await exam.save();
-        const exams: Exam[] = await this.getExams(user.id);
-        return exams.map((e) => {
-          if (e.id === exam.id && e.restrictedAccessList !== restrictedList) {
-            e.restrictedAccessList = restrictedList;
-          }
-          return e;
-        });
-      }
-    } catch (e) {
-      throw new InternalServerErrorException(e);
     }
   }
 
   async removeExam(examId: number, userId: number): Promise<Exam[]> {
-    try {
       const exam: Exam = await this.findOne({
         where: { id: examId },
       });
@@ -441,9 +443,6 @@ export class ExamRepository extends Repository<Exam> {
       //11. Delete Exam
       await this.delete(examId);
       return await this.getExams(userId);
-    } catch (e) {
-      throw new InternalServerErrorException(e);
-    }
   }
   /******Helper Methods***** */
   createQuery(

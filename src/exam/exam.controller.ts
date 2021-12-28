@@ -55,7 +55,7 @@ export class ExamController {
   ) {}
 
   /********************* */
-  /***Exam Routes for Public Users***/
+  /***Exam Routes for users to access published exams***/
   /********************* */
   @ApiOperation({ summary: 'Get Exam Indexes for Populating FrontEnd Routes' })
   @ApiResponse({ status: 200, description: 'Exam Object Array' })
@@ -292,7 +292,7 @@ export class ExamController {
         .json({ message: 'Something went wrong. Please try again!' });
     }
   }
-  /*****************Methods for Restricted Access*************** */
+  /***Exam Routes for users to access restricted exams***/
   @ApiOperation({ summary: 'Get Restricted Exams for a Specific User' })
   @Get('/restricted')
   @UseGuards(AuthGuard())

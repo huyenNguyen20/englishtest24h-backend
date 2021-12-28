@@ -7,8 +7,8 @@ import {
   Unique,
 } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { Exam } from 'src/exam/entities/exam.entity';
-import { TestEnrollment } from 'src/exam/entities/test-enrollment.entity';
+import { Exam } from '../../exam/entities/exam.entity';
+import { TestEnrollment } from '../../exam/entities/test-enrollment.entity';
 
 @Entity()
 @Unique(['email'])

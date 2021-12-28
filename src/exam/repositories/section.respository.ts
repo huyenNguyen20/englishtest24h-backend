@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreateSectionDto } from '../dto/create-section.dto';
@@ -20,29 +20,33 @@ export class SectionRepository extends Repository<Section> {
     exam: Exam,
     user: User,
   ): Promise<Section> {
-    const {
-      title,
-      audioUrl,
-      imageUrl,
-      htmlContent,
-      directions,
-      transcription,
-    } = createSectionDto;
-    const s = new Section();
-    s.title = title;
-    if (audioUrl) s.audioUrl = audioUrl;
-
-    if (imageUrl) s.imageUrl = imageUrl;
-    else s.imageUrl = null;
-
-    if (htmlContent) s.htmlContent = htmlContent;
-    if (directions) s.directions = directions;
-    if (transcription) s.transcript = transcription;
-    s.ownerId = user.id;
-    s.exam = exam;
-    s.examId = exam.id;
-    await s.save();
-    return s;
+    try{
+      const {
+        title,
+        audioUrl,
+        imageUrl,
+        htmlContent,
+        directions,
+        transcription,
+      } = createSectionDto;
+      const s = new Section();
+      s.title = title;
+      if (audioUrl) s.audioUrl = audioUrl;
+  
+      if (imageUrl) s.imageUrl = imageUrl;
+      else s.imageUrl = null;
+  
+      if (htmlContent) s.htmlContent = htmlContent;
+      if (directions) s.directions = directions;
+      if (transcription) s.transcript = transcription;
+      s.ownerId = user.id;
+      s.exam = exam;
+      s.examId = exam.id;
+      await s.save();
+      return s;
+    } catch(e){
+      throw new InternalServerErrorException(e)
+    }
   }
 
   async getSection(

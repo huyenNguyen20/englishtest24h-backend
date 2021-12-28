@@ -1,5 +1,5 @@
-import { User } from 'src/auth/entities/user.entity';
-import { TestEnrollment } from 'src/exam/entities/test-enrollment.entity';
+import { User } from '../../auth/entities/user.entity';
+import { TestEnrollment } from '../../exam/entities/test-enrollment.entity';
 import {
   BaseEntity,
   Entity,

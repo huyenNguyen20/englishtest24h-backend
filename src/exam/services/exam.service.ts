@@ -5,8 +5,6 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { Logger } from 'winston';
 import {
   CreateQuestionDto,
   FilterExamDto,
@@ -15,7 +13,7 @@ import {
 } from '../dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExamRepository } from '../repositories/exam.repositary';
-import { User } from 'src/auth/entities/user.entity';
+import { User } from '../../auth/entities/user.entity';
 import { QuestionRepository } from '../repositories/question.repository';
 import { AnswerRepository } from '../repositories/answer.repository';
 import { Exam } from '../entities/exam.entity';
@@ -37,8 +35,6 @@ import { CreateWritingSectionDto } from '../dto/create-writing-section.dto';
 @Injectable()
 export class ExamService {
   constructor(
-    @Inject(WINSTON_MODULE_PROVIDER)
-    private readonly logger: Logger,
 
     @InjectRepository(ExamRepository)
     private examRepository: ExamRepository,
@@ -55,14 +51,16 @@ export class ExamService {
     @InjectRepository(AnswerRepository)
     private answerRepository: AnswerRepository,
   ) {}
-
-  /************************************* */
-  /****Exam Services For Public Users & Students*****/
-  /************************************* */
+  /**********Mics Methods */
+  async getSubjects(): Promise<any> {
+    return await this.examRepository.getSubjects();
+  }
+  async getQuestionTypes(): Promise<string[]> {
+    return await this.questionGroupRepository.getQuestionTypes();
+  }
+  /****Methods for Frontend Indexes*/
   async getExamIndexes(): Promise<Partial<Exam>[]> {
-    return await this.examRepository.find({
-      select: ['id', 'ownerId'],
-    });
+    return await this.examRepository.getExamIndexes();
   }
   async getPublishedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.examRepository.getPublishedExamIndexes();
@@ -70,12 +68,21 @@ export class ExamService {
   async getRestrictedExamIndexes(): Promise<Partial<Exam>[]> {
     return await this.examRepository.getRestrictedExamIndexes();
   }
+  /****Methods for User to access published exams*/
   async getPublishedExams(filterExamDto: FilterExamDto): Promise<Exam[]> {
     return await this.examRepository.getPublishedExams(filterExamDto);
   }
   async getPublishedExamsCount(): Promise<number> {
     return await this.examRepository.getPublishedExamsCount();
   }
+  async getLatestExams(): Promise<Exam[]> {
+    return await this.examRepository.getLatestExams();
+  }
+  async getRelatedExams(examId: number): Promise<Exam[]> {
+    return await this.examRepository.getRelatedExams(examId);
+  }
+
+  /*********Methods for Users to Access Restricted Exams */
   async getRestrictedExams(
     user: User,
     filterExamDto: FilterExamDto,
@@ -88,104 +95,69 @@ export class ExamService {
   async getPublishedExam(examId: number): Promise<Exam> {
     return await this.examRepository.getPublishedExam(examId);
   }
-
   async getRestrictedExam(user: User, examId: number): Promise<Exam> {
-    try {
-      const exam = await this.examRepository.findOne({
-        where: { id: examId },
-      });
-      if (!exam) throw new NotFoundException('Exam Not Found');
-      // Exam owner can access the test
-      if (exam.ownerId === user.id) {
+    const exam = await this.examRepository.findOne({
+      where: { id: examId },
+    });
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    // Exam owner can access the test
+    if (exam.ownerId === user.id) {
+      delete exam.sections;
+      return exam;
+    }
+    // Student whose email listed in the restricted access list can access the test
+    if (exam.restrictedAccessList) {
+      const list = JSON.parse(exam.restrictedAccessList);
+      const isIncluded = list.filter((item) => item.content === user.email);
+      if (isIncluded[0]) {
         delete exam.sections;
         return exam;
       }
-      // Student whose email listed in the restricted access list can access the test
-      if (exam.restrictedAccessList) {
-        const list = JSON.parse(exam.restrictedAccessList);
-        const isIncluded = list.filter((item) => item.content === user.email);
-        if (isIncluded[0]) {
-          delete exam.sections;
-          return exam;
-        }
-      }
-      throw new UnauthorizedException('You are not permitted to take the test');
-    } catch (e) {
-      return e;
     }
+    throw new UnauthorizedException('You are not permitted to take the test');
   }
-
-  async getLatestExams(): Promise<Exam[]> {
-    return await this.examRepository.getLatestExams();
-  }
-  async getRelatedExams(examId: number): Promise<Exam[]> {
-    return await this.examRepository.getRelatedExams(examId);
-  }
-  async getSubjects(): Promise<any> {
-    return await this.examRepository.getSubjects();
-  }
-  async getQuestionTypes(): Promise<string[]> {
-    return await this.questionGroupRepository.getQuestionTypes();
-  }
+  /*********Methods for Test Takers */
   async getExamForTestTaker(
     examId: number,
   ): Promise<{ exam: Exam; sections: Section[] }> {
-    try {
-      const exam = await this.examRepository.findOne({
-        where: { id: examId, isPublished: true },
-      });
-      if (!exam) throw new NotFoundException('Exam Not Found');
-      const sections = await this.sectionRepository.find({ where: { examId } });
-      return { exam, sections };
-    } catch (e) {
-      throw new NotFoundException('Exam Not Found');
-    }
+    const exam = await this.examRepository.findOne({
+      where: { id: examId, isPublished: true },
+    });
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    const sections = await this.sectionRepository.find({ where: { examId } });
+    return { exam, sections };
   }
 
   async getRestrictedExamForTestTaker(
     user: User,
     examId: number,
   ): Promise<{ exam: Exam; sections: Section[] }> {
-    try {
-      const exam = await this.examRepository.findOne({
-        where: { id: examId },
-      });
-      const sections = await this.sectionRepository.find({ where: { examId } });
-      if (!exam) throw new NotFoundException('Exam Not Found');
-
-      // Exam owner can access the test
-      if (exam.ownerId === user.id) {
+    const exam = await this.examRepository.findOne({
+      where: { id: examId },
+    });
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    const sections = await this.sectionRepository.find({ where: { examId } });
+    // Exam owner can access the test
+    if (exam.ownerId === user.id) {
+      return { exam, sections };
+    }
+    // Student whose email listed in the restricted access list can access the test
+    if (exam.restrictedAccessList) {
+      const list = JSON.parse(exam.restrictedAccessList);
+      const isIncluded = list.filter((item) => item.content === user.email);
+      if (isIncluded[0]) {
         return { exam, sections };
       }
-      // Student whose email listed in the restricted access list can access the test
-      if (exam.restrictedAccessList) {
-        const list = JSON.parse(exam.restrictedAccessList);
-        const isIncluded = list.filter((item) => item.content === user.email);
-        if (isIncluded[0]) {
-          return { exam, sections };
-        }
-      }
-      throw new UnauthorizedException('You are not permitted to take the test');
-    } catch (e) {
-      return e;
     }
+    throw new UnauthorizedException('You are not permitted to take the test');
   }
 
   async updateExamRating(rating: number, examId: number): Promise<void> {
-    try {
-      const exam: Exam = await this.examRepository.findOne(examId);
-      if (!exam) throw new NotFoundException('Exam Not Found');
-      // Update Exam Rating
-      exam.totalRating += rating;
-      exam.ratingPeople++;
-      await exam.save();
-    } catch (e) {
-      throw new InternalServerErrorException(e);
-    }
+    return await this.examRepository.updateExamRating(rating, examId);
   }
 
   /************************************* */
-  /****Exam Services For Owner*****/
+  /****Exam Services For exam Owner*****/
   /************************************* */
 
   async getExams(user: User): Promise<Exam[]> {
@@ -206,7 +178,10 @@ export class ExamService {
     user: User,
   ): Promise<Exam[]> {
     const { imageUrl } = updatedExamDto;
-    const exam: Exam = await this.getExam(examId, user);
+    const exam: Exam = await this.examRepository.findOne({
+      where: { id: examId, ownerId: user.id  }
+    });
+    if(!exam) throw new NotFoundException("Exam Not Found");
     //1. Remove corresponding images
     if (
       exam &&
@@ -241,11 +216,7 @@ export class ExamService {
   }
 
   async removeExam(examId: number, user: User): Promise<Exam[]> {
-    try {
-      return await this.examRepository.removeExam(examId, user.id);
-    } catch (e) {
-      throw new InternalServerErrorException(e);
-    }
+    return await this.examRepository.removeExam(examId, user.id);
   }
 
   /************************************* */
@@ -261,21 +232,18 @@ export class ExamService {
     examId: number,
     user: User,
   ): Promise<Section> {
-    try {
-      /***Check the User's Permission***/
-      const exam = await this.examRepository.findOne({
-        where: { id: examId, ownerId: user.id },
-      });
-      if (!exam) throw new NotFoundException('Exam Not Found');
-      /***********************************/ else {
-        return await this.sectionRepository.createSection(
-          createSectionDto,
-          exam,
-          user,
-        );
-      }
-    } catch (e) {
-      throw new InternalServerErrorException(e);
+    /***Check the User's Permission***/
+    const exam = await this.examRepository.findOne({
+      where: { id: examId, ownerId: user.id },
+    });
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    /***********************************/ 
+    else {
+      return await this.sectionRepository.createSection(
+        createSectionDto,
+        exam,
+        user,
+      );
     }
   }
 
@@ -284,7 +252,12 @@ export class ExamService {
     exam: Exam,
     user: User,
   ): Promise<Section> {
-    try {
+
+      /***Check the User's Permission***/
+      const oldExam = await this.examRepository.findOne({
+        where: { id: exam.id, ownerId: user.id },
+      });
+      if (!oldExam) throw new NotFoundException('Exam Not Found');
       /********************************/
       // 1. Create Section
       const sectionDto: CreateSectionDto = {
@@ -300,6 +273,7 @@ export class ExamService {
         exam,
         user,
       );
+      if(!section) throw new InternalServerErrorException("Something went wrong!")
       // 2. Create Question Group
       const questionDto: CreateQuestionDto = {
         imageUrl: null,
@@ -326,9 +300,6 @@ export class ExamService {
       );
       section.questionGroups = questionGroups;
       return section;
-    } catch (e) {
-      throw new NotFoundException('Exam Not Found');
-    }
   }
 
   async getSection(
@@ -533,6 +504,7 @@ export class ExamService {
           section,
           user,
         );
+      if(!questionGroup) throw new InternalServerErrorException("Something went wrong in createQuestionGroup")
       const { questions } = createQuestionGroupDto;
       // 2. Create questions and answers
       const newQuestions = [];
@@ -542,11 +514,13 @@ export class ExamService {
       }
 
       let questionGroups = await this.getQuestionGroups(sectionId, user);
-      questionGroups = questionGroups.map((q) => {
-        if (q.id === questionGroup.id) q.questions = newQuestions;
-        return q;
-      });
-      return questionGroups;
+      if(questionGroups.length > 0) {
+        questionGroups = questionGroups.map((q) => {
+          if (q.id === questionGroup.id) q.questions = newQuestions;
+          return q;
+        });
+        return questionGroups;
+      } return [];
     } catch (e) {
       throw new InternalServerErrorException(e);
     }
