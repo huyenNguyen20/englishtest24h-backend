@@ -18,7 +18,7 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
   }
 
   async getQuestionGroups(sectionId, user: User): Promise<QuestionGroup[]> {
-    return this.find({ where: { sectionId, ownerId: user.id } });
+    return await this.find({ where: { sectionId, ownerId: user.id } });
   }
 
   async createQuestionGroup(

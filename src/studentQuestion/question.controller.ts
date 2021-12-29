@@ -18,15 +18,15 @@ import { Logger } from 'winston';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { getUser } from 'src/auth/decorator/getUser.decorator';
-import { User } from 'src/auth/entities/user.entity';
+import { getUser } from '../auth/decorator/getUser.decorator';
+import { User } from '../auth/entities/user.entity';
 import { StudentQuestionService } from './question.service';
 import { StudentQuestion } from './entities/question.entity';
 import { CreateTeacherAnswerDto } from './dto/create-answer.dto';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { getExam } from 'src/exam/decorators/getExam.decorator';
-import { Exam } from 'src/exam/entities/exam.entity';
-import { isTeacher } from 'src/auth/decorator/isTeacher.decorator';
+import { getExam } from '../exam/decorators/getExam.decorator';
+import { Exam } from '../exam/entities/exam.entity';
+import { isTeacher } from '../auth/decorator/isTeacher.decorator';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Student Question Endpoints')

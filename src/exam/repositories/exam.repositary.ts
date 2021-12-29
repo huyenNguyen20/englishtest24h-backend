@@ -151,15 +151,15 @@ export class ExamRepository extends Repository<Exam> {
     }
   }
   async updateExamRating(rating: number, examId: number): Promise<void> {
-      const exam: Exam = await this.findOne(examId);
-      if (!exam) throw new NotFoundException('Exam Not Found');
-      // Update Exam Rating
-      exam.totalRating += rating;
-      exam.ratingPeople++;
-      await exam.save();
+    const exam: Exam = await this.findOne(examId);
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    // Update Exam Rating
+    exam.totalRating += rating;
+    exam.ratingPeople++;
+    await exam.save();
   }
   /******Exams Methods for Test Takers** */
-  
+
   /****Exams Methods for Owner*** */
   async getExams(userId: number): Promise<Exam[]> {
     return await this.createQueryBuilder('exam')
@@ -263,186 +263,184 @@ export class ExamRepository extends Repository<Exam> {
   }
 
   async removeExam(examId: number, userId: number): Promise<Exam[]> {
-      const exam: Exam = await this.findOne({
-        where: { id: examId },
+    const exam: Exam = await this.findOne({
+      where: { id: examId },
+    });
+    if (!exam) throw new NotFoundException('Exam Not Found');
+    // Get neccessary helper functions
+    const {
+      deleteImage,
+      batchDeleteAudio,
+      batchDeleteImage,
+    } = require('../../shared/helpers');
+
+    // 1. Remove all corresponding images of Exam
+    if (exam && Boolean(exam.imageUrl) && !exam.imageUrl.includes('/')) {
+      const filename = exam.imageUrl;
+      if (filename) await deleteImage(filename);
+    }
+
+    const sections: Section[] = await getConnection()
+      .createQueryBuilder()
+      .select('id')
+      .from(Section, 'section')
+      .where('section.examId =:examId', { examId })
+      .execute();
+
+    if (sections.length > 0) {
+      const sectionIds = sections.map((section) => section.id);
+      // 2. Delete Images and Audios of Corresponding Sections
+      const sectionImgArr: string[] = [];
+      const sectionAudioArr: string[] = [];
+      sections.forEach((section) => {
+        if (section.imageUrl && !section.imageUrl.includes('/')) {
+          const fileName = section.imageUrl;
+          if (fileName) sectionImgArr.push(fileName);
+        }
+        if (section.audioUrl && !section.audioUrl.includes('/')) {
+          const fileName = section.audioUrl;
+          if (fileName) sectionAudioArr.push(fileName);
+        }
       });
-      if (!exam) throw new NotFoundException('Exam Not Found');
-      // Get neccessary helper functions
-      const {
-        deleteImage,
-        batchDeleteAudio,
-        batchDeleteImage,
-      } = require('../../shared/helpers');
+      if (sectionImgArr.length > 0) await batchDeleteImage(sectionImgArr);
+      if (sectionAudioArr.length > 0) await batchDeleteAudio(sectionAudioArr);
 
-      // 1. Remove all corresponding images of Exam
-      if (exam && Boolean(exam.imageUrl) && !exam.imageUrl.includes('/')) {
-        const filename = exam.imageUrl;
-        if (filename) await deleteImage(filename);
-      }
-
-      const sections: Section[] = await getConnection()
+      const questionGroups: QuestionGroup[] = await getConnection()
         .createQueryBuilder()
         .select('id')
-        .from(Section, 'section')
-        .where('section.examId =:examId', { examId })
+        .from(QuestionGroup, 'questionGroup')
+        .where('questionGroup.sectionId IN (:...sectionIds)', {
+          sectionIds: [...sectionIds],
+        })
         .execute();
 
-      if (sections.length > 0) {
-        const sectionIds = sections.map((section) => section.id);
-        // 2. Delete Images and Audios of Corresponding Sections
-        const sectionImgArr: string[] = [];
-        const sectionAudioArr: string[] = [];
-        sections.forEach((section) => {
-          if (section.imageUrl && !section.imageUrl.includes('/')) {
-            const fileName = section.imageUrl;
-            if (fileName) sectionImgArr.push(fileName);
-          }
-          if (section.audioUrl && !section.audioUrl.includes('/')) {
-            const fileName = section.audioUrl;
-            if (fileName) sectionAudioArr.push(fileName);
+      if (questionGroups.length > 0) {
+        const questionGroupIds = questionGroups.map(
+          (questionGroup) => questionGroup.id,
+        );
+
+        // 3. Delete Images of Corresponding Question Groups
+        const questionGrpImgArr: string[] = [];
+        questionGroups.forEach((qG) => {
+          if (qG.imageUrl && !qG.imageUrl.includes('/')) {
+            const fileName = qG.imageUrl;
+            if (fileName) questionGrpImgArr.push(fileName);
           }
         });
-        if (sectionImgArr.length > 0) await batchDeleteImage(sectionImgArr);
-        if (sectionAudioArr.length > 0) await batchDeleteAudio(sectionAudioArr);
+        if (questionGrpImgArr.length > 0)
+          await batchDeleteImage(questionGrpImgArr);
 
-        const questionGroups: QuestionGroup[] = await getConnection()
+        const questions: Question[] = await getConnection()
           .createQueryBuilder()
           .select('id')
-          .from(QuestionGroup, 'questionGroup')
-          .where('questionGroup.sectionId IN (:...sectionIds)', {
-            sectionIds: [...sectionIds],
+          .from(Question, 'question')
+          .where('question.questionGroupId IN (:...questionGroupIds)', {
+            questionGroupIds: [...questionGroupIds],
           })
           .execute();
 
-        if (questionGroups.length > 0) {
-          const questionGroupIds = questionGroups.map(
-            (questionGroup) => questionGroup.id,
-          );
-
-          // 3. Delete Images of Corresponding Question Groups
-          const questionGrpImgArr: string[] = [];
-          questionGroups.forEach((qG) => {
-            if (qG.imageUrl && !qG.imageUrl.includes('/')) {
-              const fileName = qG.imageUrl;
-              if (fileName) questionGrpImgArr.push(fileName);
+        if (questions.length > 0) {
+          const questionIds = questions.map((question) => question.id);
+          // 4. Delete Images of Corresponding Exam Questions
+          const questionImgArr: string[] = [];
+          questions.forEach((q) => {
+            if (q.imageUrl && !q.imageUrl.includes('/')) {
+              const fileName = q.imageUrl;
+              if (fileName) questionImgArr.push(fileName);
             }
           });
-          if (questionGrpImgArr.length > 0)
-            await batchDeleteImage(questionGrpImgArr);
+          if (questionImgArr.length > 0) await batchDeleteImage(questionImgArr);
 
-          const questions: Question[] = await getConnection()
-            .createQueryBuilder()
-            .select('id')
-            .from(Question, 'question')
-            .where('question.questionGroupId IN (:...questionGroupIds)', {
-              questionGroupIds: [...questionGroupIds],
-            })
-            .execute();
-
-          if (questions.length > 0) {
-            const questionIds = questions.map((question) => question.id);
-            // 4. Delete Images of Corresponding Exam Questions
-            const questionImgArr: string[] = [];
-            questions.forEach((q) => {
-              if (q.imageUrl && !q.imageUrl.includes('/')) {
-                const fileName = q.imageUrl;
-                if (fileName) questionImgArr.push(fileName);
-              }
-            });
-            if (questionImgArr.length > 0)
-              await batchDeleteImage(questionImgArr);
-
-            //5. Delete Answers of Corresponding Questions
-            await getConnection()
-              .createQueryBuilder()
-              .delete()
-              .from(Answer)
-              .where('questionId IN (:...questionIds)', {
-                questionIds: [...questionIds],
-              })
-              .execute();
-
-            //6. Delete Exam Questions
-            await getConnection()
-              .createQueryBuilder()
-              .delete()
-              .from(Question)
-              .where('id IN (:...questionIds)', {
-                questionIds: [...questionIds],
-              })
-              .execute();
-          }
-          //7. Delete Question Group
+          //5. Delete Answers of Corresponding Questions
           await getConnection()
             .createQueryBuilder()
             .delete()
-            .from(QuestionGroup)
-            .where('id IN (:...questionGroupIds)', {
-              questionGroupIds: [...questionGroupIds],
+            .from(Answer)
+            .where('questionId IN (:...questionIds)', {
+              questionIds: [...questionIds],
+            })
+            .execute();
+
+          //6. Delete Exam Questions
+          await getConnection()
+            .createQueryBuilder()
+            .delete()
+            .from(Question)
+            .where('id IN (:...questionIds)', {
+              questionIds: [...questionIds],
             })
             .execute();
         }
-        //8. Delete Section
+        //7. Delete Question Group
         await getConnection()
           .createQueryBuilder()
           .delete()
-          .from(Section)
-          .where('id IN (:...sectionIds)', { sectionIds: [...sectionIds] })
+          .from(QuestionGroup)
+          .where('id IN (:...questionGroupIds)', {
+            questionGroupIds: [...questionGroupIds],
+          })
           .execute();
       }
+      //8. Delete Section
+      await getConnection()
+        .createQueryBuilder()
+        .delete()
+        .from(Section)
+        .where('id IN (:...sectionIds)', { sectionIds: [...sectionIds] })
+        .execute();
+    }
 
-      // 9. Delete Corresponding Enrollment Records
-      // 9.1. If this is Enrollment Record for speaking test,
-      // the recording audio urls need to be removed
-      if (exam.subject === 3) {
-        const testEnrollments: TestEnrollment[] = await getConnection()
-          .createQueryBuilder()
-          .from(TestEnrollment, 'e')
-          .where('e.examId = :examId', { examId })
-          .getMany();
+    // 9. Delete Corresponding Enrollment Records
+    // 9.1. If this is Enrollment Record for speaking test,
+    // the recording audio urls need to be removed
+    if (exam.subject === 3) {
+      const testEnrollments: TestEnrollment[] = await getConnection()
+        .createQueryBuilder()
+        .from(TestEnrollment, 'e')
+        .where('e.examId = :examId', { examId })
+        .getMany();
 
-        if (testEnrollments.length > 0) {
-          for (const e of testEnrollments) {
-            const urlArr = [];
-            const answers = JSON.parse(e.answerObj);
+      if (testEnrollments.length > 0) {
+        for (const e of testEnrollments) {
+          const urlArr = [];
+          const answers = JSON.parse(e.answerObj);
 
-            for (const a in answers) {
-              if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
-                urlArr.push(answers[a].userAnswer[0]);
-            }
-
-            const answerAudioArr: string[] = [];
-            urlArr.forEach((url) => {
-              if (!url.includes('/')) {
-                const filename = url;
-                if (filename) answerAudioArr.push(filename);
-              }
-            });
-
-            if (answerAudioArr.length > 0)
-              await batchDeleteAudio(answerAudioArr);
+          for (const a in answers) {
+            if (answers.hasOwnProperty(a) && answers[a].userAnswer[0])
+              urlArr.push(answers[a].userAnswer[0]);
           }
+
+          const answerAudioArr: string[] = [];
+          urlArr.forEach((url) => {
+            if (!url.includes('/')) {
+              const filename = url;
+              if (filename) answerAudioArr.push(filename);
+            }
+          });
+
+          if (answerAudioArr.length > 0) await batchDeleteAudio(answerAudioArr);
         }
       }
-      // 9.2. Remove Test Enrollment Records
-      await getConnection()
-        .createQueryBuilder()
-        .delete()
-        .from(TestEnrollment)
-        .where('examId =:examId', { examId })
-        .execute();
+    }
+    // 9.2. Remove Test Enrollment Records
+    await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(TestEnrollment)
+      .where('examId =:examId', { examId })
+      .execute();
 
-      // 10. Delete Corresponding Students' questions
-      await getConnection()
-        .createQueryBuilder()
-        .delete()
-        .from(StudentQuestion)
-        .where('examId =:examId', { examId })
-        .execute();
+    // 10. Delete Corresponding Students' questions
+    await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(StudentQuestion)
+      .where('examId =:examId', { examId })
+      .execute();
 
-      //11. Delete Exam
-      await this.delete(examId);
-      return await this.getExams(userId);
+    //11. Delete Exam
+    await this.delete(examId);
+    return await this.getExams(userId);
   }
   /******Helper Methods***** */
   createQuery(

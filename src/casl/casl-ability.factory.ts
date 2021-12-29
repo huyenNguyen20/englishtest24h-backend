@@ -6,9 +6,9 @@ import {
   InferSubjects,
 } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
-import { User } from 'src/auth/entities/user.entity';
-import { Exam } from 'src/exam/entities/exam.entity';
-import { TestEnrollment } from 'src/exam/entities/test-enrollment.entity';
+import { User } from '../auth/entities/user.entity';
+import { Exam } from '../exam/entities/exam.entity';
+import { TestEnrollment } from '../exam/entities/test-enrollment.entity';
 import { Action } from './Action';
 
 type Subjects =

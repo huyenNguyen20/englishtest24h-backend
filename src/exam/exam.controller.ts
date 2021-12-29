@@ -19,8 +19,8 @@ import {
 import { ExamService } from './services/exam.service';
 import { CreateExamDto, UpdateExamDto, FilterExamDto } from './dto';
 import { AuthGuard } from '@nestjs/passport';
-import { getUser } from 'src/auth/decorator/getUser.decorator';
-import { User } from 'src/auth/entities/user.entity';
+import { getUser } from '../auth/decorator/getUser.decorator';
+import { User } from '../auth/entities/user.entity';
 import { ExamValidationPipe } from './pipes/exam.pipe';
 import { Exam } from './entities/exam.entity';
 import { ExamFilterValidationPipe } from './pipes/exam-filter.pipe';
@@ -39,9 +39,9 @@ import { CreateWritingSectionValidationPipe } from './pipes/create-writing-secti
 import { CreateQuestionGroupValidationPipe } from './pipes/create-question-group.pipe';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { isTeacher } from 'src/auth/decorator/isTeacher.decorator';
+import { isTeacher } from '../auth/decorator/isTeacher.decorator';
 import { getExam } from './decorators/getExam.decorator';
-import { UploadService } from 'src/upload/upload.service';
+import { UploadService } from '../upload/upload.service';
 
 @ApiTags('Exams Endpoints')
 @Controller('exams')

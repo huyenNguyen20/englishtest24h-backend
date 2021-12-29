@@ -1,4 +1,7 @@
-import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { User } from 'src/auth/entities/user.entity';
 import { EntityRepository, getConnection, Repository } from 'typeorm';
 import { CreateSectionDto } from '../dto/create-section.dto';
@@ -20,7 +23,7 @@ export class SectionRepository extends Repository<Section> {
     exam: Exam,
     user: User,
   ): Promise<Section> {
-    try{
+    try {
       const {
         title,
         audioUrl,
@@ -32,10 +35,10 @@ export class SectionRepository extends Repository<Section> {
       const s = new Section();
       s.title = title;
       if (audioUrl) s.audioUrl = audioUrl;
-  
+
       if (imageUrl) s.imageUrl = imageUrl;
       else s.imageUrl = null;
-  
+
       if (htmlContent) s.htmlContent = htmlContent;
       if (directions) s.directions = directions;
       if (transcription) s.transcript = transcription;
@@ -44,8 +47,8 @@ export class SectionRepository extends Repository<Section> {
       s.examId = exam.id;
       await s.save();
       return s;
-    } catch(e){
-      throw new InternalServerErrorException(e)
+    } catch (e) {
+      throw new InternalServerErrorException(e);
     }
   }
 

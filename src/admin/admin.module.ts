@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from 'src/auth/auth.module';
-import { CaslModule } from 'src/casl/casl.module';
-import { ExamModule } from 'src/exam/exam.module';
+import { AuthModule } from '../auth/auth.module';
+import { CaslModule } from '../casl/casl.module';
+import { ExamModule } from '../exam/exam.module';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 

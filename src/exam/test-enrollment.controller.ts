@@ -17,8 +17,8 @@ import {
 import { Logger } from 'winston';
 import { AuthGuard } from '@nestjs/passport';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { getUser } from 'src/auth/decorator/getUser.decorator';
-import { User } from 'src/auth/entities/user.entity';
+import { getUser } from '../auth/decorator/getUser.decorator';
+import { User } from '../auth/entities/user.entity';
 import { CreateTestEnrollmentDto } from './dto/create-test-enrollment.dto';
 import { FilterDto } from './dto/filter.dto';
 import { TestEnrollment } from './entities/test-enrollment.entity';
@@ -26,7 +26,7 @@ import { EnrollmentDataToTeacher } from './interface/enrollment-data-to-teacher.
 import { FilterValidationPipe } from './pipes/filter.pipe';
 import { TestEnrollmentValidationPipe } from './pipes/test-enrollment.pipe';
 import { TestEnrollmentService } from './services/test-enrollment.service';
-import { isTeacher } from 'src/auth/decorator/isTeacher.decorator';
+import { isTeacher } from '../auth/decorator/isTeacher.decorator';
 import { getExam } from './decorators/getExam.decorator';
 import { Exam } from './entities/exam.entity';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';

@@ -35,7 +35,6 @@ import { CreateWritingSectionDto } from '../dto/create-writing-section.dto';
 @Injectable()
 export class ExamService {
   constructor(
-
     @InjectRepository(ExamRepository)
     private examRepository: ExamRepository,
 
@@ -179,9 +178,9 @@ export class ExamService {
   ): Promise<Exam[]> {
     const { imageUrl } = updatedExamDto;
     const exam: Exam = await this.examRepository.findOne({
-      where: { id: examId, ownerId: user.id  }
+      where: { id: examId, ownerId: user.id },
     });
-    if(!exam) throw new NotFoundException("Exam Not Found");
+    if (!exam) throw new NotFoundException('Exam Not Found');
     //1. Remove corresponding images
     if (
       exam &&
@@ -237,8 +236,7 @@ export class ExamService {
       where: { id: examId, ownerId: user.id },
     });
     if (!exam) throw new NotFoundException('Exam Not Found');
-    /***********************************/ 
-    else {
+    /***********************************/ else {
       return await this.sectionRepository.createSection(
         createSectionDto,
         exam,
@@ -252,54 +250,54 @@ export class ExamService {
     exam: Exam,
     user: User,
   ): Promise<Section> {
-
-      /***Check the User's Permission***/
-      const oldExam = await this.examRepository.findOne({
-        where: { id: exam.id, ownerId: user.id },
-      });
-      if (!oldExam) throw new NotFoundException('Exam Not Found');
-      /********************************/
-      // 1. Create Section
-      const sectionDto: CreateSectionDto = {
-        title: createWritingSectionDto.title,
-        directions: createWritingSectionDto.directions,
-        imageUrl: createWritingSectionDto.imageUrl || null,
-        audioUrl: null,
-        htmlContent: null,
-        transcription: null,
-      };
-      const section = await this.sectionRepository.createSection(
-        sectionDto,
-        exam,
-        user,
-      );
-      if(!section) throw new InternalServerErrorException("Something went wrong!")
-      // 2. Create Question Group
-      const questionDto: CreateQuestionDto = {
-        imageUrl: null,
-        score: createWritingSectionDto.score,
-        order: null,
-        minWords: createWritingSectionDto.minWords,
-        question: createWritingSectionDto.question,
-        htmlExplaination: createWritingSectionDto.htmlExplaination,
-        answers: null,
-      };
-      const questionGroupDto: CreateQuestionGroupDto = {
-        type: 7,
-        title: '',
-        imageUrl: null,
-        htmlContent: null,
-        matchingOptions: null,
-        questions: [questionDto],
-      };
-      const questionGroups = await this.createQuestionGroup(
-        questionGroupDto,
-        exam.id,
-        section.id,
-        user,
-      );
-      section.questionGroups = questionGroups;
-      return section;
+    /***Check the User's Permission***/
+    const oldExam = await this.examRepository.findOne({
+      where: { id: exam.id, ownerId: user.id },
+    });
+    if (!oldExam) throw new NotFoundException('Exam Not Found');
+    /********************************/
+    // 1. Create Section
+    const sectionDto: CreateSectionDto = {
+      title: createWritingSectionDto.title,
+      directions: createWritingSectionDto.directions,
+      imageUrl: createWritingSectionDto.imageUrl || null,
+      audioUrl: null,
+      htmlContent: null,
+      transcription: null,
+    };
+    const section = await this.sectionRepository.createSection(
+      sectionDto,
+      exam,
+      user,
+    );
+    if (!section)
+      throw new InternalServerErrorException('Something went wrong!');
+    // 2. Create Question Group
+    const questionDto: CreateQuestionDto = {
+      imageUrl: null,
+      score: createWritingSectionDto.score,
+      order: null,
+      minWords: createWritingSectionDto.minWords,
+      question: createWritingSectionDto.question,
+      htmlExplaination: createWritingSectionDto.htmlExplaination,
+      answers: null,
+    };
+    const questionGroupDto: CreateQuestionGroupDto = {
+      type: 7,
+      title: '',
+      imageUrl: null,
+      htmlContent: null,
+      matchingOptions: null,
+      questions: [questionDto],
+    };
+    const questionGroups = await this.createQuestionGroup(
+      questionGroupDto,
+      exam.id,
+      section.id,
+      user,
+    );
+    section.questionGroups = questionGroups;
+    return section;
   }
 
   async getSection(
@@ -316,49 +314,45 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<Section> {
-    try {
-      //1. Remove Existing Audio and Image Files from File System
-      const { audioUrl, imageUrl } = updateSectionDto;
-      const section = await this.sectionRepository.getSection(
-        examId,
-        sectionId,
-        user,
-      );
-      if (!section) throw new NotFoundException('Section Not Found');
-      if (
-        section &&
-        Boolean(section.imageUrl) &&
-        section.imageUrl !== imageUrl &&
-        !section.imageUrl.includes('/')
-      ) {
-        const filename = section.imageUrl;
-        if (filename) {
-          const { deleteImage } = require('../../shared/helpers');
-          await deleteImage(filename);
-        }
+    //1. Remove Existing Audio and Image Files from File System
+    const { audioUrl, imageUrl } = updateSectionDto;
+    const section = await this.sectionRepository.getSection(
+      examId,
+      sectionId,
+      user,
+    );
+    if (!section) throw new NotFoundException('Section Not Found');
+    if (
+      section &&
+      Boolean(section.imageUrl) &&
+      section.imageUrl !== imageUrl &&
+      !section.imageUrl.includes('/')
+    ) {
+      const filename = section.imageUrl;
+      if (filename) {
+        const { deleteImage } = require('../../shared/helpers');
+        await deleteImage(filename);
       }
-      if (
-        section &&
-        Boolean(section.audioUrl) &&
-        section.audioUrl !== audioUrl &&
-        !section.audioUrl.includes('/')
-      ) {
-        const filename = section.audioUrl;
-        if (filename) {
-          const { deleteAudio } = require('../../shared/helpers');
-          await deleteAudio(filename);
-        }
-      }
-      //2. Update the section
-      return await this.sectionRepository.updateSection(
-        updateSectionDto,
-        examId,
-        sectionId,
-        user,
-      );
-    } catch (e) {
-      throw new InternalServerErrorException(e);
     }
+    if (
+      section &&
+      Boolean(section.audioUrl) &&
+      section.audioUrl !== audioUrl &&
+      !section.audioUrl.includes('/')
+    ) {
+      const filename = section.audioUrl;
+      if (filename) {
+        const { deleteAudio } = require('../../shared/helpers');
+        await deleteAudio(filename);
+      }
+    }
+    //2. Update the section
+    return await this.sectionRepository.updateSection(
+      updateSectionDto,
+      examId,
+      sectionId,
+      user,
+    );
   }
 
   async updateWritingSection(
@@ -367,69 +361,71 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<Section> {
-    try {
-      //1. Remove Existing Audio and Image Files of Writing Section
-      const { imageUrl } = updateWritingSectionDto;
-      const section: Section = await this.sectionRepository.getSection(
-        exam.id,
-        sectionId,
+    //1. Remove Existing Audio and Image Files of Writing Section
+    const { imageUrl } = updateWritingSectionDto;
+    const section: Section = await this.sectionRepository.getSection(
+      exam.id,
+      sectionId,
+      user,
+    );
+    if (!section) throw new NotFoundException('Section Not Found');
+    if (
+      section &&
+      Boolean(section.imageUrl) &&
+      section.imageUrl !== imageUrl &&
+      !section.imageUrl.includes('/')
+    ) {
+      const filename = section.imageUrl;
+      if (filename) {
+        const { deleteImage } = require('../../shared/helpers');
+        await deleteImage(filename);
+      }
+    }
+    //2. Create questionDto, sectionDto, and questionGroupDto
+    const sectionDto: UpdateSectionDto = {
+      title: updateWritingSectionDto.title,
+      directions: updateWritingSectionDto.directions,
+      imageUrl: updateWritingSectionDto.imageUrl || null,
+    };
+    const questionDto: CreateQuestionDto = {
+      imageUrl: null,
+      score: updateWritingSectionDto.score,
+      order: null,
+      minWords: updateWritingSectionDto.minWords,
+      question: updateWritingSectionDto.question,
+      htmlExplaination: updateWritingSectionDto.htmlExplaination,
+      answers: null,
+    };
+    const questionGroupDto: UpdateQuestionGroupDto = {
+      title: '',
+      imageUrl: null,
+      htmlContent: null,
+      questions: [questionDto],
+    };
+    // 3. Update Section
+    const updatedSection: Section = await this.sectionRepository.updateSection(
+      sectionDto,
+      exam.id,
+      sectionId,
+      user,
+    );
+    // 4. Update Question Group
+    let updatedQuestionGroup: QuestionGroup[] = [];
+    if (
+      section.questionGroups &&
+      section.questionGroups.length > 0 &&
+      section.questionGroups[0].id
+    ) {
+      updatedQuestionGroup = await this.updateQuestionGroup(
+        questionGroupDto,
+        section.id,
+        section.questionGroups[0].id,
         user,
       );
-      if (!section) throw new NotFoundException('Section Not Found');
-      if (
-        section &&
-        Boolean(section.imageUrl) &&
-        section.imageUrl !== imageUrl &&
-        !section.imageUrl.includes('/')
-      ) {
-        const filename = section.imageUrl;
-        if (filename) {
-          const { deleteImage } = require('../../shared/helpers');
-          await deleteImage(filename);
-        }
-      }
-      //2. Create questionDto, sectionDto, and questionGroupDto
-      const sectionDto: UpdateSectionDto = {
-        title: updateWritingSectionDto.title,
-        directions: updateWritingSectionDto.directions,
-        imageUrl: updateWritingSectionDto.imageUrl || null,
-      };
-      const questionDto: CreateQuestionDto = {
-        imageUrl: null,
-        score: updateWritingSectionDto.score,
-        order: null,
-        minWords: updateWritingSectionDto.minWords,
-        question: updateWritingSectionDto.question,
-        htmlExplaination: updateWritingSectionDto.htmlExplaination,
-        answers: null,
-      };
-      const questionGroupDto: UpdateQuestionGroupDto = {
-        title: '',
-        imageUrl: null,
-        htmlContent: null,
-        questions: [questionDto],
-      };
-      // 3. Update Section
-      const updatedSection: Section =
-        await this.sectionRepository.updateSection(
-          sectionDto,
-          exam.id,
-          sectionId,
-          user,
-        );
-      // 4. Update Question Group
-      const updatedQuestionGroup: QuestionGroup[] =
-        await this.updateQuestionGroup(
-          questionGroupDto,
-          section.id,
-          section.questionGroups[0].id,
-          user,
-        );
-      updatedSection.questionGroups = updatedQuestionGroup;
-      return updatedSection;
-    } catch (e) {
-      throw new InternalServerErrorException(e);
     }
+
+    updatedSection.questionGroups = updatedQuestionGroup;
+    return updatedSection;
   }
 
   async removeSection(
@@ -437,42 +433,38 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<Section[]> {
-    try {
-      const section: Section = await this.sectionRepository.getSection(
-        examId,
-        sectionId,
-        user,
-      );
-      if (!section) throw new NotFoundException('Section Not Found');
-      //1. Remove Audio and Image Files of Section
-      if (
-        section &&
-        Boolean(section.imageUrl) &&
-        !section.imageUrl.includes('/')
-      ) {
-        const filename = section.imageUrl;
-        if (filename) {
-          const { deleteImage } = require('../../shared/helpers');
-          await deleteImage(filename);
-        }
+    const section: Section = await this.sectionRepository.getSection(
+      examId,
+      sectionId,
+      user,
+    );
+    if (!section) throw new NotFoundException('Section Not Found');
+    //1. Remove Audio and Image Files of Section
+    if (
+      section &&
+      Boolean(section.imageUrl) &&
+      !section.imageUrl.includes('/')
+    ) {
+      const filename = section.imageUrl;
+      if (filename) {
+        const { deleteImage } = require('../../shared/helpers');
+        await deleteImage(filename);
       }
-      if (
-        section &&
-        Boolean(section.audioUrl) &&
-        !section.audioUrl.includes('/')
-      ) {
-        const filename = section.audioUrl;
-        if (filename) {
-          const { deleteAudio } = require('../../shared/helpers');
-          await deleteAudio(filename);
-        }
-      }
-      //2. Remove the section
-      await this.sectionRepository.removeSection(examId, sectionId, user);
-      return await this.getSections(examId, user);
-    } catch (e) {
-      throw new InternalServerErrorException(e);
     }
+    if (
+      section &&
+      Boolean(section.audioUrl) &&
+      !section.audioUrl.includes('/')
+    ) {
+      const filename = section.audioUrl;
+      if (filename) {
+        const { deleteAudio } = require('../../shared/helpers');
+        await deleteAudio(filename);
+      }
+    }
+    //2. Remove the section
+    await this.sectionRepository.removeSection(examId, sectionId, user);
+    return await this.getSections(examId, user);
   }
 
   /************************************* */
@@ -495,35 +487,35 @@ export class ExamService {
     sectionId: number,
     user: User,
   ): Promise<QuestionGroup[]> {
-    try {
-      const section = await this.getSection(examId, sectionId, user);
-      // 1. Create question group
-      const questionGroup =
-        await this.questionGroupRepository.createQuestionGroup(
-          createQuestionGroupDto,
-          section,
-          user,
-        );
-      if(!questionGroup) throw new InternalServerErrorException("Something went wrong in createQuestionGroup")
-      const { questions } = createQuestionGroupDto;
-      // 2. Create questions and answers
-      const newQuestions = [];
+    const section = await this.getSection(examId, sectionId, user);
+    if (!section) throw new NotFoundException('Section Not Found');
+    // 1. Create question group
+    const questionGroup =
+      await this.questionGroupRepository.createQuestionGroup(
+        createQuestionGroupDto,
+        section,
+        user,
+      );
+    if (!questionGroup)
+      throw new InternalServerErrorException('Something went wrong');
+    const { questions } = createQuestionGroupDto;
+    // 2. Create questions and answers
+    const newQuestions = [];
+    if (questions && questions.length > 0) {
       for (const q of questions) {
         const question = await this.createQuestion(q, questionGroup.id, user);
         newQuestions.push(question);
       }
-
-      let questionGroups = await this.getQuestionGroups(sectionId, user);
-      if(questionGroups.length > 0) {
-        questionGroups = questionGroups.map((q) => {
-          if (q.id === questionGroup.id) q.questions = newQuestions;
-          return q;
-        });
-        return questionGroups;
-      } return [];
-    } catch (e) {
-      throw new InternalServerErrorException(e);
     }
+    let questionGroups = await this.getQuestionGroups(sectionId, user);
+    if (questionGroups.length > 0) {
+      questionGroups = questionGroups.map((q) => {
+        if (q.id === questionGroup.id) q.questions = newQuestions;
+        return q;
+      });
+      return questionGroups;
+    }
+    return [];
   }
 
   async getQuestionGroup(
@@ -543,98 +535,97 @@ export class ExamService {
     user: User,
   ): Promise<QuestionGroup[]> {
     //Update questionGroup
-    try {
-      const { questions, imageUrl } = updateQuestionGroupDto;
-      const oldQuestionGroup: QuestionGroup = await this.getQuestionGroup(
+    const { questions, imageUrl } = updateQuestionGroupDto;
+    const oldQuestionGroup: QuestionGroup = await this.getQuestionGroup(
+      questionGroupId,
+      user,
+    );
+    if (!oldQuestionGroup)
+      throw new NotFoundException('Question Group Not Found');
+    // 1. Delete image of the question group
+    if (
+      Boolean(oldQuestionGroup.imageUrl) &&
+      oldQuestionGroup.imageUrl !== imageUrl &&
+      !oldQuestionGroup.imageUrl.includes('/')
+    ) {
+      const filename = oldQuestionGroup.imageUrl;
+      if (filename) {
+        const { deleteImage } = require('../../shared/helpers');
+        await deleteImage(filename);
+      }
+    }
+    // 2. Update and get updated question group
+    const questionGroup: QuestionGroup =
+      await this.questionGroupRepository.updateQuestionGroup(
+        updateQuestionGroupDto,
         questionGroupId,
         user,
       );
-      if (!oldQuestionGroup)
-        throw new NotFoundException('Question Group Not Found');
-      // 1. Delete image of the question group
-      if (
-        Boolean(oldQuestionGroup.imageUrl) &&
-        oldQuestionGroup.imageUrl !== imageUrl &&
-        !oldQuestionGroup.imageUrl.includes('/')
-      ) {
-        const filename = oldQuestionGroup.imageUrl;
-        if (filename) {
-          const { deleteImage } = require('../../shared/helpers');
-          await deleteImage(filename);
-        }
+    if (!questionGroup) throw new NotFoundException('Question Group Not Found');
+    if (questionGroup.questions && questionGroup.questions.length > 0) {
+      const questionIds = questionGroup.questions.map(
+        (question) => question.id,
+      );
+
+      //3. Delete image file of corresponding questions
+      // const fileNameArr: string[] = [];
+      // questionGroup.questions.forEach((question) => {
+      //   if (question.imageUrl) {
+      //     const fileName = question.imageUrl.substring(
+      //       question.imageUrl.lastIndexOf('/') + 1,
+      //     );
+      //     if (fileName) fileNameArr.push(fileName);
+      //   }
+      // });
+      // if (fileNameArr.length > 0) {
+      //   const { batchDeleteImage } = require('../../shared/helpers');
+      //   await batchDeleteImage(fileNameArr);
+      // }
+
+      if (questionIds.length > 0) {
+        //4. Delete corresponding answers
+        await getConnection()
+          .createQueryBuilder()
+          .delete()
+          .from(Answer)
+          .where('questionId IN (:...questionIds)', {
+            questionIds: [...questionIds],
+          })
+          .execute();
+        //5. Delete corresponding questions
+        await getConnection()
+          .createQueryBuilder()
+          .delete()
+          .from(Question)
+          .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
+          .execute();
       }
-      // 2. Update and get updated question group
-      const questionGroup: QuestionGroup =
-        await this.questionGroupRepository.updateQuestionGroup(
-          updateQuestionGroupDto,
-          questionGroupId,
+    }
+
+    //6. Create questions and answers
+    const newQuestions: Question[] = [];
+    if (questions && questions.length > 0) {
+      for (const q of questions) {
+        const question: Question = await this.createQuestion(
+          q,
+          questionGroup.id,
           user,
         );
-      if (questionGroup.questions) {
-        const questionIds = questionGroup.questions.map(
-          (question) => question.id,
-        );
-
-        //3. Delete image file of corresponding questions
-        // const fileNameArr: string[] = [];
-        // questionGroup.questions.forEach((question) => {
-        //   if (question.imageUrl) {
-        //     const fileName = question.imageUrl.substring(
-        //       question.imageUrl.lastIndexOf('/') + 1,
-        //     );
-        //     if (fileName) fileNameArr.push(fileName);
-        //   }
-        // });
-        // if (fileNameArr.length > 0) {
-        //   const { batchDeleteImage } = require('../../shared/helpers');
-        //   await batchDeleteImage(fileNameArr);
-        // }
-
-        if (questionIds.length > 0) {
-          //4. Delete corresponding answers
-          await getConnection()
-            .createQueryBuilder()
-            .delete()
-            .from(Answer)
-            .where('questionId IN (:...questionIds)', {
-              questionIds: [...questionIds],
-            })
-            .execute();
-          //5. Delete corresponding questions
-          await getConnection()
-            .createQueryBuilder()
-            .delete()
-            .from(Question)
-            .where('id IN (:...questionIds)', { questionIds: [...questionIds] })
-            .execute();
-        }
+        newQuestions.push(question);
       }
-
-      //6. Create questions and answers
-      const newQuestions: Question[] = [];
-      if (questions) {
-        for (const q of questions) {
-          const question: Question = await this.createQuestion(
-            q,
-            questionGroup.id,
-            user,
-          );
-          newQuestions.push(question);
-        }
-      }
-      let questionGroups: QuestionGroup[] = await this.getQuestionGroups(
-        sectionId,
-        user,
-      );
-      //7. Return new question group array
+    }
+    let questionGroups: QuestionGroup[] = await this.getQuestionGroups(
+      sectionId,
+      user,
+    );
+    //7. Return new question group array
+    if (questionGroups.length > 0) {
       questionGroups = questionGroups.map((q) => {
         if (q.id === questionGroup.id) q.questions = newQuestions;
         return q;
       });
-      return questionGroups;
-    } catch (e) {
-      throw new InternalServerErrorException(e);
     }
+    return questionGroups;
   }
 
   async removeQuestionGroup(
@@ -642,47 +633,45 @@ export class ExamService {
     questionGroupId: number,
     user: User,
   ): Promise<QuestionGroup[]> {
-    try {
-      const questionGroup: QuestionGroup =
-        await this.questionGroupRepository.getQuestionGroup(
-          questionGroupId,
-          user,
-        );
-      // 1. Delete image of the question group
-      if (
-        Boolean(questionGroup.imageUrl) &&
-        !questionGroup.imageUrl.includes('/')
-      ) {
-        const filename = questionGroup.imageUrl;
-        if (filename) {
-          const { deleteImage } = require('../../shared/helpers');
-          await deleteImage(filename);
-        }
-      }
-
-      if (questionGroup.questions) {
-        //2. Delete image file of corresponding questions
-        const fileNameArr: string[] = [];
-        questionGroup.questions.forEach((question) => {
-          if (question.imageUrl && !question.imageUrl.includes('/')) {
-            const fileName = question.imageUrl;
-            if (fileName) fileNameArr.push(fileName);
-          }
-        });
-        if (fileNameArr.length > 0) {
-          const { batchDeleteImage } = require('../../shared/helpers');
-          await batchDeleteImage(fileNameArr);
-        }
-      }
-
-      await this.questionGroupRepository.removeQuestionGroup(
+    const questionGroup: QuestionGroup =
+      await this.questionGroupRepository.getQuestionGroup(
         questionGroupId,
         user,
       );
-      return await this.getQuestionGroups(sectionId, user);
-    } catch (e) {
-      throw new InternalServerErrorException(e);
+    if (!questionGroup) throw new NotFoundException('Question Group Not Found');
+    // 1. Delete image of the question group
+    if (
+      Boolean(questionGroup.imageUrl) &&
+      !questionGroup.imageUrl.includes('/')
+    ) {
+      const filename = questionGroup.imageUrl;
+      if (filename) {
+        const { deleteImage } = require('../../shared/helpers');
+        await deleteImage(filename);
+      }
     }
+
+    if (questionGroup.questions) {
+      //2. Delete image file of corresponding questions
+      const fileNameArr: string[] = [];
+      questionGroup.questions.forEach((question) => {
+        if (question.imageUrl && !question.imageUrl.includes('/')) {
+          const fileName = question.imageUrl;
+          if (fileName) fileNameArr.push(fileName);
+        }
+      });
+      if (fileNameArr.length > 0) {
+        const { batchDeleteImage } = require('../../shared/helpers');
+        await batchDeleteImage(fileNameArr);
+      }
+    }
+    // 3. Call removeQuestionGroup to remove question groups
+    await this.questionGroupRepository.removeQuestionGroup(
+      questionGroupId,
+      user,
+    );
+    // 4. Return an array of question group that belongs to the section
+    return await this.getQuestionGroups(sectionId, user);
   }
 
   /************************************* */
@@ -703,12 +692,15 @@ export class ExamService {
       questionGroupId,
       user,
     );
+    if (!questionGroup) throw new NotFoundException('Question Group Not Found');
     // 2. Create question
     const question: Question = await this.questionRepository.createQuestion(
       createQuestionDto,
       questionGroup,
       user,
     );
+    if (!question)
+      throw new InternalServerErrorException('Something went wrong');
     // 3. Create answers
     const { answers } = createQuestionDto;
     const answersArr = [];

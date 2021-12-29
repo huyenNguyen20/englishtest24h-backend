@@ -16,10 +16,10 @@ import { Exam } from '../exam/entities/exam.entity';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TestEnrollment } from '../exam/entities/test-enrollment.entity';
 import { AdminService } from './admin.service';
-import { PoliciesGuard } from 'src/casl/guards/casl-policy.guard';
-import { CheckPolicies } from 'src/casl/decorators/checkPolicy.decorator';
+import { PoliciesGuard } from '../casl/guards/casl-policy.guard';
+import { CheckPolicies } from '../casl/decorators/checkPolicy.decorator';
 import { AdminPolicyHandler } from './policies/AdminPolicyHandler';
-import { getExam } from 'src/exam/decorators/getExam.decorator';
+import { getExam } from '../exam/decorators/getExam.decorator';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 @ApiTags('Admin Endpoints')

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { AuthService } from 'src/auth/auth.service';
-import { User } from 'src/auth/entities/user.entity';
-import { TestEnrollment } from 'src/exam/entities/test-enrollment.entity';
-import { ExamService } from 'src/exam/services/exam.service';
-import { TestEnrollmentService } from 'src/exam/services/test-enrollment.service';
+import { AuthService } from '../auth/auth.service';
+import { User } from '../auth/entities/user.entity';
+import { TestEnrollment } from '../exam/entities/test-enrollment.entity';
+import { ExamService } from '../exam/services/exam.service';
+import { TestEnrollmentService } from '../exam/services/test-enrollment.service';
 import { Exam } from '../exam/entities/exam.entity';
 
 @Injectable()

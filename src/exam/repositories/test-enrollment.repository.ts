@@ -39,7 +39,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       throw new InternalServerErrorException(e);
     }
   }
-  async getMyTest(user: User, filter: FilterDto) {
+  async getMyTests(user: User, filter: FilterDto) {
     try {
       const { limit, offset } = filter;
       const enrollments: TestEnrollment[] = await this.createQueryBuilder('e')
@@ -66,19 +66,15 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
   }
 
   async getScore(examId: number, user: User): Promise<TestEnrollment> {
-    try {
-      const enrollment: TestEnrollment = await this.findOne({
-        where: { examId, studentId: user.id },
-      });
-      if (!enrollment)
-        throw new NotFoundException("You haven't enrolled in the exam");
-      else {
-        delete enrollment.exam;
-        delete enrollment.student;
-        return enrollment;
-      }
-    } catch (e) {
-      throw new InternalServerErrorException(e);
+    const enrollment: TestEnrollment = await this.findOne({
+      where: { examId, studentId: user.id },
+    });
+    if (!enrollment)
+      throw new NotFoundException("You haven't enrolled in the exam");
+    else {
+      delete enrollment.exam;
+      delete enrollment.student;
+      return enrollment;
     }
   }
 
@@ -186,21 +182,17 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
     payload: { score?: number; teacherGrading?: string },
     enrollmentId: number,
   ): Promise<TestEnrollment> {
-    try {
-      const testEnrollment = await this.findOne(enrollmentId);
-      if (!testEnrollment)
-        throw new Error(
-          "The student hasn't taken the test. The enrollment is not found.",
-        );
-      if (payload.score || payload.score === 0)
-        testEnrollment.score = payload.score;
-      if (payload.teacherGrading)
-        testEnrollment.teacherGrading = payload.teacherGrading;
-      await testEnrollment.save();
-      return testEnrollment;
-    } catch (e) {
-      throw new InternalServerErrorException(e);
-    }
+    const testEnrollment = await this.findOne(enrollmentId);
+    if (!testEnrollment)
+      throw new Error(
+        "The student hasn't taken the test. The enrollment is not found.",
+      );
+    if (payload.score || payload.score === 0)
+      testEnrollment.score = payload.score;
+    if (payload.teacherGrading)
+      testEnrollment.teacherGrading = payload.teacherGrading;
+    await testEnrollment.save();
+    return testEnrollment;
   }
   /************DELETE**********/
   async removeEnrollments(subject: number, list: string[]) {

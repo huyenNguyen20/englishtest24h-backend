@@ -27,7 +27,7 @@ export class TestEnrollmentService {
   }
   // Get Past Exams for STUDENTS
   async getMyTests(user: User, filter: FilterDto) {
-    return await this.testEnrollmentRepository.getMyTest(user, filter);
+    return await this.testEnrollmentRepository.getMyTests(user, filter);
   }
   // Get Total Past Exams for STUDENTS
   async getMyTestsCount(user: User): Promise<number> {
@@ -35,11 +35,7 @@ export class TestEnrollmentService {
   }
   // Get all enrollment records for TEACHERS
   async getAllScores(exam: Exam): Promise<EnrollmentDataToTeacher[]> {
-    try {
-      return await this.testEnrollmentRepository.getAllScores(exam.id);
-    } catch (e) {
-      throw new InternalServerErrorException(e);
-    }
+    return await this.testEnrollmentRepository.getAllScores(exam.id);
   }
   // Check if the student has taken test for STUDENT
   async getScore(examId: number, user: User): Promise<TestEnrollment> {
@@ -55,17 +51,13 @@ export class TestEnrollmentService {
     teacherId: number;
     isPublished: boolean;
   }> {
-    try {
-      const enrollment: TestEnrollment =
-        await this.testEnrollmentRepository.getExamResult(enrollmentId);
-      return {
-        enrollment,
-        teacherId: exam.ownerId,
-        isPublished: exam.isPublished,
-      };
-    } catch (e) {
-      throw new InternalServerErrorException(e);
-    }
+    const enrollment: TestEnrollment =
+      await this.testEnrollmentRepository.getExamResult(enrollmentId);
+    return {
+      enrollment,
+      teacherId: exam.ownerId,
+      isPublished: exam.isPublished,
+    };
   }
 
   /********CREATE ******** */
@@ -103,29 +95,21 @@ export class TestEnrollmentService {
     teacherGrading: string,
     enrollmentId: number,
   ): Promise<TestEnrollment> {
-    try {
-      // Update TestEnrollment
-      return this.testEnrollmentRepository.updateEnrollment(
-        { teacherGrading },
-        enrollmentId,
-      );
-    } catch (e) {
-      throw new InternalServerErrorException(e);
-    }
+    // Update TestEnrollment
+    return this.testEnrollmentRepository.updateEnrollment(
+      { teacherGrading },
+      enrollmentId,
+    );
   }
 
   /********DELETE******** */
   // Remove a student's enrollment record by TEACHER
   async removeTestEnrollments(exam: Exam, list: string[]) {
-    try {
-      // Update TestEnrollment
-      return await this.testEnrollmentRepository.removeEnrollments(
-        exam.subject,
-        list,
-      );
-    } catch (e) {
-      throw new InternalServerErrorException(e);
-    }
+    // Update TestEnrollment
+    return await this.testEnrollmentRepository.removeEnrollments(
+      exam.subject,
+      list,
+    );
   }
 
   /************************************* */
@@ -138,14 +122,9 @@ export class TestEnrollmentService {
   }
 
   async deleteEnrollmentForAdmin(enrollmentId: number, exam: Exam) {
-    try {
-      // Update TestEnrollment
-      return await this.testEnrollmentRepository.removeEnrollments(
-        exam.subject,
-        [`${enrollmentId}`],
-      );
-    } catch (e) {
-      throw new InternalServerErrorException(e);
-    }
+    // Update TestEnrollment
+    return await this.testEnrollmentRepository.removeEnrollments(exam.subject, [
+      `${enrollmentId}`,
+    ]);
   }
 }
