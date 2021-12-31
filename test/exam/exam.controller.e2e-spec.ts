@@ -1,10 +1,10 @@
 import * as request from 'supertest';
 import { Test } from '@nestjs/testing';
 import { HttpStatus, INestApplication, Logger } from '@nestjs/common';
-import { ExamService } from '../src/exam/services/exam.service';
-import { ExamController } from '../src/exam/exam.controller';
-import { WinstonModule, WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { UploadService } from '../src/upload/upload.service';
+import { ExamService } from '../../src/exam/services/exam.service';
+import { ExamController } from '../../src/exam/exam.controller';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { UploadService } from '../../src/upload/upload.service';
 import { User } from 'src/auth/entities/user.entity';
 import { Exam } from 'src/exam/entities/exam.entity';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -84,13 +84,13 @@ const createWritingSectionDto: CreateWritingSectionDto = {
   score: 1,
   htmlExplaination: null,
 };
-const createQuestionGroupDto: CreateQuestionGroupDto = {
+const createQuestionGroupDto: any = {
   title: 'test',
   type: 0,
   imageUrl: '',
   htmlContent: 'test question',
   matchingOptions: null,
-  questions: [],
+  questions: '[]',
 };
 const mockUser: User = {
   id: 1,
@@ -112,7 +112,7 @@ const mockUser: User = {
   softRemove: jest.fn(),
   recover: jest.fn(),
   reload: jest.fn(),
-}
+};
 const mockExam: Exam = {
   id: 1,
   title: "Test Exam",
@@ -137,7 +137,7 @@ const mockExam: Exam = {
   softRemove: jest.fn(),
   recover: jest.fn(),
   reload: jest.fn(),
-}
+};
 /******SET UP */
 async function setUpTest (
   config: {
@@ -1772,75 +1772,75 @@ describe("/exams - Question Group Routes for Educator/Exam Owner", () => {
       expect(mockLoggerProvider.error).not.toHaveBeenCalled();
       await app.close();
     });
-    // it(`should throw FORBIDDEN error for non-educator users`, async () => {
-    //   app = await setUpTest({ 
-    //     middleware: examAndUserMiddleware({ ...mockUser, isEducator: false }, mockExam)
-    //   });
-    //   const response = await request(app.getHttpServer())
-    //     .post('/exams/1/sections/1/questionGroups')
-    //     .send(createQuestionGroupDto)
-    //     .expect(HttpStatus.FORBIDDEN);
-    //   expect(response.body).toEqual({
-    //     message: 'You are forbidden'
-    //   });
-    //   expect(mockLoggerProvider.error).not.toHaveBeenCalled();
-    //   await app.close();
-    // });
-    // it(`should throw NOT_FOUND error for for null exam`, async () => {
-    //   app = await setUpTest({ 
-    //     middleware: examAndUserMiddleware({ ...mockUser, isEducator: false }, null)
-    //   });
-    //   const response = await request(app.getHttpServer())
-    //     .post('/exams/1/sections/1/questionGroups')
-    //     .send(createQuestionGroupDto)
-    //     .expect(HttpStatus.NOT_FOUND);
-    //   expect(response.body).toEqual({
-    //     message: "Exam Not Found"
-    //   });
-    //   expect(mockLoggerProvider.error).not.toHaveBeenCalled();
-    //   await app.close();
-    // });
-    // it(`should return INTERNAL_SERVER_ERROR for error at mockExamServices`, async () => {
-    //   app = await setUpTest({ 
-    //     middleware: examAndUserMiddleware({ ...mockExam, isEducator: true }, mockExam)
-    //   });
-    //   mockExamService.createQuestionGroup.mockRejectedValue("error");
-    //   const response = await request(app.getHttpServer())
-    //     .post('/exams/1/sections/1/questionGroups')
-    //     .send(createQuestionGroupDto)
-    //     .expect(HttpStatus.INTERNAL_SERVER_ERROR);
-    //   expect(response.body).toEqual({
-    //     message: 'Something went wrong. Please try again!'
-    //   });
-    //   expect(mockLoggerProvider.error).toHaveBeenCalled();
-    //   await app.close();
-    // });
+    it(`should throw FORBIDDEN error for non-educator users`, async () => {
+      app = await setUpTest({ 
+        middleware: examAndUserMiddleware({ ...mockUser, isEducator: false }, mockExam)
+      });
+      const response = await request(app.getHttpServer())
+        .post('/exams/1/sections/1/questionGroups')
+        .send(createQuestionGroupDto)
+        .expect(HttpStatus.FORBIDDEN);
+      expect(response.body).toEqual({
+        message: 'You are forbidden'
+      });
+      expect(mockLoggerProvider.error).not.toHaveBeenCalled();
+      await app.close();
+    });
+    it(`should throw NOT_FOUND error for for null exam`, async () => {
+      app = await setUpTest({ 
+        middleware: examAndUserMiddleware({ ...mockUser, isEducator: false }, null)
+      });
+      const response = await request(app.getHttpServer())
+        .post('/exams/1/sections/1/questionGroups')
+        .send(createQuestionGroupDto)
+        .expect(HttpStatus.NOT_FOUND);
+      expect(response.body).toEqual({
+        message: "Exam Not Found"
+      });
+      expect(mockLoggerProvider.error).not.toHaveBeenCalled();
+      await app.close();
+    });
+    it(`should return INTERNAL_SERVER_ERROR for error at mockExamServices`, async () => {
+      app = await setUpTest({ 
+        middleware: examAndUserMiddleware({ ...mockExam, isEducator: true }, mockExam)
+      });
+      mockExamService.createQuestionGroup.mockRejectedValue("error");
+      const response = await request(app.getHttpServer())
+        .post('/exams/1/sections/1/questionGroups')
+        .send(createQuestionGroupDto)
+        .expect(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(response.body).toEqual({
+        message: 'Something went wrong. Please try again!'
+      });
+      expect(mockLoggerProvider.error).toHaveBeenCalled();
+      await app.close();
+    });
   })
   describe("/PUT /exams/:examId/sections/:sectionId/questionGroups/:questionGroupId", () => {
     let app: INestApplication;  
     afterEach(() => {
       jest.clearAllMocks();
     })
-    // it(`for educator & exam owner, should call mockExamService.updateQuestionGroup & return OK`, async () => {
-    //   app = await setUpTest({ 
-    //     middleware: examAndUserMiddleware({ ...mockUser, isEducator: true }, mockExam) 
-    //   });
-    //   mockExamService.updateQuestionGroup.mockResolvedValue("exam value");
-    //   mockUploadService.compressAndUploadImage.mockResolvedValue("abc");
-    //   const response = await request(app.getHttpServer())
-    //     .put('/exams/1/sections/1/questionGroups/1')
-    //     .field('title', createQuestionGroupDto.title)
-    //     .field('type', createQuestionGroupDto.type)
-    //     .field('htmlContent', createQuestionGroupDto.htmlContent)
-    //     .attach('image', 'public/test/logo.png')
-    //     .expect(HttpStatus.OK);
-    //   expect(response.body).toEqual({
-    //     results: "exam value"
-    //   });
-    //   expect(mockUploadService.compressAndUploadImage).toHaveBeenCalled();
-    //   expect(mockLoggerProvider.error).not.toHaveBeenCalled();
-    //   await app.close();
-    // });
+    it(`for educator & exam owner, should call mockExamService.updateQuestionGroup & return OK`, async () => {
+      app = await setUpTest({ 
+        middleware: examAndUserMiddleware({ ...mockUser, isEducator: true }, mockExam) 
+      });
+      mockExamService.updateQuestionGroup.mockResolvedValue("exam value");
+      mockUploadService.compressAndUploadImage.mockResolvedValue("abc");
+      const response = await request(app.getHttpServer())
+        .put('/exams/1/sections/1/questionGroups/1')
+        .field('title', createQuestionGroupDto.title)
+        .field('type', createQuestionGroupDto.type)
+        .field('htmlContent', createQuestionGroupDto.htmlContent)
+        .attach('image', 'public/test/logo.png')
+        .expect(HttpStatus.OK);
+      expect(response.body).toEqual({
+        results: "exam value"
+      });
+      expect(mockUploadService.compressAndUploadImage).toHaveBeenCalled();
+      expect(mockLoggerProvider.error).not.toHaveBeenCalled();
+      await app.close();
+    });
     it(`should throw FORBIDDEN error for non-educator users`, async () => {
       app = await setUpTest({ 
         middleware: examAndUserMiddleware({ ...mockUser, isEducator: false }, mockExam)
@@ -1855,35 +1855,35 @@ describe("/exams - Question Group Routes for Educator/Exam Owner", () => {
       expect(mockLoggerProvider.error).not.toHaveBeenCalled();
       await app.close();
     });
-    // it(`should throw NOT_FOUND error for for null exam`, async () => {
-    //   app = await setUpTest({ 
-    //     middleware: examAndUserMiddleware({ ...mockUser, isEducator: false }, null)
-    //   });
-    //   const response = await request(app.getHttpServer())
-    //     .put('/exams/1/sections/1/questionGroups/1')
-    //     .send(createQuestionGroupDto)
-    //     .expect(HttpStatus.NOT_FOUND);
-    //   expect(response.body).toEqual({
-    //     message: "Exam Not Found"
-    //   });
-    //   expect(mockLoggerProvider.error).not.toHaveBeenCalled();
-    //   await app.close();
-    // });
-    // it(`should return INTERNAL_SERVER_ERROR for error at mockExamServices`, async () => {
-    //   app = await setUpTest({ 
-    //     middleware: examAndUserMiddleware({ ...mockExam, isEducator: true }, mockExam)
-    //   });
-    //   mockExamService.updateQuestionGroup.mockRejectedValue("error");
-    //   const response = await request(app.getHttpServer())
-    //     .put('/exams/1/sections/1/questionGroups/1')
-    //     .send(createQuestionGroupDto)
-    //     .expect(HttpStatus.INTERNAL_SERVER_ERROR);
-    //   expect(response.body).toEqual({
-    //     message: 'Something went wrong. Please try again!'
-    //   });
-    //   expect(mockLoggerProvider.error).toHaveBeenCalled();
-    //   await app.close();
-    // });
+    it(`should throw NOT_FOUND error for for null exam`, async () => {
+      app = await setUpTest({ 
+        middleware: examAndUserMiddleware({ ...mockUser, isEducator: false }, null)
+      });
+      const response = await request(app.getHttpServer())
+        .put('/exams/1/sections/1/questionGroups/1')
+        .send(createQuestionGroupDto)
+        .expect(HttpStatus.NOT_FOUND);
+      expect(response.body).toEqual({
+        message: "Exam Not Found"
+      });
+      expect(mockLoggerProvider.error).not.toHaveBeenCalled();
+      await app.close();
+    });
+    it(`should return INTERNAL_SERVER_ERROR for error at mockExamServices`, async () => {
+      app = await setUpTest({ 
+        middleware: examAndUserMiddleware({ ...mockExam, isEducator: true }, mockExam)
+      });
+      mockExamService.updateQuestionGroup.mockRejectedValue("error");
+      const response = await request(app.getHttpServer())
+        .put('/exams/1/sections/1/questionGroups/1')
+        .send(createQuestionGroupDto)
+        .expect(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(response.body).toEqual({
+        message: 'Something went wrong. Please try again!'
+      });
+      expect(mockLoggerProvider.error).toHaveBeenCalled();
+      await app.close();
+    });
   })
   describe("/DELETE /exams/:examId/sections/:sectionId/questionGroups/:questionGroupId", () => {
     let app: INestApplication;  

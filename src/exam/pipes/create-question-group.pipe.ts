@@ -6,7 +6,7 @@ export class CreateQuestionGroupValidationPipe implements PipeTransform {
     return {
       ...value,
       type: parseInt(type, 10),
-      questions: JSON.parse(questions),
+      questions: JSON.parse(questions ? questions : '[]'),
     };
   }
 }
