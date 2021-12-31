@@ -239,7 +239,9 @@ export class ExamController {
         .json({ message: 'Something went wrong. Please try again!' });
     }
   }
-
+  /*********************** */
+  /**End Points for Test Takers**** */
+  /*********************** */
   @ApiOperation({ summary: 'Get an Published Exam for test taker' })
   @Get('/published/:examId')
   @UseGuards(AuthGuard())
@@ -377,7 +379,7 @@ export class ExamController {
     }
   }
 
-  @ApiOperation({ summary: 'Get an Published Exam for test takers' })
+  @ApiOperation({ summary: 'Get an Restricted Exam for test takers' })
   @Get('/restricted/:examId')
   @UseGuards(AuthGuard())
   async getRestrictedExamForTestTaker(
@@ -679,7 +681,7 @@ export class ExamController {
   }
 
   /********************* */
-  /***Sections***/
+  /***Section Routes for Educator/Exam Owner***/
   /********************* */
   @ApiOperation({
     summary: 'Method for EXAM OWNER to get all sections of an exam',
@@ -1082,7 +1084,7 @@ export class ExamController {
   async createQuestionGroups(
     @UploadedFiles() files,
     @Body(new CreateQuestionGroupValidationPipe())
-    createQuestionGroupDto: CreateQuestionGroupDto,
+        createQuestionGroupDto: CreateQuestionGroupDto,
     @Param('examId', ParseIntPipe) examId: number,
     @Param('sectionId', ParseIntPipe) sectionId: number,
     @getUser() user: User,
@@ -1152,7 +1154,6 @@ export class ExamController {
     @Response() res,
   ) {
     try {
-      // 1. Check if the exam exists
       if (!exam)
         return res
           .status(HttpStatus.NOT_FOUND)

@@ -7,7 +7,7 @@ export class ExtractExamMiddleware implements NestMiddleware {
   constructor(private readonly examService: ExamService) {}
   async use(req: any, res: Response, next: NextFunction) {
     const { examId } = req.params;
-    //: onsole.log(req.params)
+    console.log(req.params)
     if (examId) {
       const exam = await this.examService.getExamForMiddleware(examId);
       req.exam = exam;
