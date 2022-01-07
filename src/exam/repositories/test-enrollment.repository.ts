@@ -170,6 +170,7 @@ export class TestEnrollmentRepository extends Repository<TestEnrollment> {
       }
       enrollment.timeTaken++;
       if (score || score === 0) enrollment.score = score;
+      if (!Boolean(score)) enrollment.score = null;
       enrollment.totalScore = totalScore;
       enrollment.answerObj = answerObj;
       enrollment.sectionsObj = sectionsObj;
