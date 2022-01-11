@@ -1084,7 +1084,7 @@ export class ExamController {
   async createQuestionGroups(
     @UploadedFiles() files,
     @Body(new CreateQuestionGroupValidationPipe())
-        createQuestionGroupDto: CreateQuestionGroupDto,
+    createQuestionGroupDto: CreateQuestionGroupDto,
     @Param('examId', ParseIntPipe) examId: number,
     @Param('sectionId', ParseIntPipe) sectionId: number,
     @getUser() user: User,

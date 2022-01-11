@@ -77,7 +77,7 @@ export class AuthRepository extends Repository<User> {
 
   async updateProfile(user: User, updates): Promise<any> {
     try {
-      const updatedUser = await this.createQueryBuilder()
+      await this.createQueryBuilder()
         .update(User)
         .set({
           ...updates,

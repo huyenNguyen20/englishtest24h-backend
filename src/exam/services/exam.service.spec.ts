@@ -535,7 +535,7 @@ describe('Exam Services (Exam Repository) for Exam Owner', () => {
     const helperMethods = require('../../shared/helpers');
     beforeEach(() => {
       mockDeleteImage = jest.spyOn(helperMethods, 'deleteImage');
-      mockDeleteImage.mockImplementation(async () => {});
+      mockDeleteImage.mockImplementation(async () => {}); // eslint-disable-line
     });
     afterEach(() => {
       jest.clearAllMocks();
@@ -550,11 +550,7 @@ describe('Exam Services (Exam Repository) for Exam Owner', () => {
     it('call deleteImage() when there is an updated imageUrl', async () => {
       examRepository.findOne.mockResolvedValue(mockExam);
       examRepository.updateExam.mockResolvedValue('mock value');
-      const result = await examService.updateExam(
-        { imageUrl: 'abcd' },
-        mockExam.id,
-        mockUser,
-      );
+      await examService.updateExam({ imageUrl: 'abcd' }, mockExam.id, mockUser);
       expect(mockDeleteImage).toHaveBeenCalled();
     });
     it('should throw an error for not found exam', () => {
@@ -724,9 +720,9 @@ describe('Exam Service (Section Repository) for Exam Owner', () => {
     const helperMethods = require('../../shared/helpers');
     beforeEach(() => {
       mockDeleteImage = jest.spyOn(helperMethods, 'deleteImage');
-      mockDeleteImage.mockImplementation(async () => {});
+      mockDeleteImage.mockImplementation(async () => {}); // eslint-disable-line
       mockDeleteAudio = jest.spyOn(helperMethods, 'deleteAudio');
-      mockDeleteAudio.mockImplementation(async () => {});
+      mockDeleteAudio.mockImplementation(async () => {}); // eslint-disable-line
     });
     afterEach(() => {
       jest.clearAllMocks();
@@ -746,7 +742,7 @@ describe('Exam Service (Section Repository) for Exam Owner', () => {
     it('should call deleteImage() and deleteAudio() for updated image and audio url', async () => {
       sectionRepository.getSection.mockResolvedValue(mockSection);
       sectionRepository.updateSection.mockResolvedValue(mockSection);
-      const result = await examService.updateSection(
+      await examService.updateSection(
         createSectionDto,
         mockExam.id,
         mockSection.id,
@@ -758,7 +754,7 @@ describe('Exam Service (Section Repository) for Exam Owner', () => {
     it('should not call deleteImage() and deleteAudio() for the same image and audio url', async () => {
       sectionRepository.getSection.mockResolvedValue(mockSection);
       sectionRepository.updateSection.mockResolvedValue(mockSection);
-      const result = await examService.updateSection(
+      await examService.updateSection(
         {
           imageUrl: mockSection.imageUrl,
           audioUrl: mockSection.audioUrl,
@@ -799,7 +795,7 @@ describe('Exam Service (Section Repository) for Exam Owner', () => {
     const helperMethods = require('../../shared/helpers');
     beforeEach(() => {
       mockDeleteImage = jest.spyOn(helperMethods, 'deleteImage');
-      mockDeleteImage.mockImplementation(async () => {});
+      mockDeleteImage.mockImplementation(async () => {}); // eslint-disable-line
     });
     afterEach(() => {
       jest.clearAllMocks();
@@ -820,7 +816,7 @@ describe('Exam Service (Section Repository) for Exam Owner', () => {
     it('should call deleteImage() for updated image  url', async () => {
       sectionRepository.getSection.mockResolvedValue(mockSection);
       sectionRepository.updateSection.mockResolvedValue(mockSection);
-      const result = await examService.updateWritingSection(
+      await examService.updateWritingSection(
         createWritingSectionDto,
         mockExam,
         mockSection.id,
@@ -831,7 +827,7 @@ describe('Exam Service (Section Repository) for Exam Owner', () => {
     it('should not call deleteImage() for the same image url', async () => {
       sectionRepository.getSection.mockResolvedValue(mockSection);
       sectionRepository.updateSection.mockResolvedValue(mockSection);
-      const result = await examService.updateWritingSection(
+      await examService.updateWritingSection(
         {
           imageUrl: mockSection.imageUrl,
         },
@@ -890,9 +886,9 @@ describe('Exam Service (Section Repository) for Exam Owner', () => {
     const helperMethods = require('../../shared/helpers');
     beforeEach(() => {
       mockDeleteImage = jest.spyOn(helperMethods, 'deleteImage');
-      mockDeleteImage.mockImplementation(async () => {});
+      mockDeleteImage.mockImplementation(async () => {}); // eslint-disable-line
       mockDeleteAudio = jest.spyOn(helperMethods, 'deleteAudio');
-      mockDeleteAudio.mockImplementation(async () => {});
+      mockDeleteAudio.mockImplementation(async () => {}); // eslint-disable-line
     });
     afterEach(() => {
       jest.clearAllMocks();
@@ -908,11 +904,7 @@ describe('Exam Service (Section Repository) for Exam Owner', () => {
     it('should call deleteImage() and deleteAudio() for image and audio url', async () => {
       sectionRepository.getSection.mockResolvedValue(mockSection);
       sectionRepository.removeSection.mockResolvedValue('mock value');
-      const result = await examService.removeSection(
-        mockExam.id,
-        mockSection.id,
-        mockUser,
-      );
+      await examService.removeSection(mockExam.id, mockSection.id, mockUser);
       expect(mockDeleteImage).toHaveBeenCalled();
       expect(mockDeleteAudio).toHaveBeenCalled();
     });
@@ -923,11 +915,7 @@ describe('Exam Service (Section Repository) for Exam Owner', () => {
         audioUrl: '',
       });
       sectionRepository.removeSection.mockResolvedValue('mock value');
-      const result = await examService.removeSection(
-        mockExam.id,
-        mockSection.id,
-        mockUser,
-      );
+      await examService.removeSection(mockExam.id, mockSection.id, mockUser);
       expect(mockDeleteImage).not.toHaveBeenCalled();
       expect(mockDeleteAudio).not.toHaveBeenCalled();
     });
@@ -1028,11 +1016,11 @@ describe('Exam Services (QuestionGroup Repository) for Exam Owner', () => {
     });
   });
   describe('updateQuestionGroup', () => {
-    let helperMethods = require('../../shared/helpers');
+    const helperMethods = require('../../shared/helpers');
     let mockDeleteImage: any;
     beforeEach(() => {
       mockDeleteImage = jest.spyOn(helperMethods, 'deleteImage');
-      mockDeleteImage.mockImplementation(async () => {});
+      mockDeleteImage.mockImplementation(async () => {}); // eslint-disable-line
     });
     afterEach(() => {
       jest.clearAllMocks();
@@ -1051,7 +1039,7 @@ describe('Exam Services (QuestionGroup Repository) for Exam Owner', () => {
         mockQuestionGroup,
       ]);
       jest.spyOn(examService, 'createQuestion').mockResolvedValue(mockQuestion);
-      const result = await examService.updateQuestionGroup(
+      await examService.updateQuestionGroup(
         createQuestionGroupDto,
         mockSection.id,
         mockQuestionGroup.id,
@@ -1069,7 +1057,7 @@ describe('Exam Services (QuestionGroup Repository) for Exam Owner', () => {
       questionGroupRepository.getQuestionGroups.mockResolvedValue([
         mockQuestionGroup,
       ]);
-      const result = await examService.updateQuestionGroup(
+      await examService.updateQuestionGroup(
         {
           imageUrl: mockQuestionGroup.imageUrl,
         },
@@ -1127,11 +1115,11 @@ describe('Exam Services (QuestionGroup Repository) for Exam Owner', () => {
     });
   });
   describe('removeQuestionGroup', () => {
-    let helperMethods = require('../../shared/helpers');
+    const helperMethods = require('../../shared/helpers');
     let mockDeleteImage: any;
     beforeEach(() => {
       mockDeleteImage = jest.spyOn(helperMethods, 'deleteImage');
-      mockDeleteImage.mockImplementation(async () => {});
+      mockDeleteImage.mockImplementation(async () => {}); // eslint-disable-line
     });
     afterEach(() => {
       jest.clearAllMocks();
@@ -1146,7 +1134,7 @@ describe('Exam Services (QuestionGroup Repository) for Exam Owner', () => {
       questionGroupRepository.getQuestionGroups.mockResolvedValue([
         mockQuestionGroup,
       ]);
-      const result = await examService.removeQuestionGroup(
+      await examService.removeQuestionGroup(
         mockSection.id,
         mockQuestionGroup.id,
         mockUser,
@@ -1164,7 +1152,7 @@ describe('Exam Services (QuestionGroup Repository) for Exam Owner', () => {
       questionGroupRepository.getQuestionGroups.mockResolvedValue([
         mockQuestionGroup,
       ]);
-      const result = await examService.removeQuestionGroup(
+      await examService.removeQuestionGroup(
         mockSection.id,
         mockQuestionGroup.id,
         mockUser,
@@ -1321,7 +1309,7 @@ describe('Exam Services (Question Repository) for Exam Owner', () => {
     let mockDeleteImage: any;
     beforeEach(() => {
       mockDeleteImage = jest.spyOn(helperMethods, 'deleteImage');
-      mockDeleteImage.mockResolvedValue(async () => {});
+      mockDeleteImage.mockResolvedValue(async () => {}); // eslint-disable-line
     });
     afterEach(() => {
       jest.clearAllMocks();

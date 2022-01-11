@@ -76,7 +76,7 @@ export class AuthController {
       const result: { token: string } = await this.authService.signIn(
         signInUserDto,
       );
-      return res.status(HttpStatus.OK).json({results: result});
+      return res.status(HttpStatus.OK).json({ results: result });
     } catch (e) {
       this.logger.error(`ERROR in POST /auth/signin --- 
                        ${JSON.stringify(e)}`);
