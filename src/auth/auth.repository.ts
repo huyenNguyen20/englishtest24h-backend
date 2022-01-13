@@ -11,6 +11,11 @@ import { ResetPasswordDto } from './dto/resetPassword.dto';
 export class AuthRepository extends Repository<User> {
   async createUser(createUserDto: CreateUserDto): Promise<boolean> {
     const { email, firstName, lastName, password } = createUserDto;
+    const oldUser = await this.findOne({ where: { email } });
+    if (oldUser)
+      throw new BadRequestException(
+        'Email has already been used. If you had an account, please sign in!',
+      );
     const user = new User();
     user.salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, user.salt);

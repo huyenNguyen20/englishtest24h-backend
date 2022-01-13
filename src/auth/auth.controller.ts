@@ -61,7 +61,9 @@ export class AuthController {
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: 'Something went wrong. Please try again!' });
+        .json({
+          message: e.message || 'Something went wrong. Please try again!',
+        });
     }
   }
 
@@ -82,7 +84,9 @@ export class AuthController {
                        ${JSON.stringify(e)}`);
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: 'Something went wrong. Please try again!' });
+        .json({
+          message: e.message || 'Something went wrong. Please try again!',
+        });
     }
   }
 
