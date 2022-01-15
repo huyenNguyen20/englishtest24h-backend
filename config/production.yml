@@ -1,8 +1,8 @@
 server:
-  port: 3000
+  port: 80
   url: 'https://apis.englishtest24h.tk'
 
 client:
   port: 80
-  url: 'https://www.englishtest24h.tk'
+  url: 'https://englishtest24h.tk'
 
