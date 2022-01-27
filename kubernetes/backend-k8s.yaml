@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: backend-deployment
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: englishtest24-backend
+        image: englishtest24-backend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GOOGLE_CLIENTID
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: GOOGLE_CLIENTID
+        - name: GOOGLE_CLIENTSECRET
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: GOOGLE_CLIENTSECRET
+        - name: GOOGLE_CALLBACK_URL
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: GOOGLE_CALLBACK_URL
+        - name: OAUTH_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: OAUTH_USER_PASSWORD
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: JWT_SECRET
+        - name: DATABASE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: DATABASE_USERNAME
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: DATABASE_PASSWORD
+        - name: DATABASE_HOST
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: DATABASE_HOST
+        - name: DATABASE_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: DATABASE_DATABASE
+        - name: IMAGE_S3_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: IMAGE_S3_BUCKET
+        - name: AUDIO_S3_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: AUDIO_S3_BUCKET
+        - name: AWS_REGION
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: AWS_REGION
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: AWS_SECRET_ACCESS_KEY         
+        - name: IMAGES_S3_CLOUDFRONT_URL
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: IMAGES_S3_CLOUDFRONT_URL
+        - name: AUDIO_S3_BUCKET_URL
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: AUDIO_S3_BUCKET_URL   
+        - name: IMAGE_S3_BUCKET_URL
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: IMAGE_S3_BUCKET_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  type: LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+    nodePort: 30001
+    

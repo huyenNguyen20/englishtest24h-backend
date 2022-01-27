@@ -15,6 +15,7 @@ import { AdminController } from './admin/admin.controller';
 import { StudentQuestionController } from './studentQuestion/question.controller';
 import { TestEnrollmentController } from './exam/test-enrollment.controller';
 import { UploadModule } from './upload/upload.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { UploadModule } from './upload/upload.module';
     StudentQuestionModule,
     CaslModule,
     UploadModule,
+    HealthModule
   ],
   controllers: [],
   providers: [],

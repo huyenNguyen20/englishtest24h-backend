@@ -1,38 +1,25 @@
-# Base on offical Node.js Alpine image
-FROM node:17-alpine
+FROM node:17
 
-# Install the latest version of NPM
-RUN npm install -g npm@8.1.4
+# Create app directory
+WORKDIR /usr/src/app
 
-# Install PM2 globally
-RUN npm install --global pm2
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
 
-# Clear Cache
-RUN npm  cache clear --force
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+COPY package*.json ./
 
-# Set working directory
-WORKDIR /opt
-
-# Copy package.json and package-lock.json before other files
-# Utilise Docker cache to save re-installing dependencies if unchanged
-COPY ./package*.json ./
-
-
-# Install dependencies
 RUN npm install --production
+# If you are building your code for production
+# RUN npm ci --only=production
 
-# Copy all files
-COPY ./ ./
+# Bundle app source
+COPY . .
 
-# Build app
 RUN npm run build
 
-# Expose the listening port
 EXPOSE 3000
 
-# Run container as non-root (unprivileged) user
-# The node user is provided in the Node.js Alpine base image
-USER node
-
-# Run npm start script with PM2 when container starts
-CMD [ "pm2-runtime", "npm", "--", "start" ]
+CMD [ "node", "dist/main" ]
