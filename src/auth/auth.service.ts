@@ -107,9 +107,9 @@ export class AuthService {
 
       // Configure AWS Client
       const sesv2 = new AWS.SESV2({
-        region: process.env.AWS_REGION,
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        region: process.env.AWS_REGION_S3,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID_S3,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_S3,
       });
 
       const { senderEmail, recipientEmail, subject, htmlMessage } = emailObject;
