@@ -6,6 +6,9 @@ WORKDIR /usr/src/app
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
+# Install NestJS CLI
+RUN npm i -g @nestjs/cli
+
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
@@ -17,6 +20,7 @@ RUN npm install --production
 
 # Bundle app source
 COPY . .
+
 
 RUN npm run build
 
