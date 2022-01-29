@@ -55,7 +55,7 @@ import { HealthModule } from './health/health.module';
     StudentQuestionModule,
     CaslModule,
     UploadModule,
-    HealthModule
+    HealthModule,
   ],
   controllers: [],
   providers: [],

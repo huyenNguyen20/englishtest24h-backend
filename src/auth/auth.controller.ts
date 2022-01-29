@@ -59,11 +59,9 @@ export class AuthController {
     } catch (e) {
       this.logger.error(`ERROR in POST /auth/signup --- 
                        ${JSON.stringify(e)}`);
-      return res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({
-          message: e.message || 'Something went wrong. Please try again!',
-        });
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: e.message || 'Something went wrong. Please try again!',
+      });
     }
   }
 
@@ -82,11 +80,9 @@ export class AuthController {
     } catch (e) {
       this.logger.error(`ERROR in POST /auth/signin --- 
                        ${JSON.stringify(e)}`);
-      return res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({
-          message: e.message || 'Something went wrong. Please try again!',
-        });
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: e.message || 'Something went wrong. Please try again!',
+      });
     }
   }
 

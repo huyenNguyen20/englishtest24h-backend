@@ -42,7 +42,7 @@ async function bootstrap() {
     app.enableCors({
       origin: 'https://englishtest24h.tk',
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: ''
+      allowedHeaders: '',
     });
   }
 

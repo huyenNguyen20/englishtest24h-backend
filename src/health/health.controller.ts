@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Response,
-  HttpStatus,
-  Inject,
-} from '@nestjs/common';
+import { Controller, Get, Response, HttpStatus, Inject } from '@nestjs/common';
 import { Logger } from 'winston';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
@@ -24,7 +18,9 @@ export class HealthController {
   @Get('/')
   async healthCheck(@Response() res) {
     try {
-      return res.status(HttpStatus.OK).json({ message: "englishtest24 API server is on" });
+      return res
+        .status(HttpStatus.OK)
+        .json({ message: 'englishtest24 API server is on' });
     } catch (e) {
       this.logger.error(`ERROR in GET / 
                        ${JSON.stringify(e)}`);
