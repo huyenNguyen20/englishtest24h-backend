@@ -44,25 +44,8 @@ env:
 jobs:
   deploy:
     name: Deploy
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: production
-    env: 
-      GOOGLE_CLIENTID: ${{ secrets.GOOGLE_CLIENTID }}
-      GOOGLE_CLIENTSECRET: ${{ secrets.GOOGLE_CLIENTSECRET }}
-      GOOGLE_CALLBACK_URL: ${{ secrets.GOOGLE_CALLBACK_URL}}
-      OAUTH_USER_PASSWORD: ${{secrets.OAUTH_USER_PASSWORD}}
-      JWT_SECRET: ${{secrets.JWT_SECRET}}
-      DATABASE_USERNAME: ${{secrets.DATABASE_USERNAME}}
-      DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
-      DATABASE_HOST: ${{secrets.DATABASE_HOST}}
-      DATABASE_DATABASE: ${{secrets.DATABASE_DATABASE}}
-      IMAGE_S3_BUCKET: ${{secrets.IMAGE_S3_BUCKET}}
-      AWS_REGION_S3: ${{secrets.AWS_REGION}}
-      AWS_ACCESS_KEY_ID_S3: ${{secrets.AWS_ACCESS_KEY_ID_S3}}
-      AWS_SECRET_ACCESS_KEY_S3: ${{secrets.AWS_SECRET_ACCESS_KEY_S3}}
-      IMAGES_S3_CLOUDFRONT_URL: ''
-      AUDIO_S3_BUCKET_URL: ''
-      IMAGE_S3_BUCKET_URL: ''
     steps:
     - name: Checkout
       uses: actions/checkout@v2
