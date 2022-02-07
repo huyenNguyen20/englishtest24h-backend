@@ -151,7 +151,6 @@ export class AuthService {
   async getStudents(): Promise<User[]> {
     return await this.authRepository.find({
       select: ['id', 'email', 'firstName', 'lastName'],
-      where: { isEducator: false },
     });
   }
 
