@@ -283,7 +283,7 @@ export class ExamService {
       answers: null,
     };
     const questionGroupDto: CreateQuestionGroupDto = {
-      type: 7,
+      type: 5,
       title: '',
       imageUrl: null,
       htmlContent: null,
