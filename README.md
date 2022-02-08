@@ -19,3 +19,11 @@ English teachers manage the students' exam enrollments and their exam results. A
 * Enzyme
 * Typescript
 * NestJS
+* Passport
+* JWT
+* OAuth
+* MySQL
+* AWS: S3, ECS, ECR, EKS, ALB, Route53, ACM, RDS, and AWS-SDK
+* Docker
+* Kubernetes
+* Github Actions
