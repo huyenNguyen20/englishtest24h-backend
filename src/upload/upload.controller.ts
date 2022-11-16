@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Controller,
   HttpStatus,
   Inject,
   Post,
   Response,
+  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -13,6 +15,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { UploadService } from './upload.service';
+import LocalFilesInterceptor from './upload.interceptor';
 
 require('dotenv').config();
 
@@ -23,6 +26,7 @@ require('dotenv').config();
   FileFieldsInterceptor([
     { name: 'image', maxCount: 1 },
     { name: 'audio', maxCount: 1 },
+    { name: 'xlsx', maxCount: 1 },
   ]),
 )
 export class UploadController {
@@ -94,6 +98,31 @@ export class UploadController {
       return res.status(HttpStatus.OK).json({ results: audioUrl });
     } catch (e) {
       this.logger.error(`ERROR in POST /upload/audio ${JSON.stringify(e)}`);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Something went wrong with uploading. Please try again!',
+      });
+    }
+  }
+
+  @ApiOperation({ summary: 'Method for EXAM OWNER to upload xlsx' })
+  @Post('/xlsx')
+  @UseInterceptors(LocalFilesInterceptor({
+    fieldName: 'xlsx',
+    path: '/xlsx',
+    fileFilter: (request, file, callback) => {
+      if (!file.mimetype.includes('sheet')) {
+        return callback(new BadRequestException('Provide a valid xlsx file'), false);
+      }
+      callback(null, true);
+    }
+  }))
+  async postXLSX(@UploadedFile() file : Express.Multer.File, @Response() res) {
+    try {
+      console.log("file ---", file)
+      const xlsxUrl = await this.uploadService.uploadXLSX(file.buffer, file.originalname);
+      return res.status(HttpStatus.OK).json({ results: xlsxUrl });
+    } catch (e) {
+      this.logger.error(`ERROR in POST /upload/xlsx ${JSON.stringify(e)}`);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         message: 'Something went wrong with uploading. Please try again!',
       });
