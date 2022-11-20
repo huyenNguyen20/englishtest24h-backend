@@ -58,7 +58,7 @@ export class UploadController {
     try {
       const file = files?.image[0] || null;
       if (!file) throw new Error('File not found');
-      const imageUrl = await this.uploadService.compressAndUploadImage(
+      const imageUrl = await this.uploadService.compressAndUploadImageV2(
         file.buffer,
         file.originalname
       );

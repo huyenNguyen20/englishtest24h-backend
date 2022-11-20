@@ -473,10 +473,11 @@ export class ExamController {
           .json({ message: 'You are forbidden' });
       // 2. Upload Image File
       if (files && files.image && files.image[0]) {
-        const file = files.images[0]
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
         const imageUrl = await this.uploadService.compressAndUploadImage(
-          file,
-          file.originalname
+          tempFile,
+          fileName,
         );
         if (imageUrl) createExamDto.imageUrl = imageUrl;
       }
@@ -549,10 +550,11 @@ export class ExamController {
           .json({ message: 'You are forbidden' });
       // 3. Upload Image Files
       if (files && files.image && files.image[0]) {
-        const file = files.images[0]
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
         const imageUrl = await this.uploadService.compressAndUploadImage(
-          file,
-          file.originalname
+          tempFile,
+          fileName,
         );
         if (imageUrl) updateExamDto.imageUrl = imageUrl;
       }
@@ -751,10 +753,11 @@ export class ExamController {
           .json({ message: 'You are forbidden' });
       // 3. Upload Image File
       if (files && files.image && files.image[0]) {
-        const file = files.images[0]
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
         const imageUrl = await this.uploadService.compressAndUploadImage(
-          file,
-          file.originalname
+          tempFile,
+          fileName,
         );
         if (imageUrl) createSectionDto.imageUrl = imageUrl;
       }
@@ -804,10 +807,11 @@ export class ExamController {
           .json({ message: 'You are forbidden' });
       // 3. Upload Image File
       if (files && files.image && files.image[0]) {
-        const file = files.images[0]
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
         const imageUrl = await this.uploadService.compressAndUploadImage(
-          file,
-          file.originalname
+          tempFile,
+          fileName,
         );
         if (imageUrl) createWritingSectionDto.imageUrl = imageUrl;
       }
@@ -903,10 +907,11 @@ export class ExamController {
           .json({ message: 'You are forbidden' });
       // 3. Upload Image File
       if (files && files.image && files.image[0]) {
-        const file = files.images[0]
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
         const imageUrl = await this.uploadService.compressAndUploadImage(
-          file,
-          file.originalname
+          tempFile,
+          fileName,
         );
         if (imageUrl) updateSectionDto.imageUrl = imageUrl;
       }
@@ -960,10 +965,11 @@ export class ExamController {
           .json({ message: 'You are forbidden' });
       // 3. Upload Image File
       if (files && files.image && files.image[0]) {
-        const file = files.images[0]
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
         const imageUrl = await this.uploadService.compressAndUploadImage(
-          file,
-          file.originalname
+          tempFile,
+          fileName,
         );
         if (imageUrl) updateWritingSectionDto.imageUrl = imageUrl;
       }
@@ -1099,10 +1105,11 @@ export class ExamController {
           .json({ message: 'You are forbidden' });
       // 3. Upload Image File
       if (files && files.image && files.image[0]) {
-        const file = files.images[0]
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
         const imageUrl = await this.uploadService.compressAndUploadImage(
-          file,
-          file.originalname
+          tempFile,
+          fileName,
         );
         if (imageUrl) createQuestionGroupDto.imageUrl = imageUrl;
       }
@@ -1158,10 +1165,11 @@ export class ExamController {
           .json({ message: 'You are forbidden' });
       // 3. Upload Image File
       if (files && files.image && files.image[0]) {
-        const file = files.images[0]
+        const fileName = files.image[0].filename;
+        const tempFile = `public/examsFiles/${fileName}`;
         const imageUrl = await this.uploadService.compressAndUploadImage(
-          file,
-          file.originalname
+          tempFile,
+          fileName,
         );
         if (imageUrl) updateQuestionGroupDto.imageUrl = imageUrl;
       }
