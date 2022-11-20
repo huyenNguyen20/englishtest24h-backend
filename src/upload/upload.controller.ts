@@ -58,25 +58,9 @@ export class UploadController {
     try {
       const file = files?.image[0] || null;
       if (!file) throw new Error('File not found');
-
-      // Compress the image
-      const Jimp = require('jimp');
-      Jimp.read(file)
-        .then((result) => {
-          return result
-            .resize(600, 500) // resize
-            .quality(60) // set JPEG quality
-            .greyscale() // set greyscale
-            .write(file); // save
-        })
-        .catch((err) => {
-          throw new Error(err);
-        });
-
-      const imageUrl = await this.uploadService.upload(
+      const imageUrl = await this.uploadService.compressAndUploadImage(
         file.buffer,
-        file.originalname,
-        'image',
+        file.originalname
       );
       return res.status(HttpStatus.OK).json({ results: imageUrl });
     } catch (e) {
