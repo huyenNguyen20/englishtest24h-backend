@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   HttpStatus,
   Inject,
@@ -13,6 +14,8 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { UploadService } from './upload.service';
+import LocalFilesInterceptor from './upload.interceptor';
+
 
 require('dotenv').config();
 
@@ -23,6 +26,7 @@ require('dotenv').config();
   FileFieldsInterceptor([
     { name: 'image', maxCount: 1 },
     { name: 'audio', maxCount: 1 },
+    { name: 'xlsx', maxCount: 1 },
   ]),
 )
 export class UploadController {
@@ -35,33 +39,32 @@ export class UploadController {
 
   @ApiOperation({ summary: 'Method for EXAM OWNER to upload image' })
   @Post('/image')
+  @UseInterceptors(
+    LocalFilesInterceptor({
+      fieldName: 'image',
+      path: '/image',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new BadRequestException('Provide a valid image file'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   async postImage(@UploadedFiles() files, @Response() res) {
     try {
-      // 1. Check if the file exists
-      if (!files || !files.image || !files.image[0])
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .json({ message: 'File must not be empty' });
-
-      // 2. Check if the file is in the right format
-      if (
-        files.image[0] &&
-        !files.image[0].originalname.toLowerCase().match(/\.(jpg|jpeg|png)/)
-      )
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .json({ message: 'Must be An JPG/JPEG/PNG file' });
-
-      // 3. Upload file
-      const fileName = files.image[0].filename;
-      const tempFile = `public/examsFiles/${fileName}`;
-      const imageUrl = await this.uploadService.compressAndUploadImage(
-        tempFile,
-        fileName,
+      const file = files?.image[0] || null;
+      if (!file) throw new Error('File not found');
+      const imageUrl = await this.uploadService.compressAndUploadImageV2(
+        file.buffer,
+        file.originalname
       );
       return res.status(HttpStatus.OK).json({ results: imageUrl });
     } catch (e) {
-      this.logger.error(`ERROR in POST /upload/image ${JSON.stringify(e)}`);
+      this.logger.error(`ERROR in POST /upload/audio ${JSON.stringify(e)}`);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         message: 'Something went wrong with uploading. Please try again!',
       });
@@ -70,30 +73,68 @@ export class UploadController {
 
   @ApiOperation({ summary: 'Method for EXAM OWNER to upload audio' })
   @Post('/audio')
+  @UseInterceptors(
+    LocalFilesInterceptor({
+      fieldName: 'audio',
+      path: '/audio',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('audio')) {
+          return callback(
+            new BadRequestException('Provide a valid audio file'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   async postAudio(@UploadedFiles() files, @Response() res) {
     try {
-      // 1. Check if the file exists
-      if (!files || !files.audio || !files.audio[0])
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .json({ message: 'File must be empty' });
-
-      // 2. Check if the file is in the right format
-      if (
-        files.audio[0] &&
-        !files.audio[0].originalname.toLowerCase().match(/\.(wav|mp3)/)
-      )
-        return res
-          .status(HttpStatus.BAD_REQUEST)
-          .json({ message: 'Must be An MP3/WAV file' });
-
-      // 3. Upload file
-      const fileName = files.audio[0].filename;
-      const tempFile = `public/examsFiles/${fileName}`;
-      const audioUrl = await this.uploadService.uploadAudio(tempFile, fileName);
+      const file = files?.audio[0] || null;
+      if (!file) throw new Error('File not found');
+      const audioUrl = await this.uploadService.upload(
+        file.buffer,
+        file.originalname,
+        'audio',
+      );
       return res.status(HttpStatus.OK).json({ results: audioUrl });
     } catch (e) {
       this.logger.error(`ERROR in POST /upload/audio ${JSON.stringify(e)}`);
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Something went wrong with uploading. Please try again!',
+      });
+    }
+  }
+
+  @ApiOperation({ summary: 'Method for EXAM OWNER to upload xlsx' })
+  @Post('/xlsx')
+  @UseInterceptors(
+    LocalFilesInterceptor({
+      fieldName: 'xlsx',
+      path: '/xlsx',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('sheet')) {
+          return callback(
+            new BadRequestException('Provide a valid xlsx file'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async postXLSX(@UploadedFiles() files, @Response() res) {
+    try {
+      const file = files?.xlsx[0] || null;
+      if (!file) throw new Error('File not found');
+      const xlsxUrl = await this.uploadService.upload(
+        file.buffer,
+        file.originalname,
+        'xlsx',
+      );
+      return res.status(HttpStatus.OK).json({ results: xlsxUrl });
+    } catch (e) {
+      this.logger.error(`ERROR in POST /upload/xlsx ${JSON.stringify(e)}`);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         message: 'Something went wrong with uploading. Please try again!',
       });
