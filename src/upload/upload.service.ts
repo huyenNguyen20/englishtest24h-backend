@@ -120,10 +120,10 @@ export class UploadService {
         destinationBucket = process.env.IMAGE_S3_BUCKET;
         break;
       case 'audio':
-        destinationBucket = process.env.IMAGE_S3_BUCKET;
+        destinationBucket = process.env.AUDIO_S3_BUCKET;
         break;
       case 'xlsx':
-        destinationBucket = process.env.IMAGE_S3_BUCKET;
+        destinationBucket = process.env.XLSX_S3_BUCKET;
         break;
       default:
         break;
