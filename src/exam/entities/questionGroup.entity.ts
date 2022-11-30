@@ -38,7 +38,7 @@ export class QuestionGroup extends BaseEntity {
   })
   section: Section;
 
-  @Column()
+  @Column({ default: null })
   sectionId: number;
 
   @Column({ default: null, type: 'longtext' })

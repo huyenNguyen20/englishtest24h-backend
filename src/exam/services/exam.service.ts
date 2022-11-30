@@ -855,4 +855,15 @@ export class ExamService {
     if (!exam) throw new NotFoundException('Exam Not Found');
     return await this.examRepository.removeExam(examId, exam.ownerId);
   }
+
+  /************************/
+  /*****PROCESS CSV FILE **/
+  /************************/
+  async importQuestionGroups(fileUrl : string, user: User): Promise<QuestionGroup[]>{
+    // 1. Download File from S3
+    // 2. Save it at the local dir
+    // 3. Read & Process file one by one line
+    // 4. Create corresponding answers, questions, and questionGroups
+    return []
+  }
 }

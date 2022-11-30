@@ -17,7 +17,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "typeorm": "typeorm-ts-node-commonjs"
+    
   },
   "dependencies": {
     "@casl/ability": "^5.4.3",
@@ -56,7 +58,6 @@
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.3",
     "swagger-ui-express": "^4.1.6",
-    "ts-node": "^9.0.0",
     "typeorm": "^0.2.32",
     "typescript": "^4.0.5",
     "util": "^0.12.4",
@@ -82,6 +83,7 @@
     "supertest": "^6.0.0",
     "ts-jest": "^26.4.3",
     "ts-loader": "^8.0.8",
+    "ts-node": "^10.9.1",
     "tsconfig-paths": "^3.9.0"
   },
   "jest": {
