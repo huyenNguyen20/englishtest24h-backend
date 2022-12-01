@@ -127,12 +127,12 @@ export class UploadController {
     try {
       const file = files?.xlsx[0] || null;
       if (!file) throw new Error('File not found');
-      const xlsxUrl = await this.uploadService.upload(
+      const key = await this.uploadService.upload(
         file.buffer,
         file.originalname,
         'xlsx',
       );
-      return res.status(HttpStatus.OK).json({ results: xlsxUrl });
+      return res.status(HttpStatus.OK).json({ results: key });
     } catch (e) {
       this.logger.error(`ERROR in POST /upload/xlsx ${JSON.stringify(e)}`);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({

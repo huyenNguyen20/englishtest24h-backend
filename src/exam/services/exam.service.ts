@@ -5,13 +5,15 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import * as XLSX from 'xlsx';
+import { InjectRepository } from '@nestjs/typeorm';
+
 import {
   CreateQuestionDto,
   FilterExamDto,
   UpdateExamDto,
   UpdateQuestionDto,
 } from '../dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { ExamRepository } from '../repositories/exam.repositary';
 import { User } from '../../auth/entities/user.entity';
 import { QuestionRepository } from '../repositories/question.repository';
@@ -859,11 +861,60 @@ export class ExamService {
   /************************/
   /*****PROCESS CSV FILE **/
   /************************/
-  async importQuestionGroups(fileUrl : string, user: User): Promise<QuestionGroup[]>{
+  async importQuestionGroups(
+    key: string,
+    user: User,
+  ): Promise<QuestionGroup[]> {
     // 1. Download File from S3
     // 2. Save it at the local dir
     // 3. Read & Process file one by one line
     // 4. Create corresponding answers, questions, and questionGroups
-    return []
+    try {
+      const fileName = await this.fetchFileFromS3(key) as string
+      var workbook = XLSX.readFile(fileName)
+      const ws = workbook.Sheets[workbook.SheetNames[0]]; // get the first worksheet
+      const data = XLSX.utils.sheet_to_json(ws); // generate objects
+      
+      console.log(data)
+    } catch(e){
+      throw new Error(e)
+    }
+    return [];
+  }
+
+  async fetchFileFromS3(key: string) {
+    // Require neccessary library
+    const AWS = require('aws-sdk');
+    const fs = require('fs');
+
+    // Configure AWS Client
+    const s3 = new AWS.S3({
+      region: process.env.AWS_REGION_S3,
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID_S3,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_S3,
+    });
+
+    // Create writable stream
+    const fileName = `./examsFiles/${key}.xlsx`
+    const writable = fs.createWriteStream(fileName);
+
+    // Get writable from stream
+    const stream = await s3
+      .getObject({
+        Bucket: process.env.XLSX_S3_BUCKET,
+        Key: key,
+      })
+      .createReadStream();
+
+    stream.pipe(writable);
+
+    return new Promise((resolve, reject) => {
+      writable.on('finish', () => {
+        resolve(fileName)
+      })
+      writable.on('error', () => {
+        reject("Something went wrong")
+      })
+    })
   }
 }

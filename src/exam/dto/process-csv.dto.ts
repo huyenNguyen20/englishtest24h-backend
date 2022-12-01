@@ -3,11 +3,11 @@ import { IsNotEmpty, IsString } from 'class-validator';
 
 export class ProcessCSVDto {
   @ApiProperty({
-    name: 'fileUrl',
+    name: 'key',
     description:
-      'Link to download the questionGroup CSV file, eg. http://www.example.com/example.xlsx',
+      'Key to questionGroup CSV file, eg. sfkaj-ekksk-wekrk-kksss',
   })
   @IsNotEmpty()
   @IsString()
-  fileUrl: string;
+  key: string;
 }

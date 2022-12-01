@@ -107,6 +107,8 @@ export class UploadService {
         Body: buffer,
       };
       const results = await s3.upload(newParams).promise();
+      
+      if(uploadType === 'xlsx') return results.key;
       return results.Location;
     } catch (e) {
       throw new InternalServerErrorException(e);

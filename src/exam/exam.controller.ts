@@ -1251,9 +1251,9 @@ export class ExamController {
     @isTeacher() isTeacher: boolean,
     @Response() res,
   ) {
-    const { fileUrl } = processCSVDto
+    const { key } = processCSVDto
     try {
-      if (!fileUrl)
+      if (!key)
         return res
           .status(HttpStatus.BAD_REQUEST)
           .json({ message: 'File URL must be a valid HTTP URL' });
@@ -1261,11 +1261,13 @@ export class ExamController {
         return res
           .status(HttpStatus.FORBIDDEN)
           .json({ message: 'You are forbidden' });
+
       const questionGroups: QuestionGroup[] =
         await this.examService.importQuestionGroups(
-          fileUrl,
+          key,
           user
         );
+        
       return res.status(HttpStatus.OK).json({ results: questionGroups });
     } catch (e) {
       this.logger.error(
