@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -7,6 +8,7 @@ import {
 } from '@nestjs/common';
 import * as XLSX from 'xlsx';
 import { InjectRepository } from '@nestjs/typeorm';
+import { uniqueId } from 'lodash';
 
 import {
   CreateQuestionDto,
@@ -33,6 +35,7 @@ import { CreateSectionDto } from '../dto/create-section.dto';
 import { CreateQuestionGroupDto } from '../dto/create-questionGroup.dto';
 import { UpdateWritingSectionDto } from '../dto/update-writing-section.dto';
 import { CreateWritingSectionDto } from '../dto/create-writing-section.dto';
+import { IRawQuestionGroupData, IRawQuestionsData } from '../interface/import.interface';
 
 @Injectable()
 export class ExamService {
@@ -569,21 +572,6 @@ export class ExamService {
         (question) => question.id,
       );
 
-      //3. Delete image file of corresponding questions
-      // const fileNameArr: string[] = [];
-      // questionGroup.questions.forEach((question) => {
-      //   if (question.imageUrl) {
-      //     const fileName = question.imageUrl.substring(
-      //       question.imageUrl.lastIndexOf('/') + 1,
-      //     );
-      //     if (fileName) fileNameArr.push(fileName);
-      //   }
-      // });
-      // if (fileNameArr.length > 0) {
-      //   const { batchDeleteImage } = require('../../shared/helpers');
-      //   await batchDeleteImage(fileNameArr);
-      // }
-
       if (questionIds.length > 0) {
         //4. Delete corresponding answers
         await getConnection()
@@ -856,65 +844,5 @@ export class ExamService {
     const exam: Exam = await this.examRepository.findOne(examId);
     if (!exam) throw new NotFoundException('Exam Not Found');
     return await this.examRepository.removeExam(examId, exam.ownerId);
-  }
-
-  /************************/
-  /*****PROCESS CSV FILE **/
-  /************************/
-  async importQuestionGroups(
-    key: string,
-    user: User,
-  ): Promise<QuestionGroup[]> {
-    // 1. Download File from S3
-    // 2. Save it at the local dir
-    // 3. Read & Process file one by one line
-    // 4. Create corresponding answers, questions, and questionGroups
-    try {
-      const fileName = await this.fetchFileFromS3(key) as string
-      var workbook = XLSX.readFile(fileName)
-      const ws = workbook.Sheets[workbook.SheetNames[0]]; // get the first worksheet
-      const data = XLSX.utils.sheet_to_json(ws); // generate objects
-      
-      console.log(data)
-    } catch(e){
-      throw new Error(e)
-    }
-    return [];
-  }
-
-  async fetchFileFromS3(key: string) {
-    // Require neccessary library
-    const AWS = require('aws-sdk');
-    const fs = require('fs');
-
-    // Configure AWS Client
-    const s3 = new AWS.S3({
-      region: process.env.AWS_REGION_S3,
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID_S3,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_S3,
-    });
-
-    // Create writable stream
-    const fileName = `./examsFiles/${key}.xlsx`
-    const writable = fs.createWriteStream(fileName);
-
-    // Get writable from stream
-    const stream = await s3
-      .getObject({
-        Bucket: process.env.XLSX_S3_BUCKET,
-        Key: key,
-      })
-      .createReadStream();
-
-    stream.pipe(writable);
-
-    return new Promise((resolve, reject) => {
-      writable.on('finish', () => {
-        resolve(fileName)
-      })
-      writable.on('error', () => {
-        reject("Something went wrong")
-      })
-    })
   }
 }

@@ -25,7 +25,7 @@ export class CreateQuestionGroupDto {
   })
   @IsNotEmpty()
   @IsString()
-  title: string;
+  title?: string;
 
   @ApiProperty({
     example: 'http://example.com/image1.jpg',
@@ -33,7 +33,7 @@ export class CreateQuestionGroupDto {
   })
   @IsString()
   @IsOptional()
-  imageUrl: string;
+  imageUrl?: string;
 
   @ApiProperty({
     example: 'Extra information and directions to the question group',
@@ -41,7 +41,7 @@ export class CreateQuestionGroupDto {
   })
   @IsOptional()
   @IsString()
-  htmlContent: string;
+  htmlContent?: string;
 
   @ApiProperty({
     example: '[A, B, C, D]',
@@ -49,12 +49,12 @@ export class CreateQuestionGroupDto {
   })
   @IsOptional()
   @IsString()
-  matchingOptions: string;
+  matchingOptions?: string;
 
   @ApiProperty({
     example: '[{id: 1, question: "example", answers: [], ...}]',
     description: 'List of questions for a question group',
   })
   @IsOptional()
-  questions: CreateQuestionDto[];
+  questions?: CreateQuestionDto[];
 }

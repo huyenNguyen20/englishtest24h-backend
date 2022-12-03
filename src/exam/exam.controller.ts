@@ -43,6 +43,7 @@ import { isTeacher } from '../auth/decorator/isTeacher.decorator';
 import { getExam } from './decorators/getExam.decorator';
 import { UploadService } from '../upload/upload.service';
 import { ProcessCSVDto } from './dto/process-csv.dto';
+import { ImportService } from './services/import.service';
 
 @ApiTags('Exams Endpoints')
 @Controller('exams')
@@ -53,6 +54,7 @@ export class ExamController {
 
     private readonly examService: ExamService,
     private readonly uploadService: UploadService,
+    private readonly importService: ImportService,
   ) {}
 
   /********************* */
@@ -1251,8 +1253,8 @@ export class ExamController {
     @isTeacher() isTeacher: boolean,
     @Response() res,
   ) {
-    const { key } = processCSVDto
     try {
+      const { key } = processCSVDto;
       if (!key)
         return res
           .status(HttpStatus.BAD_REQUEST)
@@ -1262,23 +1264,17 @@ export class ExamController {
           .status(HttpStatus.FORBIDDEN)
           .json({ message: 'You are forbidden' });
 
-      const questionGroups: QuestionGroup[] =
-        await this.examService.importQuestionGroups(
-          key,
-          user
-        );
-        
-      return res.status(HttpStatus.OK).json({ results: questionGroups });
+      const questionGroup: QuestionGroup =
+        await this.importService.importQuestionGroups(key, user);
+
+      return res.status(HttpStatus.OK).json({ results: questionGroup });
     } catch (e) {
-      this.logger.error(
-        `ERROR in POST /exams/processCSV/questionGroups --- ${JSON.stringify(
-          e,
-        )}`,
-      );
+      this.logger.error(e.message || "");
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: 'Something went wrong. Please try again!' });
+        .json({
+          message: e.message || 'Something went wrong. Please try again!',
+        });
     }
   }
-
 }

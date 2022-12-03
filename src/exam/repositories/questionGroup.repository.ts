@@ -37,8 +37,12 @@ export class QuestionGroupRepository extends Repository<QuestionGroup> {
 
     q.type = type;
     q.ownerId = user.id;
-    q.section = section;
-    q.sectionId = section.id;
+
+    if (section) {
+      q.section = section;
+      q.sectionId = section.id;
+    }
+
     await q.save();
     return q;
   }

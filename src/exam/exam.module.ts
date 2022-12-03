@@ -13,6 +13,7 @@ import { SectionRepository } from './repositories/section.respository';
 import { QuestionGroupRepository } from './repositories/questionGroup.repository';
 import { AnswerRepository } from './repositories/answer.repository';
 import { UploadModule } from '../upload/upload.module';
+import { ImportService } from './services/import.service';
 
 @Module({
   imports: [
@@ -41,7 +42,7 @@ import { UploadModule } from '../upload/upload.module';
     }),
   ],
   controllers: [ExamController, TestEnrollmentController],
-  providers: [ExamService, TestEnrollmentService],
+  providers: [ExamService, TestEnrollmentService, ImportService],
   exports: [ExamService, TestEnrollmentService],
 })
 export class ExamModule {}
