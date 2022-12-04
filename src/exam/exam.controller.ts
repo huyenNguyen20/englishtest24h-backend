@@ -42,6 +42,8 @@ import { Logger } from 'winston';
 import { isTeacher } from '../auth/decorator/isTeacher.decorator';
 import { getExam } from './decorators/getExam.decorator';
 import { UploadService } from '../upload/upload.service';
+import { ProcessCSVDto } from './dto/process-csv.dto';
+import { ImportService } from './services/import.service';
 
 @ApiTags('Exams Endpoints')
 @Controller('exams')
@@ -52,6 +54,7 @@ export class ExamController {
 
     private readonly examService: ExamService,
     private readonly uploadService: UploadService,
+    private readonly importService: ImportService,
   ) {}
 
   /********************* */
@@ -1234,6 +1237,44 @@ export class ExamController {
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({ message: 'Something went wrong. Please try again!' });
+    }
+  }
+
+  /* Endpoints for Processing CSVs */
+  @ApiOperation({
+    summary:
+      'Method for EXAM OWNER to delete a question group of a section of an exam',
+  })
+  @Post('processCSV/questionGroups')
+  @UseGuards(AuthGuard())
+  async processQuestionGroups(
+    @Body(new ValidationPipe()) processCSVDto: ProcessCSVDto,
+    @getUser() user: User,
+    @isTeacher() isTeacher: boolean,
+    @Response() res,
+  ) {
+    try {
+      const { key } = processCSVDto;
+      if (!key)
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .json({ message: 'File URL must be a valid HTTP URL' });
+      if (!isTeacher)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+
+      const questionGroup: QuestionGroup =
+        await this.importService.importQuestionGroups(key, user);
+
+      return res.status(HttpStatus.OK).json({ results: questionGroup });
+    } catch (e) {
+      this.logger.error(e.message || "");
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({
+          message: e.message || 'Something went wrong. Please try again!',
+        });
     }
   }
 }

@@ -15,7 +15,7 @@ export class CreateQuestionDto {
   })
   @IsOptional()
   @IsString()
-  imageUrl: string;
+  imageUrl?: string;
 
   @ApiProperty({ example: '5', description: 'Score / Question' })
   @IsNotEmpty()
@@ -36,7 +36,7 @@ export class CreateQuestionDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
-  minWords: number;
+  minWords?: number;
 
   @ApiProperty({ example: 'What is the main idea?', description: 'Question' })
   @IsOptional()
@@ -46,7 +46,7 @@ export class CreateQuestionDto {
   @ApiProperty({ example: 'Explaination', description: 'Explaination' })
   @IsOptional()
   @IsString()
-  htmlExplaination: string;
+  htmlExplaination?: string;
 
   @ApiProperty({ description: 'Answer Array' })
   @IsOptional()

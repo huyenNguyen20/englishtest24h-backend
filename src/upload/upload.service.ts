@@ -107,6 +107,8 @@ export class UploadService {
         Body: buffer,
       };
       const results = await s3.upload(newParams).promise();
+      
+      if(uploadType === 'xlsx') return results.key;
       return results.Location;
     } catch (e) {
       throw new InternalServerErrorException(e);
@@ -120,10 +122,10 @@ export class UploadService {
         destinationBucket = process.env.IMAGE_S3_BUCKET;
         break;
       case 'audio':
-        destinationBucket = process.env.IMAGE_S3_BUCKET;
+        destinationBucket = process.env.AUDIO_S3_BUCKET;
         break;
       case 'xlsx':
-        destinationBucket = process.env.IMAGE_S3_BUCKET;
+        destinationBucket = process.env.XLSX_S3_BUCKET;
         break;
       default:
         break;
