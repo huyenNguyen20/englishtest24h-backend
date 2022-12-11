@@ -22,8 +22,10 @@ import {
 } from '../interface/import.interface';
 import { QUESTION_GROUP_TYPES } from '../enum/QuestionGroupType.enum';
 import { ExamService } from './exam.service';
+import { InjectQueue, Process, Processor } from '@nestjs/bull';
+import { Job, Queue } from 'bull';
 
-
+@Processor('process-import-questions')
 @Injectable()
 export class ImportService {
   constructor(
@@ -31,12 +33,19 @@ export class ImportService {
     private questionGroupRepository: QuestionGroupRepository,
 
     private readonly examService: ExamService,
+
+    
   ) {}
 
   /************************/
   /*****PROCESS CSV FILE **/
   /************************/
-  async importQuestionGroups(key: string, user: User): Promise<QuestionGroup> {
+  @Process('processQuestions')
+  async importQuestionGroups(job: Job<unknown>): Promise<QuestionGroup> {
+    const input = job.data
+
+    const { key, user} = (input  as {input: {key: string, user: User}}).input
+
     // 1. Download File from S3
     // 2. Save it at the local dir
     const fileName = (await this.fetchFileFromS3(key)) as string;
@@ -61,7 +70,6 @@ export class ImportService {
       default:
         break;
     }
-
     // 4.1. Create question group
     const questionGroup =
       await this.questionGroupRepository.createQuestionGroup(
@@ -71,7 +79,7 @@ export class ImportService {
       );
     if (!questionGroup)
       throw new InternalServerErrorException('Something went wrong');
-
+            console.log(questionGroup)
     // 4.2. Create questions and answers
     const newQuestions = [];
     if (questionsData && questionsData.length > 0) {

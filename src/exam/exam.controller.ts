@@ -44,6 +44,8 @@ import { getExam } from './decorators/getExam.decorator';
 import { UploadService } from '../upload/upload.service';
 import { ProcessCSVDto } from './dto/process-csv.dto';
 import { ImportService } from './services/import.service';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @ApiTags('Exams Endpoints')
 @Controller('exams')
@@ -51,6 +53,9 @@ export class ExamController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER)
     private readonly logger: Logger,
+
+    @InjectQueue('process-import-questions')
+    private processImportQuestions: Queue,
 
     private readonly examService: ExamService,
     private readonly uploadService: UploadService,
@@ -1264,17 +1269,56 @@ export class ExamController {
           .status(HttpStatus.FORBIDDEN)
           .json({ message: 'You are forbidden' });
 
-      const questionGroup: QuestionGroup =
-        await this.importService.importQuestionGroups(key, user);
+      const job = await this.processImportQuestions.add(
+        'processQuestions',
+        {
+          input: { key, user },
+        },
+        {
+          attempts: 3,
+          removeOnFail: true,
+        },
+      );
 
-      return res.status(HttpStatus.OK).json({ results: questionGroup });
+      return res.status(HttpStatus.OK).json({ results: job.id });
     } catch (e) {
-      this.logger.error(e.message || "");
-      return res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({
-          message: e.message || 'Something went wrong. Please try again!',
-        });
+      this.logger.error(e.message || '');
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: e.message || 'Something went wrong. Please try again!',
+      });
+    }
+  }
+
+  @ApiOperation({
+    summary: 'Method for EXAM OWNER to get processed question import',
+  })
+  @Get('processCSV/questionGroups/:jobId')
+  @UseGuards(AuthGuard())
+  async getProcessedQuestionGroup(
+    @Param('jobId', ParseIntPipe) jobId: number,
+    @getUser() user: User,
+    @isTeacher() isTeacher: boolean,
+    @Response() res,
+  ) {
+    try {
+      if (!isTeacher)
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'You are forbidden' });
+      const job = await this.processImportQuestions.getJob(jobId);
+
+      const isCompleted = await job.isCompleted();
+
+      if (!isCompleted) {
+        return res.status(HttpStatus.PROCESSING).json({ message: 'Process is in progress' });
+      }
+
+      return res.status(HttpStatus.OK).json({ results: job.returnvalue });
+    } catch (e) {
+      this.logger.error(e.message || '');
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: e.message || 'Something went wrong. Please try again!',
+      });
     }
   }
 }

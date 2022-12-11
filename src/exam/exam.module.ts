@@ -14,6 +14,7 @@ import { QuestionGroupRepository } from './repositories/questionGroup.repository
 import { AnswerRepository } from './repositories/answer.repository';
 import { UploadModule } from '../upload/upload.module';
 import { ImportService } from './services/import.service';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
@@ -27,6 +28,9 @@ import { ImportService } from './services/import.service';
       AnswerRepository,
       TestEnrollmentRepository,
     ]),
+    BullModule.registerQueue({
+      name: 'process-import-questions'
+    }),
     MulterModule.register({
       dest: 'public/examsFiles',
       fileFilter: (req, file, cb) => {

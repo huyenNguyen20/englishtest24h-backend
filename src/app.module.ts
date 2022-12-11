@@ -16,6 +16,7 @@ import { StudentQuestionController } from './studentQuestion/question.controller
 import { TestEnrollmentController } from './exam/test-enrollment.controller';
 import { UploadModule } from './upload/upload.module';
 import { HealthModule } from './health/health.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
@@ -48,6 +49,12 @@ import { HealthModule } from './health/health.module';
           level: 'warning',
         }),
       ],
+    }),
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
     }),
     ExamModule,
     AuthModule,
