@@ -27,7 +27,7 @@ export class UploadService {
       const unlinkAsync = promisify(fs.unlink);
 
       // Compress Image
-      const newFileName = `${fileName}-${v4()}`;
+      const newFileName = v4();
       Jimp.read(tempFile)
         .then((result) => {
           return result
